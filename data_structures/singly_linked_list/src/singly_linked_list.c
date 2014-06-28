@@ -51,11 +51,11 @@ void insertSLListHead(SLList_t *list, void *data){
 	list->head = newHead;
 }
 
-SLNode_t *removeSLListHead(SLList_t *list){
+void *removeSLListHead(SLList_t *list){
 	list->len--;
 	SLNode_t *head = list->head;
 	list->head = list->head->next;
-	return head;
+	return freeSLNode(head);
 }
 
 void insertAfterSLNode(SLList_t *list, SLNode_t *node, void *data){
@@ -65,15 +65,15 @@ void insertAfterSLNode(SLList_t *list, SLNode_t *node, void *data){
 	node->next = newNode;
 }
 
-SLNode_t *removeAfterSLNode(SLList_t *list, SLNode_t *node){
+void *removeAfterSLNode(SLList_t *list, SLNode_t *node){
 	list->len--;
 	SLNode_t *removedNode = node->next;
 	node->next = node->next->next;
-	return removedNode;
+	return freeSLNode(removedNode);
 }
 
 static SLNode_t *createSLNode(void *data){
-	SLNode_t *node = malloc(sizeof(node));
+	SLNode_t *node = malloc(sizeof(SLNode_t));
 	node->data = data;
 	node->next = NULL;
 	return node;
@@ -110,6 +110,22 @@ static void testSLList(void){
 	strcpy(s7, "7777777777");
 
 	SLList_t *list = createSLList(freeData);
+	insertSLListHead(list, s0);
+	insertSLListHead(list, s1);
+	insertSLListHead(list, s2);
+	insertSLListHead(list, s3);
+	insertSLListHead(list, s4);
+	insertSLListHead(list, s5);
+	insertSLListHead(list, s6);
+	insertSLListHead(list, s7);
+	list->freeData(removeSLListHead(list));
+	list->freeData(removeSLListHead(list));
+	list->freeData(removeSLListHead(list));
+	list->freeData(removeSLListHead(list));
+	list->freeData(removeSLListHead(list));
+	list->freeData(removeSLListHead(list));
+	list->freeData(removeSLListHead(list));
+	list->freeData(removeSLListHead(list));
 	freeSLList(list);
 }
 

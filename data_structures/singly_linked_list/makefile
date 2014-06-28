@@ -1,13 +1,19 @@
 PROJECT_NAME = singly_linked_list
 FLAGS = -Wall -Wextra -I ./
-CC = gcc $(FLAGS)
+COMPILER = gcc $(FLAGS)
+CC = @echo "cc $@" && $(COMPILER)
 
 SRC = $(wildcard src/*.c)
-OBJ = $(patsubst %.c, bin/%.o, $(foreach file, $(SRC), $(notdir $(file))))
+OBJ = $(patsubst %.c, bin/%.o, $(foreach srcFile, $(SRC), $(notdir $(srcFile))))
 
-.PHONY: all run clean
+.PHONY: all debug run clean
+
+all: FLAGS += -Ofast
+debug: FLAGS += -O0 -g3
 
 all: bin bin/$(PROJECT_NAME)
+
+debug: bin bin/$(PROJECT_NAME)
 
 run: all
 	bin/$(PROJECT_NAME)
