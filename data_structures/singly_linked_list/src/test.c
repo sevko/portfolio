@@ -1,3 +1,7 @@
+/*
+ * @brief Tests the functions inside `src/singly_linked_list.c`.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,12 +9,34 @@
 #include "src/singly_linked_list.h"
 
 /*
- * @brief Tests the other functions defined within this source file.
+ * @brief Deallocates data stored in the test ::SLList_t's ::SLNode_t.
+ *
+ * @param data Assumed to be a `char *`.
+*/
+static void freeData(void *data);
+
+/*
+ * @brief Prints an ::SLList_t.
+ *
+ * Prints the list's ::SLNode_t's ::data, starting at its ::head and ending at
+ * its ::tail.
+ *
+ * @param list Assumed to contain `char *` data.
+*/
+static void printSLList(SLList_t *list);
+
+/*
+ * @brief Tests the functions defined in `src/singly_linked_list.h`.
 */
 static void testSLList(void);
 
-void freeData(void *data){
+static void freeData(void *data){
 	free((char *)data);
+}
+
+static void printSLList(SLList_t *list){
+	(void)list;
+	puts("List.");
 }
 
 static void testSLList(void){
@@ -40,6 +66,7 @@ static void testSLList(void){
 	insertSLListHead(list, s5);
 	insertSLListHead(list, s6);
 	insertSLListHead(list, s7);
+	printSLList(list);
 	freeSLList(list);
 }
 
