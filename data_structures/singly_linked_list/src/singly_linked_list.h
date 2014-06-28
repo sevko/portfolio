@@ -8,17 +8,14 @@
 #define isSLListHead(list, node) (void)
 #define isSLListTail(list, node) (void)
 
-// A singly-linked node that composes an ::SLList_t.
-typedef struct SLNode {
-	void *data; // The contained data.
-	struct SLNode *next; // The next node in the sequence.
-} SLNode_t;
+typedef struct SLNode SLNode_t;
 
 // A singly-linked-list.
 typedef struct {
 	int len; // The number of ::SLNode_t inside the list.
 	SLNode_t *head, // The beginning of the list.
 		*tail; // The end of the list.
+	// Function to deallocate the data stored inside this list's ::SLNode_t.
 	void (*freeData)(void *data);
 } SLList_t;
 
@@ -50,7 +47,7 @@ void insertSLListHead(SLList_t *list, void *data);
 /*
  * @brief Remove an ::SLList_t's ::head.
  *
- * @param list The list to lost its current ::head.
+ * @param list The list to lose its current ::head.
  *
  * @return The removed ::head's ::data.
 */
