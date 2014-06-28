@@ -38,5 +38,22 @@ SLList_t *createSLList(void (*freeData)(void *data));
  * @param list The list to be free'd.
 */
 void freeSLList(SLList_t *list);
-void insertAfterSLNode(SLList_t *list, SLNode_t *node);
-void removeAfterSLNode(SLList_t *list, SLNode_t *node);
+
+/*
+ * @brief Insert an ::SLNode_t after another ::SLNode_t.
+ *
+ * @param list The list containing `node`.
+ * @param node The node to insert a new node after.
+ * @param data The data contained within the new node.
+*/
+void insertAfterSLNode(SLList_t *list, SLNode_t *node, void *data);
+
+/*
+ * @brief Remove an ::SLNode_t after another ::SLNode_t.
+ *
+ * @param list The list containing `node`.
+ * @param node The node whose ::SLNode_t::next will be removed.
+ *
+ * @return The removed node.
+*/
+SLNode_t *removeAfterSLNode(SLList_t *list, SLNode_t *node);
