@@ -35,8 +35,13 @@ static void freeData(void *data){
 }
 
 static void printSLList(SLList_t *list){
-	(void)list;
-	puts("List.");
+	SLNode_t *currNode = list->head;
+	puts("Printing singly-linked list.");
+	while(currNode != NULL){
+		printf("%s\n", (char *)currNode->data);
+		currNode = currNode->next;
+	}
+	puts("Finished.");
 }
 
 static void testSLList(void){
@@ -58,14 +63,16 @@ static void testSLList(void){
 	strcpy(s7, "7777777777");
 
 	SLList_t *list = createSLList(freeData);
-	insertSLListHead(list, s0);
-	insertSLListHead(list, s1);
-	insertSLListHead(list, s2);
-	insertSLListHead(list, s3);
-	insertSLListHead(list, s4);
-	insertSLListHead(list, s5);
-	insertSLListHead(list, s6);
 	insertSLListHead(list, s7);
+	insertAfterSLNode(list, list->tail, s6);
+	insertAfterSLNode(list, list->tail, s5);
+	insertAfterSLNode(list, list->tail, s4);
+	insertAfterSLNode(list, list->tail, s3);
+	insertAfterSLNode(list, list->tail, s2);
+	insertAfterSLNode(list, list->tail, s1);
+	insertAfterSLNode(list, list->tail, s0);
+	freeData(removeSLListHead(list));
+
 	printSLList(list);
 	freeSLList(list);
 }

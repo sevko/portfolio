@@ -5,10 +5,11 @@
 
 #pragma once
 
-#define isSLListHead(list, node) (void)
-#define isSLListTail(list, node) (void)
-
-typedef struct SLNode SLNode_t;
+// A singly-linked node that composes an ::SLList_t.
+typedef struct SLNode {
+	void *data; // The contained data.
+	struct SLNode *next; // The next node in the sequence.
+} SLNode_t;
 
 // A singly-linked-list.
 typedef struct {
@@ -47,7 +48,8 @@ void insertSLListHead(SLList_t *list, void *data);
 /*
  * @brief Remove an ::SLList_t's ::head.
  *
- * @param list The list to lose its current ::head.
+ * @param list The list to lose its current ::head. Must have ::len greater
+ * than 0.
  *
  * @return The removed ::head's ::data.
 */
@@ -66,7 +68,8 @@ void insertAfterSLNode(SLList_t *list, SLNode_t *node, void *data);
  * @brief Remove an ::SLNode_t after another ::SLNode_t.
  *
  * @param list The list containing `node`.
- * @param node The node whose ::SLNode_t::next will be removed.
+ * @param node The node whose ::SLNode_t::next will be removed. Cannot be
+ *      list's ::tail.
  *
  * @return The removed node's ::data.
 */

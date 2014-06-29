@@ -3,12 +3,6 @@
 
 #include "singly_linked_list.h"
 
-// A singly-linked node that composes an ::SLList_t.
-struct SLNode {
-	void *data; // The contained data.
-	struct SLNode *next; // The next node in the sequence.
-};
-
 /*
  * @brief Allocate an ::SLNode_t.
  *
@@ -50,17 +44,16 @@ void insertSLListHead(SLList_t *list, void *data){
 	SLNode_t *newHead = createSLNode(data);
 	newHead->next = list->head;
 	list->head = newHead;
+
+	if(list->len == 1)
+		list->tail = newHead;
 }
 
 void *removeSLListHead(SLList_t *list){
-	if(0 < list->len){
-		list->len--;
-		SLNode_t *head = list->head;
-		list->head = list->head->next;
-		return freeSLNode(head);
-	}
-	else
-		return NULL;
+	list->len--;
+	SLNode_t *head = list->head;
+	list->head = list->head->next;
+	return freeSLNode(head);
 }
 
 void insertAfterSLNode(SLList_t *list, SLNode_t *node, void *data){
@@ -68,12 +61,19 @@ void insertAfterSLNode(SLList_t *list, SLNode_t *node, void *data){
 	SLNode_t *newNode = createSLNode(data);
 	newNode->next = node->next;
 	node->next = newNode;
+
+	if(node == list->tail)
+		list->tail = newNode;
 }
 
 void *removeAfterSLNode(SLList_t *list, SLNode_t *node){
 	list->len--;
 	SLNode_t *removedNode = node->next;
 	node->next = node->next->next;
+
+	if(removedNode == list->tail)
+		list->tail = node;
+
 	return freeSLNode(removedNode);
 }
 
