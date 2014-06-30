@@ -74,3 +74,13 @@ void insertAfterSLNode(SLList_t *list, SLNode_t *node, void *data);
  * @return The removed node's ::data.
 */
 void *removeAfterSLNode(SLList_t *list, SLNode_t *node);
+
+/*
+ * @brief Remove a ::SLNode_t from a ::SLList_t.
+ *
+ * @param list A list.
+ * @param node The node to be removed. Must exist within `list`.
+ *
+ * @return A pointer to the removed ::SLNode_t.
+*/
+void *removeSLNode(SLList_t *list, SLNode_t *node);

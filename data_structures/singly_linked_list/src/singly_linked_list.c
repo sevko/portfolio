@@ -77,6 +77,19 @@ void *removeAfterSLNode(SLList_t *list, SLNode_t *node){
 	return freeSLNode(removedNode);
 }
 
+void *removeSLNode(SLList_t *list, SLNode_t *node){
+	if(node == list->head)
+		return removeSLListHead(list);
+
+	SLNode_t *currNode = list->head;
+	while(currNode->next != node)
+		currNode = currNode->next;
+
+	list->len--;
+	currNode->next = node->next;
+	return freeSLNode(node);
+}
+
 static SLNode_t *createSLNode(void *data){
 	SLNode_t *node = malloc(sizeof(SLNode_t));
 	node->data = data;

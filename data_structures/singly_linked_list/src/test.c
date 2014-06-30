@@ -72,6 +72,7 @@ static void testSLList(void){
 	insertAfterSLNode(list, list->tail, s1);
 	insertAfterSLNode(list, list->tail, s0);
 	freeData(removeSLListHead(list));
+	freeData(removeSLNode(list, list->head));
 
 	printSLList(list);
 	freeSLList(list);
