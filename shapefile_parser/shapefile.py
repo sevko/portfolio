@@ -1,12 +1,12 @@
 """
-A module for ESRI Shapefile reading, and writing.
+A module for ESRI Shapefile reading and writing.
 """
 
 import sys
 
 class Shape(object):
 	"""
-	Contains shapefile shape types.
+	Contains Shapefile shape types.
 	"""
 
 	NULL_SHAPE = 0
@@ -26,6 +26,7 @@ class Shape(object):
 
 class Shapefile(object):
 	"""
+	A Shapefile representation.
 
 	Attributes:
 		length (int): The number of bytes in the file.
@@ -38,14 +39,39 @@ class Shapefile(object):
 		self.shape_type = shape_type
 		self.bounding_box = bounding_box
 
-	def read_from_file(path):
+	def read_from_file(self, path):
+		if not self._valid_filename():
+			pass
+
+		def _read_header():
+			pass
+
+		def _read_records():
+			pass
+
+	def write_to_file(self, path):
 		pass
 
-	def write_to_file(path):
-		pass
+	def _valid_filename(self, path):
+		"""
+		Verify whether a shapefile filename satisfies the 8.3 convention.
+
+		Args:
+			path (str): The path of a shapefile.
+
+		Returns:
+			bool: True if the shapefile's filename satisfies the 8.3 filename
+			convention (the root is 8 characters in length, starts with
+			[a-Z0-9], and continues with [a-Z0-9_-]; False otherwise, and the
+			extension is 3 characters long).
+		"""
+
+		filename = path.split("/")[-1].split(".")
+		return (
+			re.compile("^[a-zA-Z0-9][a-zA-Z0-9_-]{7}$").match(filename[0])
+			and filename[1] == "shp")
 
 class BoundingBox(object):
-
 	def __init__(self, min_x, max_x, min_y, max_y, min_m=None, max_m=None,
 			min_z=None, max_z=None):
 		self.min_x = min_x
@@ -58,6 +84,10 @@ class BoundingBox(object):
 		self.max_z = max_z
 
 def _handleCommandLineArgs():
+	"""
+	Handles and prints diagnostic messages for command-line arguments.
+	"""
+
 	if 1 < len(sys.argv):
 		shapefile = Shapefile()
 		shapefile.read_from_file(sys.argv[1])
