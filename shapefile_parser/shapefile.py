@@ -11,6 +11,9 @@ import sys
 class Shape(object):
 	"""
 	Contains Shapefile shape types.
+
+	Attributes:
+		points (list of doubles) : All of the points belonging to this shape.
 	"""
 
 	NULL_SHAPE = 0
@@ -28,6 +31,9 @@ class Shape(object):
 	MULTI_POINT_M = 28
 	MULTI_PATCH = 31
 
+	def __init__(self, shape_type, points):
+		self.points = points
+
 class Shapefile(object):
 	"""
 	A Shapefile representation.
@@ -38,10 +44,14 @@ class Shapefile(object):
 		bounding_box (BoundingBox): The shapefile's bounds.
 	"""
 
-	def __init__(self, length=None, shape_type=None, bounding_box=None):
+	def __init__(self, filename=None, length=None, shape_type=None,
+			bounding_box=None):
 		self.length = length
 		self.shape_type = shape_type
 		self.bounding_box = bounding_box
+
+		if filename:
+			self.read_from_file(filename)
 
 	def read_from_file(self, path):
 		"""
@@ -58,12 +68,16 @@ class Shapefile(object):
 				" convention." % path)
 
 		with open(path) as shapefile:
+			def read_and_unpack(fmt, num_bytes):
+				return struct.unpack(fmt, shapefile.read(num_bytes))
+
 			shapefile.seek(24)
-			self.length = struct.unpack(">i", shapefile.read(4))[0]
+			self.length = read_and_unpack(">i", 4)[0] * 2
 			shapefile.seek(32)
-			self.shape_type = struct.unpack("<i", shapefile.read(4))[0]
-			self.bounding_box = BoundingBox(
-				*struct.unpack("<8d", shapefile.read(64)))
+			self.shape_type = read_and_unpack("<i", 4)[0]
+			self.bounding_box = BoundingBox(*read_and_unpack("<8d", 64))
+
+			shapefile.seek(4, 1)
 
 	def write_to_file(self, path):
 		pass
@@ -105,15 +119,47 @@ def _handleCommandLineArgs():
 	"""
 
 	if 1 < len(sys.argv):
-		shapefile = Shapefile()
-		path = os.path.expanduser(sys.argv[1])
-		shapefile.read_from_file(path)
-		logging.info("Reading shapefile %s." % path)
+		if sys.argv[1] == "--test":
+			logging.info("Running unit-tests.")
+			_unit_tests()
+		elif sys.argv[1] == "--file":
+			path = os.path.expanduser(sys.argv[2])
+			logging.info("Reading shapefile %s." % path)
+			shapefile = Shapefile(path)
+
 	else:
 		logging.critical(
 			"Missing argument. Use:\n"
-			"\tpython shapefile_parser.py SHAPEFILE_PATH\n\n"
-			"\tSHAPEFILE_PATH : the path of a shapefile (.shp) file.")
+			"\tpython shapefile_parser.py (--test | --file SHAPEFILE_PATH)\n\n"
+			"\t--test : run unit-tests.\n"
+			"\t--script : Read a shapefile.\n"
+			"\t\tSHAPEFILE_PATH : the path of a shapefile (.shp) file.")
+
+def _unit_tests():
+	shapefile = Shapefile("test/test.shp")
+	accepted_shapefile = {
+		"length" : 53139272,
+		"shape_type" : 5,
+	}
+
+	accepted_bounding_box = {
+		"min_x" : -159.79790283200012,
+		"max_x" : -46.63492012129996,
+		"min_y" : 178.14644409200054,
+		"max_y" : 69.03239737290023,
+		"min_z" : 0.0,
+		"max_z" : 0.0,
+		"min_m" : 0.0,
+		"max_m" : 0.0
+	}
+
+	for member in accepted_shapefile:
+		assert getattr(shapefile, member) == accepted_shapefile[member]
+
+
+	for member in accepted_bounding_box:
+		assert (getattr(shapefile.bounding_box, member) ==
+				accepted_bounding_box[member])
 
 def _configure_logging():
 	"""
