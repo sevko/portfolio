@@ -2,6 +2,10 @@
 A module for ESRI Shapefile reading and writing.
 """
 
+import logging
+import os
+import re
+import struct
 import sys
 
 class Shape(object):
@@ -40,14 +44,26 @@ class Shapefile(object):
 		self.bounding_box = bounding_box
 
 	def read_from_file(self, path):
-		if not self._valid_filename():
-			pass
+		"""
+		Load a shapefile file into this Shapefile instance.
 
-		def _read_header():
-			pass
+		Args:
+			path (str): The path of a shapefile; tildes, "~", are valid.
+		"""
 
-		def _read_records():
-			pass
+		path = os.path.expanduser(path)
+		if not self._valid_filename(path):
+			logging.warning(
+				"Shapefile filename '%s' does not satisfy 8.3 filename"
+				" convention." % path)
+
+		with open(path) as shapefile:
+			shapefile.seek(24)
+			self.length = struct.unpack(">i", shapefile.read(4))[0]
+			shapefile.seek(32)
+			self.shape_type = struct.unpack("<i", shapefile.read(4))[0]
+			self.bounding_box = BoundingBox(
+				*struct.unpack("<8d", shapefile.read(64)))
 
 	def write_to_file(self, path):
 		pass
@@ -90,12 +106,22 @@ def _handleCommandLineArgs():
 
 	if 1 < len(sys.argv):
 		shapefile = Shapefile()
-		shapefile.read_from_file(sys.argv[1])
+		path = os.path.expanduser(sys.argv[1])
+		shapefile.read_from_file(path)
+		logging.info("Reading shapefile %s." % path)
 	else:
-		print (
+		logging.critical(
 			"Missing argument. Use:\n"
 			"\tpython shapefile_parser.py SHAPEFILE_PATH\n\n"
 			"\tSHAPEFILE_PATH : the path of a shapefile (.shp) file.")
 
+def _configure_logging():
+	"""
+	Configure settings for the `logging` module.
+	"""
+
+	logging.basicConfig(format="%(levelname)s %(funcName)s %(message)s")
+
 if __name__ == "__main__":
+	_configure_logging()
 	_handleCommandLineArgs()
