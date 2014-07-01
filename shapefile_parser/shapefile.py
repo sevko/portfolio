@@ -32,39 +32,87 @@ class Shape(object):
 	MULTI_PATCH = 31
 
 class NullShape(object):
+	"""
+	A Shapefile Null Shape.
+
+	Attributes:
+		shape_type (int): See `Shape.NULL_SHAPE`.
+	"""
 
 	def __init__(self):
-		pass
+		self.shape_type = Shape.NULL_SHAPE
 
 class Point(object):
+	"""
+	A Shapefile Point object.
 
-	def __init__(self, points):
-		self.x = points[0]
-		self.y = points[1]
+	Attributes:
+		shape_type (int) : See `Shape.POINT`.
+		x (double): The point's x-coordinate.
+		y (double): The point's y-coordinate.
+	"""
+
+	def __init__(self, x, y):
+		self.shape_type = Shape.POINT
+		self.x = x
+		self.y = y
+
+	def read_from_binary_string(self, bin_str):
+		"""
+		Recreate a `Point` instance from its compressed binary form.
+
+		Args:
+			bin_str (str) : A bit-packed representation of a `Point`, as
+				written by `Point.write_to_binary_string()`.
+
+		Returns:
+			Point: A `Point` instance with member values as read from
+				`bin_str`.
+		"""
+
+		return Point(*struct.unpack("<i<2d", bin_str)[1:])
+
+	def write_to_binary_string(self):
+		"""
+		Convert a `Point` to its binary representation.
+
+		Returns:
+			str: `self` in the bit-packed binary format described by the
+			Shapefile specification for `Point`:
+
+			Byte | Field | Type | Number | Endianness
+			0 | `self.shape_type`  | Integer | 1 | Little
+			4 | `self.x` | Double | 1 | Little
+			12 | `self.y` | Double | 1 | Little
+		"""
+
+		return struct.pack("<i<2d", self.shape_type, self.x, self.y)
 
 class MultiPoint(object):
+	"""
 
-	def __init__(self, points):
-		self.bounding_box = BoundingBox(*points[1:5])
-		self.points = [6:]
+	Attributes:
+		bounding_box (BoundingBox): The MultiPoint's bounding box.
+		points (list of Point): The constituent points.
+	"""
+
+	def __init__(self, bounding_box, points):
+		self.bounding_box = bounding_box
+		self.points = points
 
 class PolyLine(object):
 
 	def __init__(self, points):
-		self.bounding_box = BoundingBox(*points[1:5])
-		self.parts = points[7:7 + points[5]]
-		self.points = points[7 + points[5]:]
+		pass
 
 class Polygon(object):
 
 	def __init__(self, points):
-		self.bounding_box = BoundingBox(*points[1:5])
-		self.parts = points[7:7 + points[5]]
-		self.points = points[7 + points[5]:]
+		pass
 
 class PointM(object):
 
-	def __init__(self):
+	def __init__(self, points):
 		pass
 
 class PolyLineM(object):
@@ -239,7 +287,7 @@ def _configure_logging():
 	Configure settings for the `logging` module.
 	"""
 
-	logging.basicConfig(format="%(levelname)s %(funcName)s %(message)s")
+	logging.basicConfig(format="%(levelname)s: %(funcName)s: %(message)s")
 
 if __name__ == "__main__":
 	_configure_logging()
