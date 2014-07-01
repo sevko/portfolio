@@ -31,8 +31,81 @@ class Shape(object):
 	MULTI_POINT_M = 28
 	MULTI_PATCH = 31
 
-	def __init__(self, shape_type, points):
-		self.points = points
+class NullShape(object):
+
+	def __init__(self):
+		pass
+
+class Point(object):
+
+	def __init__(self, points):
+		self.x = points[0]
+		self.y = points[1]
+
+class MultiPoint(object):
+
+	def __init__(self, points):
+		self.bounding_box = BoundingBox(*points[1:5])
+		self.points = [6:]
+
+class PolyLine(object):
+
+	def __init__(self, points):
+		self.bounding_box = BoundingBox(*points[1:5])
+		self.parts = points[7:7 + points[5]]
+		self.points = points[7 + points[5]:]
+
+class Polygon(object):
+
+	def __init__(self, points):
+		self.bounding_box = BoundingBox(*points[1:5])
+		self.parts = points[7:7 + points[5]]
+		self.points = points[7 + points[5]:]
+
+class PointM(object):
+
+	def __init__(self):
+		pass
+
+class PolyLineM(object):
+
+	def __init__(self):
+		pass
+
+class PolygonM(object):
+
+	def __init__(self):
+		pass
+
+class MultiPointM(object):
+
+	def __init__(self):
+		pass
+
+class PointZ(object):
+
+	def __init__(self):
+		pass
+
+class PolyLineZ(object):
+
+	def __init__(self):
+		pass
+
+class PolygonZ(object):
+
+	def __init__(self):
+		pass
+
+class MultiPointZ(object):
+
+	def __init__(self):
+		pass
+
+class MultiPatch(object):
+
+	def __init__(self):
+		pass
 
 class Shapefile(object):
 	"""
