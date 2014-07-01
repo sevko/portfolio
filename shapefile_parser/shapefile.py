@@ -90,6 +90,7 @@ class Point(object):
 
 class MultiPoint(object):
 	"""
+	A Shapefile MultiPoint object.
 
 	Attributes:
 		bounding_box (BoundingBox): The MultiPoint's bounding box.
@@ -99,6 +100,48 @@ class MultiPoint(object):
 	def __init__(self, bounding_box, points):
 		self.bounding_box = bounding_box
 		self.points = points
+
+	def read_from_binary_string(self, bin_str):
+		"""
+		Recreate a `MultiPoint` instance from its compressed binary form.
+
+		Args:
+			bin_str (str): A bit-packed representation of a `MultiPoint`, as
+			written by `MultiPoint.write_to_binary_string()`.
+
+		Returns:
+			MultiPoint: A `MultiPoint` instance with its member values as read
+			from `bin_str`.
+		"""
+
+		bounding_box = BoundingBox(*struct.unpack("<4d", bin_str[4:4 + 4 * 8]))
+		bin_str = bin_str[4 + 4 * 8:]
+		num_points = struct.unpack("<i", bin_str[:4])
+		bin_str = bin_str[4:]
+		point_bin_strs = [bin_str[pt * 20:pt * 20 + 20] for pt in num_points]
+		points = [Point.read_from_binary_string(bin_str) for bin_str in
+			point_bin_strs]
+		return MultiPoint(bounding_box, points)
+
+	def write_to_binary_string(self):
+		"""
+		Convert a `MultiPoint` to its binary representation.
+
+		Returns:
+			str: `self` in the bit-packed binary format decsribed by the
+			Shapefile specification for `MultiPoint`.
+
+			Byte | Field | Type | Number | Endianness
+			0 | self.shape_type | Integer | 1 | Little
+			4 | self.bounding_box | Double | 4 | Little
+			36 | len(self.points) | Integer | 1 | Little
+			40 | self.points | Point | len(self.points) | Little
+		"""
+
+		return "%s%s" % struct.pack(
+				"<i<4d<i", self.shape_type,
+				*self.bounding_box.write_to_binary_string(), len(self.points)),
+			"".join([point.write_to_binary_string() for pt in self.points]))
 
 class PolyLine(object):
 
