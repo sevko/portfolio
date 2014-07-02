@@ -20,6 +20,12 @@ class Shape(object):
 	POINT = 1
 	MULTI_POINT = 8
 	POLYGON = 5
+	SHAPE_TYPES = {
+		Shape.NULL_SHAPE : NullShape,
+		Shape.POINT = Point,
+		Shape.MULTI_POINT = MultiPoint,
+		Shape.POLYGON = Polygon
+	}
 
 	def __init__(self, shape_type):
 		self.shape_type = shape_type
@@ -75,7 +81,7 @@ class Point(Shape):
 				`bin_str`.
 		"""
 
-		return Point(*struct.unpack("<i<2d", bin_str)[1:])
+		return Point(*struct.unpack("<2d", bin_str)[1:])
 
 	def to_binary(self):
 		"""
@@ -223,6 +229,7 @@ class Shapefile(Shape):
 		shape_type (int): Any of the constant instances in `Shape`.
 		length (int): The number of bytes in the file.
 		bounding_box (BoundingBox): The shapefile's bounds.
+		shapes (list of Shape): The `Shape`s contained in this `Shapefile`.
 	"""
 
 	def __init__(self, filename=None, length=None, shape_type=None,
@@ -257,6 +264,20 @@ class Shapefile(Shape):
 			shapefile.seek(32)
 			self.shape_type = read_and_unpack("<i", 4)[0]
 			self.bounding_box = BoundingBox(*read_and_unpack("<8d", 64))
+			self.shapes = []
+
+			def read_header_content_len():
+				shapefile.seek(4, 1)
+				return shapefile.read(4)
+
+			content_len_str = read_header_content_len()
+			while content_len_str:
+				content_len = struct.unpack("<i", content_len_str)[0] * 2
+				shape_type = struct.unpack("<i", shapefile.read(4))[0]
+				shape_bin_str = shapefile.read(content_len - 4)
+
+				self.shapes.append(
+					Shape.SHAPE_TYPES[shape_type].from_binary(shape_bin_str))
 
 	def write_to_file(self, path):
 		pass
@@ -271,8 +292,8 @@ class Shapefile(Shape):
 		Returns:
 			bool: True if the shapefile's filename satisfies the 8.3 filename
 			convention (the root is 8 characters in length, starts with
-			[a-Z0-9], and continues with [a-Z0-9_-]; False otherwise, and the
-			extension is 3 characters long).
+			[a-Z0-9], and continues with [a-Z0-9_-], and the
+			extension is 3 characters long); False otherwise.
 		"""
 
 		filename = path.split("/")[-1].split(".")
