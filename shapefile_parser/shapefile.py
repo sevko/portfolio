@@ -20,12 +20,6 @@ class Shape(object):
 	POINT = 1
 	MULTI_POINT = 8
 	POLYGON = 5
-	SHAPE_TYPES = {
-		Shape.NULL_SHAPE : NullShape,
-		Shape.POINT = Point,
-		Shape.MULTI_POINT = MultiPoint,
-		Shape.POLYGON = Polygon
-	}
 
 	def __init__(self, shape_type):
 		self.shape_type = shape_type
@@ -68,7 +62,8 @@ class Point(Shape):
 		self.x = x
 		self.y = y
 
-	def from_binary(self, bin_str):
+	@classmethod
+	def from_binary(cls, bin_str):
 		"""
 		Recreate a `Point` instance from its compressed binary form.
 
@@ -81,7 +76,7 @@ class Point(Shape):
 				`bin_str`.
 		"""
 
-		return Point(*struct.unpack("<2d", bin_str)[1:])
+		return Point(*struct.unpack("<2d", bin_str))
 
 	def to_binary(self):
 		"""
@@ -113,7 +108,8 @@ class MultiPoint(Shape):
 		self.bounding_box = bounding_box
 		self.points = points
 
-	def from_binary(self, bin_str):
+	@classmethod
+	def from_binary(cls, bin_str):
 		"""
 		Recreate a `MultiPoint` instance from its compressed binary form.
 
@@ -172,7 +168,8 @@ class Polygon(Shape):
 		self.parts = parts
 		self.points = points
 
-	def from_binary(self, bin_str):
+	@classmethod
+	def from_binary(cls, bin_str):
 		"""
 		Recreate a 'Polygon' instance from its compressed binary form.
 
@@ -185,17 +182,20 @@ class Polygon(Shape):
 			`bin_str`.
 		"""
 
-		self.bounding_box = bounding_box(
-			*struct.unpack("<4d", bin_str[4:4 + 4 * 8]))
+		bounding_box = BoundingBox(
+			*struct.unpack("<4d", bin_str[:4 * 8]))
 
-		num_parts = struct.unpack("<i", bin_str[36:40])
-		num_points = struct.unpack("<i", bin_str[40:44])
-		self.parts = struct.unpack("<%di" % num_parts,
-			bin_str[44:44 + 4 * num_parts])
+		num_parts = struct.unpack("<i", bin_str[32:36])[0]
+		num_points = struct.unpack("<i", bin_str[36:40])[0]
+		parts = struct.unpack("<%di" % num_parts,
+			bin_str[40:40 + 4 * num_parts])
 
-		bin_str = bin_str[44 + 4 * num_parts:]
-		point_bin_strs = [bin_str[pt * 20:pt * 20 + 20] for pt in num_points]
-		self.points = [Point.from_binary(binstr) for binstr in point_bin_strs]
+		bin_str = bin_str[40 + 4 * num_parts:]
+		point_bin_strs = [bin_str[pt * 16:pt * 16 + 16] for pt in
+			xrange(num_points)]
+		points = [Point.from_binary(binstr) for binstr in point_bin_strs]
+
+		return Polygon(bounding_box, parts, points)
 
 	def to_binary(self):
 		"""
@@ -270,14 +270,22 @@ class Shapefile(Shape):
 				shapefile.seek(4, 1)
 				return shapefile.read(4)
 
+			SHAPE_TYPES = {
+				Shape.NULL_SHAPE : NullShape,
+				Shape.POINT : Point,
+				Shape.MULTI_POINT : MultiPoint,
+				Shape.POLYGON : Polygon
+			}
+
 			content_len_str = read_header_content_len()
 			while content_len_str:
-				content_len = struct.unpack("<i", content_len_str)[0] * 2
+				content_len = struct.unpack(">i", content_len_str)[0] * 2
 				shape_type = struct.unpack("<i", shapefile.read(4))[0]
 				shape_bin_str = shapefile.read(content_len - 4)
 
 				self.shapes.append(
-					Shape.SHAPE_TYPES[shape_type].from_binary(shape_bin_str))
+					SHAPE_TYPES[shape_type].from_binary(shape_bin_str))
+				content_len_str = read_header_content_len()
 
 	def write_to_file(self, path):
 		pass
