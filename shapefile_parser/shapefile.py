@@ -93,6 +93,7 @@ class MultiPoint(object):
 	A Shapefile MultiPoint object.
 
 	Attributes:
+		shape_type (int): See `Shape.MULTI_POINT`.
 		bounding_box (BoundingBox): The MultiPoint's bounding box.
 		points (list of Point): The constituent points.
 	"""
@@ -145,6 +146,13 @@ class MultiPoint(object):
 class PolyLine(object):
 	"""
 	A Shapefile PolyLine object.
+
+	Attributes:
+		shape_type (int): See Shape.POLY_LINE.
+		bounding_box (BoundingBox): The PolyLine's bounds.
+		parts (list of ints): The indexes of the first Point of each "part" of
+			the PolyLine in self.points.
+		points (list of Point): The constituent points of the PolyLine.
 	"""
 
 	def __init__(self, bounding_box, parts, points):
@@ -185,6 +193,7 @@ class PolyLine(object):
 			str: `self` in the bit-packed binary format described by the
 			Shapefile specification for `PolyLine`.
 
+			Byte | Field | Type | Number | Endianness
 			0 | Shape | Type | Integer | 1 | Little
 			4 | Box | Double | 4 | Little
 			36 | NumParts | Integer | 1 | Little
@@ -194,9 +203,10 @@ class PolyLine(object):
 		"""
 
 		return "%s%s" % (struct.pack(
-			"<i<4d<3i<%di" % len(self.parts), self.shape_type,
-			self.bounding_box.points, len(self.parts), len(self.points),
-			self.parts), "".join([pt.to_binary() for pt in self.points]))
+				"<i<4d<3i<%di" % len(self.parts), self.shape_type,
+				self.bounding_box.points, len(self.parts), len(self.points),
+				self.parts),
+			"".join([pt.to_binary() for pt in self.points]))
 
 class Polygon(object):
 	"""
@@ -229,6 +239,7 @@ class Polygon(object):
 			str: `self` in the bit-packed binary format described by the
 			Shapefile specification for `Polygon`.
 
+			Byte | Field | Type | Number | Endianness
 			0 | Shape | Type | Integer | 1 | Little
 			4 | Box | Double | 4 | Little
 			36 | NumParts | Integer | 1 | Little
@@ -270,6 +281,7 @@ class PointM(object):
 			str: `self` in the bit-packed binary format described by the
 			Shapefile specification for `PointM`.
 
+			Byte | Field | Type | Number | Endianness
 			0 | Shape | Type | Integer | 1 | Little
 			4 | X | Double | 1 | Little
 			12 | Y | Double | 1 | Little
@@ -309,6 +321,7 @@ class MultiPointM(object):
 			str: `self` in the bit-packed binary format described by the
 			Shapefile specification for `MultiPointM`.
 
+			Byte | Field | Type | Number | Endianness
 			0 | Shape | Type | Integer | 1 | Little
 			4 | Box | Double | 4 | Little
 			36 | NumPoints | Integer | 1 | Little
@@ -351,6 +364,7 @@ class PolyLineM(object):
 			str: `self` in the bit-packed binary format described by the
 			Shapefile specification for `PolyLineM`.
 
+			Byte | Field | Type | Number | Endianness
 			0 | Shape | Type | Integer | 1 | Little
 			4 | Box | Double | 4 | Little
 			36 | NumParts | Integer | 1 | Little
@@ -395,6 +409,7 @@ class PolygonM(object):
 			str: `self` in the bit-packed binary format described by the
 			Shapefile specification for `PolygonM`.
 
+			Byte | Field | Type | Number | Endianness
 			0 | Shape | Type | Integer | 1 | Little
 			4 | Box | Double | 4 | Little
 			36 | NumParts | Integer | 1 | Little
@@ -438,6 +453,7 @@ class PointZ(object):
 			str: `self` in the bit-packed binary format described by the
 			Shapefile specification for `PointZ`.
 
+			Byte | Field | Type | Number | Endianness
 			0 | Shape | Type | Integer | 1 | Little
 			4 | X | Double | 1 | Little
 			12 | Y | Double | 1 | Little
@@ -478,6 +494,7 @@ class MultiPointZ(object):
 			str: `self` in the bit-packed binary format described by the
 			Shapefile specification for `MultiPointZ`.
 
+			Byte | Field | Type | Number | Endianness
 			0 | Shape | Type | Integer | 1 | Little
 			4 | Box | Double | 4 | Little
 			36 | NumPoints | Integer | 1 | Little
@@ -523,6 +540,7 @@ class PolyLineZ(object):
 			str: `self` in the bit-packed binary format described by the
 			Shapefile specification for `PolyLineZ`.
 
+			Byte | Field | Type | Number | Endianness
 			0 | Shape | Type | Integer | 1 | Little
 			4 | Box | Double | 4 | Little
 			36 | NumParts | Integer | 1 | Little
@@ -570,6 +588,7 @@ class PolygonZ(object):
 			str: `self` in the bit-packed binary format described by the
 			Shapefile specification for `PolygonZ`.
 
+			Byte | Field | Type | Number | Endianness
 			0 | Shape | Type | Integer | 1 | Little
 			4 | Box | Double | 4 | Little
 			36 | NumParts | Integer | 1 | Little
@@ -617,6 +636,7 @@ class MultiPatch(object):
 			str: `self` in the bit-packed binary format described by the
 			Shapefile specification for `MultiPatch`.
 
+			Byte | Field | Type | Number | Endianness
 			0 | Shape | Type | Integer | 1 | Little
 			4 | Box | Double | 4 | Little
 			36 | NumParts | Integer | 1 | Little
