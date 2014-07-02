@@ -143,78 +143,22 @@ class MultiPoint(object):
 				*self.bounding_box.points, len(self.points)),
 			"".join([point.to_binary() for pt in self.points]))
 
-class PolyLine(object):
+class Polygon(object):
 	"""
-	A Shapefile PolyLine object.
+	A Shapefile Polygon object.
 
 	Attributes:
 		shape_type (int): See Shape.POLY_LINE.
-		bounding_box (BoundingBox): The PolyLine's bounds.
+		bounding_box (BoundingBox): The Polygon's bounds.
 		parts (list of ints): The indexes of the first Point of each "part" of
-			the PolyLine in self.points.
-		points (list of Point): The constituent points of the PolyLine.
+			the Polygon in self.points.
+		points (list of Point): The constituent points of the Polygon.
 	"""
 
 	def __init__(self, bounding_box, parts, points):
 		self.bounding_box = bounding_box
 		self.parts = parts
 		self.points = points
-
-	def from_binary(self, bin_str):
-		"""
-		Recreate a 'PolyLine' instance from its compressed binary form.
-
-		Args:
-			bin_str (str): A bit-packed representation of a `PolyLine`, as
-				written by `PolyLine.to_binary()`.
-
-		Returns:
-			PolyLine: A `PolyLine` instance with its member values as read from
-			`bin_str`.
-		"""
-
-		self.bounding_box = bounding_box(
-			*struct.unpack("<4d", bin_str[4:4 + 4 * 8]))
-
-		num_parts = struct.unpack("<i", bin_str[36:40])
-		num_points = struct.unpack("<i", bin_str[40:44])
-		self.parts = struct.unpack("<%di" % num_parts,
-			bin_str[44:44 + 4 * num_parts])
-
-		bin_str = bin_str[44 + 4 * num_parts:]
-		point_bin_strs = [bin_str[pt * 20:pt * 20 + 20] for pt in num_points]
-		self.points = [Point.from_binary(binstr) for binstr in point_bin_strs]
-
-	def to_binary(self):
-		"""
-		Convert a `PolyLine` to its binary representation.
-
-		Returns:
-			str: `self` in the bit-packed binary format described by the
-			Shapefile specification for `PolyLine`.
-
-			Byte | Field | Type | Number | Endianness
-			0 | Shape | Type | Integer | 1 | Little
-			4 | Box | Double | 4 | Little
-			36 | NumParts | Integer | 1 | Little
-			40 | NumPoints | Integer | 1 | Little
-			44 | Parts | Integer | NumParts | Little
-			X | Points | Point | NumPoints | Little
-		"""
-
-		return "%s%s" % (struct.pack(
-				"<i<4d<3i<%di" % len(self.parts), self.shape_type,
-				self.bounding_box.points, len(self.parts), len(self.points),
-				self.parts),
-			"".join([pt.to_binary() for pt in self.points]))
-
-class Polygon(object):
-	"""
-	A Shapefile Polygon object.
-	"""
-
-	def __init__(self, ):
-		pass
 
 	def from_binary(self, bin_str):
 		"""
@@ -229,7 +173,17 @@ class Polygon(object):
 			`bin_str`.
 		"""
 
-		pass
+		self.bounding_box = bounding_box(
+			*struct.unpack("<4d", bin_str[4:4 + 4 * 8]))
+
+		num_parts = struct.unpack("<i", bin_str[36:40])
+		num_points = struct.unpack("<i", bin_str[40:44])
+		self.parts = struct.unpack("<%di" % num_parts,
+			bin_str[44:44 + 4 * num_parts])
+
+		bin_str = bin_str[44 + 4 * num_parts:]
+		point_bin_strs = [bin_str[pt * 20:pt * 20 + 20] for pt in num_points]
+		self.points = [Point.from_binary(binstr) for binstr in point_bin_strs]
 
 	def to_binary(self):
 		"""
@@ -248,411 +202,11 @@ class Polygon(object):
 			X | Points | Point | NumPoints | Little
 		"""
 
-		pass
-
-class PointM(object):
-	"""
-	A Shapefile PointM object.
-	"""
-
-	def __init__(self, ):
-		pass
-
-	def from_binary(self, bin_str):
-		"""
-		Recreate a 'PointM' instance from its compressed binary form.
-
-		Args:
-			bin_str (str): A bit-packed representation of a `PointM`, as
-				written by `PointM.to_binary()`.
-
-		Returns:
-			PointM: A `PointM` instance with its member values as read from
-			`bin_str`.
-		"""
-
-		pass
-
-	def to_binary(self):
-		"""
-		Convert a `PointM` to its binary representation.
-
-		Returns:
-			str: `self` in the bit-packed binary format described by the
-			Shapefile specification for `PointM`.
-
-			Byte | Field | Type | Number | Endianness
-			0 | Shape | Type | Integer | 1 | Little
-			4 | X | Double | 1 | Little
-			12 | Y | Double | 1 | Little
-			20 | M | Double | 1 | Little
-		"""
-
-		pass
-
-class MultiPointM(object):
-	"""
-	A Shapefile MultiPointM object.
-	"""
-
-	def __init__(self, ):
-		pass
-
-	def from_binary(self, bin_str):
-		"""
-		Recreate a 'MultiPointM' instance from its compressed binary form.
-
-		Args:
-			bin_str (str): A bit-packed representation of a `MultiPointM`, as
-				written by `MultiPointM.to_binary()`.
-
-		Returns:
-			MultiPointM: A `MultiPointM` instance with its member values as
-			read from `bin_str`.
-		"""
-
-		pass
-
-	def to_binary(self):
-		"""
-		Convert a `MultiPointM` to its binary representation.
-
-		Returns:
-			str: `self` in the bit-packed binary format described by the
-			Shapefile specification for `MultiPointM`.
-
-			Byte | Field | Type | Number | Endianness
-			0 | Shape | Type | Integer | 1 | Little
-			4 | Box | Double | 4 | Little
-			36 | NumPoints | Integer | 1 | Little
-			40 | Points | Point | NumPoints | Little
-			X* | Mmin | Double | 1 | Little
-			X+8* | Mmax | Double | 1 | Little
-			X+16* | Marray | Double | NumPoints | Little
-		"""
-
-		pass
-
-class PolyLineM(object):
-	"""
-	A Shapefile PolyLineM object.
-	"""
-
-	def __init__(self, ):
-		pass
-
-	def from_binary(self, bin_str):
-		"""
-		Recreate a 'PolyLineM' instance from its compressed binary form.
-
-		Args:
-			bin_str (str): A bit-packed representation of a `PolyLineM`, as
-			written by `PolyLineM.to_binary()`.
-
-		Returns:
-			PolyLineM: A `PolyLineM` instance with its member values as read from
-			`bin_str`.
-		"""
-
-		pass
-
-	def to_binary(self):
-		"""
-		Convert a `PolyLineM` to its binary representation.
-
-		Returns:
-			str: `self` in the bit-packed binary format described by the
-			Shapefile specification for `PolyLineM`.
-
-			Byte | Field | Type | Number | Endianness
-			0 | Shape | Type | Integer | 1 | Little
-			4 | Box | Double | 4 | Little
-			36 | NumParts | Integer | 1 | Little
-			40 | NumPoints | Integer | 1 | Little
-			44 | Parts | Integer | NumParts | Little
-			X | Points | Point | NumPoints | Little
-			Y* | Mmin | Double | 1 | Little
-			Y+8* | Mmax | Double | 1 | Little
-			Y+16* | Marray | Double | NumPoints | Little
-		"""
-
-		pass
-
-class PolygonM(object):
-	"""
-	A Shapefile PolygonM object.
-	"""
-
-	def __init__(self, ):
-		pass
-
-	def from_binary(self, bin_str):
-		"""
-		Recreate a 'PolygonM' instance from its compressed binary form.
-
-		Args:
-			bin_str (str): A bit-packed representation of a `PolygonM`, as
-				written by `PolygonM.to_binary()`.
-
-		Returns:
-			PolygonM: A `PolygonM` instance with its member values as read from
-			`bin_str`.
-		"""
-
-		pass
-
-	def to_binary(self):
-		"""
-		Convert a `PolygonM` to its binary representation.
-
-		Returns:
-			str: `self` in the bit-packed binary format described by the
-			Shapefile specification for `PolygonM`.
-
-			Byte | Field | Type | Number | Endianness
-			0 | Shape | Type | Integer | 1 | Little
-			4 | Box | Double | 4 | Little
-			36 | NumParts | Integer | 1 | Little
-			40 | NumPoints | Integer | 1 | Little
-			44 | Parts | Integer | NumParts | Little
-			X | Points | Point | NumPoints | Little
-			Y* | Mmin | Double | 1 | Little
-			Y+8* | Mmax | Double | 1 | Little
-			Y+16* | Marray | Double | NumPoints | Little
-		"""
-
-		pass
-
-class PointZ(object):
-	"""
-	A Shapefile PointZ object.
-	"""
-
-	def __init__(self, ):
-		pass
-
-	def from_binary(self, bin_str):
-		"""
-		Recreate a 'PointZ' instance from its compressed binary form.
-
-		Args:
-			bin_str (str): A bit-packed representation of a `PointZ`, as
-				written by `PointZ.to_binary()`.
-
-		Returns:
-				PointZ: A `PointZ` instance with its member values as read from `bin_str`.
-		"""
-
-		pass
-
-	def to_binary(self):
-		"""
-		Convert a `PointZ` to its binary representation.
-
-		Returns:
-			str: `self` in the bit-packed binary format described by the
-			Shapefile specification for `PointZ`.
-
-			Byte | Field | Type | Number | Endianness
-			0 | Shape | Type | Integer | 1 | Little
-			4 | X | Double | 1 | Little
-			12 | Y | Double | 1 | Little
-			20 | Z | Double | 1 | Little
-			28 | Measure | Double | 1 | Little
-		"""
-
-		pass
-
-class MultiPointZ(object):
-	"""
-	A Shapefile MultiPointZ object.
-	"""
-
-	def __init__(self, ):
-		pass
-
-	def from_binary(self, bin_str):
-		"""
-		Recreate a 'MultiPointZ' instance from its compressed binary form.
-
-		Args:
-			bin_str (str): A bit-packed representation of a `MultiPointZ`, as
-				written by `MultiPointZ.to_binary()`.
-
-		Returns:
-			MultiPointZ: A `MultiPointZ` instance with its member values as
-			read from `bin_str`.
-		"""
-
-		pass
-
-	def to_binary(self):
-		"""
-		Convert a `MultiPointZ` to its binary representation.
-
-		Returns:
-			str: `self` in the bit-packed binary format described by the
-			Shapefile specification for `MultiPointZ`.
-
-			Byte | Field | Type | Number | Endianness
-			0 | Shape | Type | Integer | 1 | Little
-			4 | Box | Double | 4 | Little
-			36 | NumPoints | Integer | 1 | Little
-			40 | Points | Point | NumPoints | Little
-			X | Zmin | Double | 1 | Little
-			X+8 | Zmax | Double | 1 | Little
-			X+16 | Zarray | Double | NumPoints | Little
-			Y* | Mmin | Double | 1 | Little
-			Y+8* | Mmax | Double | 1 | Little
-			Y+16* | Marray | Double | NumPoints | Little
-		"""
-
-		pass
-
-class PolyLineZ(object):
-	"""
-	A Shapefile PolyLineZ object.
-	"""
-
-	def __init__(self, ):
-		pass
-
-	def from_binary(self, bin_str):
-		"""
-		Recreate a 'PolyLineZ' instance from its compressed binary form.
-
-		Args:
-			bin_str (str): A bit-packed representation of a `PolyLineZ`, as
-				written by `PolyLineZ.to_binary()`.
-
-		Returns:
-			PolyLineZ: A `PolyLineZ` instance with its member values as read
-			from `bin_str`.
-		"""
-
-		pass
-
-	def to_binary(self):
-		"""
-		Convert a `PolyLineZ` to its binary representation.
-
-		Returns:
-			str: `self` in the bit-packed binary format described by the
-			Shapefile specification for `PolyLineZ`.
-
-			Byte | Field | Type | Number | Endianness
-			0 | Shape | Type | Integer | 1 | Little
-			4 | Box | Double | 4 | Little
-			36 | NumParts | Integer | 1 | Little
-			40 | NumPoints | Integer | 1 | Little
-			44 | Parts | Integer | NumParts | Little
-			X | Points | Point | NumPoints | Little
-			Y | Zmin | Double | 1 | Little
-			Y+8 | Zmax | Double | 1 | Little
-			Y+16 | Zarray | Double | NumPoints | Little
-			Z* | Mmin | Double | 1 | Little
-			Z+8* | Mmax | Double | 1 | Little
-			Z+16* | Marray | Double | NumPoints | Little
-		"""
-
-		pass
-
-class PolygonZ(object):
-	"""
-	A Shapefile PolygonZ object.
-	"""
-
-	def __init__(self, ):
-		pass
-
-	def from_binary(self, bin_str):
-		"""
-		Recreate a 'PolygonZ' instance from its compressed binary form.
-
-		Args:
-			bin_str (str): A bit-packed representation of a `PolygonZ`, as
-				written by `PolygonZ.to_binary()`.
-
-		Returns:
-			PolygonZ: A `PolygonZ` instance with its member values as read from
-			`bin_str`.
-		"""
-
-		pass
-
-	def to_binary(self):
-		"""
-		Convert a `PolygonZ` to its binary representation.
-
-		Returns:
-			str: `self` in the bit-packed binary format described by the
-			Shapefile specification for `PolygonZ`.
-
-			Byte | Field | Type | Number | Endianness
-			0 | Shape | Type | Integer | 1 | Little
-			4 | Box | Double | 4 | Little
-			36 | NumParts | Integer | 1 | Little
-			40 | NumPoints | Integer | 1 | Little
-			44 | Parts | Integer | NumParts | Little
-			X | Points | Point | NumPoints | Little
-			Y | Zmin | Double | 1 | Little
-			Y+8 | Zmax | Double | 1 | Little
-			Y+16 | Zarray | Double | NumPoints | Little
-			Z* | Mmin | Double | 1 | Little
-			Z+8* | Mmax | Double | 1 | Little
-			Z+16* | Marray | Double | NumPoints | Little
-		"""
-
-		pass
-
-class MultiPatch(object):
-	"""
-	A Shapefile MultiPatch object.
-	"""
-
-	def __init__(self, ):
-		pass
-
-	def from_binary(self, bin_str):
-		"""
-		Recreate a 'MultiPatch' instance from its compressed binary form.
-
-		Args:
-			bin_str (str): A bit-packed representation of a `MultiPatch`, as
-				written by `MultiPatch.to_binary()`.
-
-		Returns:
-			MultiPatch: A `MultiPatch` instance with its member values as read
-			from `bin_str`.
-		"""
-
-		pass
-
-	def to_binary(self):
-		"""
-		Convert a `MultiPatch` to its binary representation.
-
-		Returns:
-			str: `self` in the bit-packed binary format described by the
-			Shapefile specification for `MultiPatch`.
-
-			Byte | Field | Type | Number | Endianness
-			0 | Shape | Type | Integer | 1 | Little
-			4 | Box | Double | 4 | Little
-			36 | NumParts | Integer | 1 | Little
-			40 | NumPoints | Integer | 1 | Little
-			44 | Parts | Integer | NumParts | Little
-			W | PartTypes | Integer | NumParts | Little
-			X | Points | Point | NumPoints | Little
-			Y | Zmin | Double | 1 | Little
-			Y+8 | Zmax | Double | 1 | Little
-			Y+16 | Zarray | Double | NumPoints | Little
-			Z* | Mmin | Double | 1 | Little
-			Z+8* | Mmax | Double | 1 | Little
-			Z+16* | Marray | Double | NumPoints | Little
-		"""
-
-		pass
+		return "%s%s" % (struct.pack(
+				"<i<4d<3i<%di" % len(self.parts), self.shape_type,
+				self.bounding_box.points, len(self.parts), len(self.points),
+				self.parts),
+			"".join([pt.to_binary() for pt in self.points]))
 
 class Shapefile(object):
 	"""
