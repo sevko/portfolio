@@ -138,9 +138,10 @@ class MultiPoint(object):
 			40 | self.points | Point | len(self.points) | Little
 		"""
 
-		return "%s%s" % struct.pack(
-				"<i<4d<i", self.shape_type,
-				*self.bounding_box.points, len(self.points)),
+		return "%s%s%s%s" % (
+			struct.pack("<i", self.shape_type),
+			self.bounding_box.to_binary(),
+			struct.pack("<i", len(self.points)),
 			"".join([point.to_binary() for pt in self.points]))
 
 class Polygon(object):
@@ -203,9 +204,10 @@ class Polygon(object):
 		"""
 
 		return "%s%s" % (struct.pack(
-				"<i<4d<3i<%di" % len(self.parts), self.shape_type,
-				self.bounding_box.points, len(self.parts), len(self.points),
-				self.parts),
+				struct.pack("<i", self.shape_type),
+				self.bounding_box.to_binary(),
+				"<2i<%di" % len(self.parts), len(self.parts), len(self.points),
+				*self.parts),
 			"".join([pt.to_binary() for pt in self.points]))
 
 class Shapefile(object):
@@ -213,13 +215,13 @@ class Shapefile(object):
 	A Shapefile representation.
 
 	Attributes:
-		length (int): The number of bytes in the file.
 		shape_type (int): Any of the constant instances in `Shape`.
+		length (int): The number of bytes in the file.
 		bounding_box (BoundingBox): The shapefile's bounds.
 	"""
 
 	def __init__(self, filename=None, length=None, shape_type=None,
-			bounding_box=None):
+			bounding_box=None, shapes=None):
 		self.length = length
 		self.shape_type = shape_type
 		self.bounding_box = bounding_box
@@ -251,8 +253,6 @@ class Shapefile(object):
 			self.shape_type = read_and_unpack("<i", 4)[0]
 			self.bounding_box = BoundingBox(*read_and_unpack("<8d", 64))
 
-			shapefile.seek(4, 1)
-
 	def write_to_file(self, path):
 		pass
 
@@ -276,6 +276,21 @@ class Shapefile(object):
 			and filename[1] == "shp")
 
 class BoundingBox(object):
+	"""
+	A Shapefile bounding box, which specifies the goemetric bounds for
+	`Shape`s.
+
+	Attributes:
+		min_x (double): The minimum x-coordinate in the parent `Shape.`
+		max_x (double): The maximum x-coordinate in the parent `Shape.`
+		min_y (double): The minimum y-coordinate in the parent `Shape.`
+		max_y (double): The maximum y-coordinate in the parent `Shape.`
+		min_m (double): The minimum m-coordinate in the parent `Shape.`
+		max_m (double): The maximum m-coordinate in the parent `Shape.`
+		min_z (double): The minimum z-coordinate in the parent `Shape.`
+		max_z (double): The maximum z-coordinate in the parent `Shape.`
+	"""
+
 	def __init__(self, min_x, max_x, min_y, max_y, min_m=None, max_m=None,
 			min_z=None, max_z=None):
 		self.min_x = min_x
@@ -286,6 +301,31 @@ class BoundingBox(object):
 		self.max_m = max_m
 		self.min_z = min_z
 		self.max_z = max_z
+
+	def to_binary(self):
+		"""
+		Convert `self` to its binary form.
+
+		Return:
+			A bit-packed binary string describing this `BoundingBox` as per the
+			Shapefile specification.
+
+			Byte | Field | Type
+			0 | self.min_x | double
+			8 | self.min_y | double
+			16 | self.max_x | double
+			24 | self.max_y | double
+			32 | self.min_z | double
+			40 | self.max_z | double
+			48 | self.min_m | double
+			56 | self.max_m | double
+		"""
+
+		bin_str = struct.pack("<4d", min_x, min_y, max_x, max_y)
+		for attribute in [self.min_z, self.max_z, self.min_m, self.max_m]:
+			if attribute:
+				bin_str += struct.pack("<d", attribute)
+		return bin_str
 
 def _handleCommandLineArgs():
 	"""
