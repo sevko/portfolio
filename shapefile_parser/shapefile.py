@@ -386,15 +386,15 @@ def _handleCommandLineArgs():
 def _unit_tests():
 	shapefile = Shapefile("test/test.shp")
 	accepted_shapefile = {
-		"length" : 53139272,
-		"shape_type" : 5,
+		"length" : 22444,
+		"shape_type" : 1,
 	}
 
 	accepted_bounding_box = {
-		"min_x" : -159.79790283200012,
-		"max_x" : -46.63492012129996,
-		"min_y" : 178.14644409200054,
-		"max_y" : 69.03239737290023,
+		"min_x" : 13.564105429550633,
+		"max_x" : 50.9698128,
+		"min_y" : 13.9785217,
+		"max_y" : 51.1843726,
 		"min_z" : 0.0,
 		"max_z" : 0.0,
 		"min_m" : 0.0,
@@ -403,7 +403,6 @@ def _unit_tests():
 
 	for member in accepted_shapefile:
 		assert getattr(shapefile, member) == accepted_shapefile[member]
-
 
 	for member in accepted_bounding_box:
 		assert (getattr(shapefile.bounding_box, member) ==
