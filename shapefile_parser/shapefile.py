@@ -13,47 +13,52 @@ class Shape(object):
 	Contains Shapefile shape types.
 
 	Attributes:
-		points (list of doubles) : All of the points belonging to this shape.
+		shape_type (int) : Any of the class constants defined in this class.
 	"""
 
 	NULL_SHAPE = 0
 	POINT = 1
-	POLY_LINE = 3
-	POLYGON = 5
 	MULTI_POINT = 8
-	POINT_Z = 11
-	POLY_LINE_Z = 13
-	POLYGON_Z = 15
-	MULTI_POINT_Z = 18
-	POINT_M = 21
-	POLY_LINE_M = 23
-	POLYGON_M = 25
-	MULTI_POINT_M = 28
-	MULTI_PATCH = 31
+	POLYGON = 5
 
-class NullShape(object):
+	def __init__(self, shape_type):
+		self.shape_type = shape_type
+
+class NullShape(Shape):
 	"""
 	A Shapefile Null Shape.
-
-	Attributes:
-		shape_type (int): See `Shape.NULL_SHAPE`.
 	"""
 
 	def __init__(self):
-		self.shape_type = Shape.NULL_SHAPE
+		super(NullShape, self).__init__(Shape.NULL_SHAPE)
 
-class Point(object):
+	def to_binary():
+		"""
+		Convert a `NullShape` to its binary representation.
+
+		Returns:
+			str: `self` in the bit-packed binary format described by the
+			Shapefile specification for `NullShape`:
+
+			Byte | Field | Type | Number | Endianness
+			0 | `self.shape_type`  | Integer | 1 | Little
+			4 | `self.x` | Double | 1 | Little
+			12 | `self.y` | Double | 1 | Little
+		"""
+
+		return struct.pack("<i", self.shape_type)
+
+class Point(Shape):
 	"""
 	A Shapefile Point object.
 
 	Attributes:
-		shape_type (int) : See `Shape.POINT`.
 		x (double): The point's x-coordinate.
 		y (double): The point's y-coordinate.
 	"""
 
 	def __init__(self, x, y):
-		self.shape_type = Shape.POINT
+		super(Point, self).__init__(Shape.POINT)
 		self.x = x
 		self.y = y
 
@@ -88,17 +93,17 @@ class Point(object):
 
 		return struct.pack("<i<2d", self.shape_type, self.x, self.y)
 
-class MultiPoint(object):
+class MultiPoint(Shape):
 	"""
 	A Shapefile MultiPoint object.
 
 	Attributes:
-		shape_type (int): See `Shape.MULTI_POINT`.
 		bounding_box (BoundingBox): The MultiPoint's bounding box.
 		points (list of Point): The constituent points.
 	"""
 
 	def __init__(self, bounding_box, points):
+		super(MultiPoint, self).__init__(Shape.MULTI_POINT)
 		self.bounding_box = bounding_box
 		self.points = points
 
@@ -144,12 +149,11 @@ class MultiPoint(object):
 			struct.pack("<i", len(self.points)),
 			"".join([point.to_binary() for pt in self.points]))
 
-class Polygon(object):
+class Polygon(Shape):
 	"""
 	A Shapefile Polygon object.
 
 	Attributes:
-		shape_type (int): See Shape.POLY_LINE.
 		bounding_box (BoundingBox): The Polygon's bounds.
 		parts (list of ints): The indexes of the first Point of each "part" of
 			the Polygon in self.points.
@@ -157,6 +161,7 @@ class Polygon(object):
 	"""
 
 	def __init__(self, bounding_box, parts, points):
+		super(Polygon, self).__init__(Shape.POLYGON)
 		self.bounding_box = bounding_box
 		self.parts = parts
 		self.points = points
@@ -210,7 +215,7 @@ class Polygon(object):
 				*self.parts),
 			"".join([pt.to_binary() for pt in self.points]))
 
-class Shapefile(object):
+class Shapefile(Shape):
 	"""
 	A Shapefile representation.
 
@@ -275,7 +280,7 @@ class Shapefile(object):
 			re.compile("^[a-zA-Z0-9][a-zA-Z0-9_-]{7}$").match(filename[0])
 			and filename[1] == "shp")
 
-class BoundingBox(object):
+class BoundingBox(Shape):
 	"""
 	A Shapefile bounding box, which specifies the goemetric bounds for
 	`Shape`s.
