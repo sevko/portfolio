@@ -57,13 +57,13 @@ class Point(object):
 		self.x = x
 		self.y = y
 
-	def read_from_binary_string(self, bin_str):
+	def from_binary(self, bin_str):
 		"""
 		Recreate a `Point` instance from its compressed binary form.
 
 		Args:
 			bin_str (str) : A bit-packed representation of a `Point`, as
-				written by `Point.write_to_binary_string()`.
+				written by `Point.to_binary()`.
 
 		Returns:
 			Point: A `Point` instance with member values as read from
@@ -72,7 +72,7 @@ class Point(object):
 
 		return Point(*struct.unpack("<i<2d", bin_str)[1:])
 
-	def write_to_binary_string(self):
+	def to_binary(self):
 		"""
 		Convert a `Point` to its binary representation.
 
@@ -101,13 +101,13 @@ class MultiPoint(object):
 		self.bounding_box = bounding_box
 		self.points = points
 
-	def read_from_binary_string(self, bin_str):
+	def from_binary(self, bin_str):
 		"""
 		Recreate a `MultiPoint` instance from its compressed binary form.
 
 		Args:
 			bin_str (str): A bit-packed representation of a `MultiPoint`, as
-			written by `MultiPoint.write_to_binary_string()`.
+			written by `MultiPoint.to_binary()`.
 
 		Returns:
 			MultiPoint: A `MultiPoint` instance with its member values as read
@@ -119,11 +119,10 @@ class MultiPoint(object):
 		num_points = struct.unpack("<i", bin_str[:4])
 		bin_str = bin_str[4:]
 		point_bin_strs = [bin_str[pt * 20:pt * 20 + 20] for pt in num_points]
-		points = [Point.read_from_binary_string(bin_str) for bin_str in
-			point_bin_strs]
+		points = [Point.from_binary(bin_str) for bin_str in point_bin_strs]
 		return MultiPoint(bounding_box, points)
 
-	def write_to_binary_string(self):
+	def to_binary(self):
 		"""
 		Convert a `MultiPoint` to its binary representation.
 
@@ -140,32 +139,45 @@ class MultiPoint(object):
 
 		return "%s%s" % struct.pack(
 				"<i<4d<i", self.shape_type,
-				*self.bounding_box.write_to_binary_string(), len(self.points)),
-			"".join([point.write_to_binary_string() for pt in self.points]))
+				*self.bounding_box.points, len(self.points)),
+			"".join([point.to_binary() for pt in self.points]))
 
 class PolyLine(object):
 	"""
 	A Shapefile PolyLine object.
 	"""
 
-	def __init__(self, ):
+	def __init__(self, bounding_box, parts, points):
+		self.bounding_box = bounding_box
+		self.parts = parts
+		self.points = points
 
-	def read_from_binary_string(self, bin_str):
+	def from_binary(self, bin_str):
 		"""
 		Recreate a 'PolyLine' instance from its compressed binary form.
 
 		Args:
 			bin_str (str): A bit-packed representation of a `PolyLine`, as
-				written by `PolyLine.write_to_binary_string()`.
+				written by `PolyLine.to_binary()`.
 
 		Returns:
 			PolyLine: A `PolyLine` instance with its member values as read from
 			`bin_str`.
 		"""
 
-		pass
+		self.bounding_box = bounding_box(
+			*struct.unpack("<4d", bin_str[4:4 + 4 * 8]))
 
-	def write_to_binary_string(self):
+		num_parts = struct.unpack("<i", bin_str[36:40])
+		num_points = struct.unpack("<i", bin_str[40:44])
+		self.parts = struct.unpack("<%di" % num_parts,
+			bin_str[44:44 + 4 * num_parts])
+
+		bin_str = bin_str[44 + 4 * num_parts:]
+		point_bin_strs = [bin_str[pt * 20:pt * 20 + 20] for pt in num_points]
+		self.points = [Point.from_binary(binstr) for binstr in point_bin_strs]
+
+	def to_binary(self):
 		"""
 		Convert a `PolyLine` to its binary representation.
 
@@ -181,7 +193,10 @@ class PolyLine(object):
 			X | Points | Point | NumPoints | Little
 		"""
 
-		pass
+		return "%s%s" % (struct.pack(
+			"<i<4d<3i<%di" % len(self.parts), self.shape_type,
+			self.bounding_box.points, len(self.parts), len(self.points),
+			self.parts), "".join([pt.to_binary() for pt in self.points]))
 
 class Polygon(object):
 	"""
@@ -191,13 +206,13 @@ class Polygon(object):
 	def __init__(self, ):
 		pass
 
-	def read_from_binary_string(self, bin_str):
+	def from_binary(self, bin_str):
 		"""
 		Recreate a 'Polygon' instance from its compressed binary form.
 
 		Args:
 			bin_str (str): A bit-packed representation of a `Polygon`, as
-				written by `Polygon.write_to_binary_string()`.
+				written by `Polygon.to_binary()`.
 
 		Returns:
 			Polygon: A `Polygon` instance with its member values as read from
@@ -206,7 +221,7 @@ class Polygon(object):
 
 		pass
 
-	def write_to_binary_string(self):
+	def to_binary(self):
 		"""
 		Convert a `Polygon` to its binary representation.
 
@@ -232,13 +247,13 @@ class PointM(object):
 	def __init__(self, ):
 		pass
 
-	def read_from_binary_string(self, bin_str):
+	def from_binary(self, bin_str):
 		"""
 		Recreate a 'PointM' instance from its compressed binary form.
 
 		Args:
 			bin_str (str): A bit-packed representation of a `PointM`, as
-				written by `PointM.write_to_binary_string()`.
+				written by `PointM.to_binary()`.
 
 		Returns:
 			PointM: A `PointM` instance with its member values as read from
@@ -247,7 +262,7 @@ class PointM(object):
 
 		pass
 
-	def write_to_binary_string(self):
+	def to_binary(self):
 		"""
 		Convert a `PointM` to its binary representation.
 
@@ -271,13 +286,13 @@ class MultiPointM(object):
 	def __init__(self, ):
 		pass
 
-	def read_from_binary_string(self, bin_str):
+	def from_binary(self, bin_str):
 		"""
 		Recreate a 'MultiPointM' instance from its compressed binary form.
 
 		Args:
 			bin_str (str): A bit-packed representation of a `MultiPointM`, as
-				written by `MultiPointM.write_to_binary_string()`.
+				written by `MultiPointM.to_binary()`.
 
 		Returns:
 			MultiPointM: A `MultiPointM` instance with its member values as
@@ -286,7 +301,7 @@ class MultiPointM(object):
 
 		pass
 
-	def write_to_binary_string(self):
+	def to_binary(self):
 		"""
 		Convert a `MultiPointM` to its binary representation.
 
@@ -313,13 +328,13 @@ class PolyLineM(object):
 	def __init__(self, ):
 		pass
 
-	def read_from_binary_string(self, bin_str):
+	def from_binary(self, bin_str):
 		"""
 		Recreate a 'PolyLineM' instance from its compressed binary form.
 
 		Args:
 			bin_str (str): A bit-packed representation of a `PolyLineM`, as
-			written by `PolyLineM.write_to_binary_string()`.
+			written by `PolyLineM.to_binary()`.
 
 		Returns:
 			PolyLineM: A `PolyLineM` instance with its member values as read from
@@ -328,7 +343,7 @@ class PolyLineM(object):
 
 		pass
 
-	def write_to_binary_string(self):
+	def to_binary(self):
 		"""
 		Convert a `PolyLineM` to its binary representation.
 
@@ -357,13 +372,13 @@ class PolygonM(object):
 	def __init__(self, ):
 		pass
 
-	def read_from_binary_string(self, bin_str):
+	def from_binary(self, bin_str):
 		"""
 		Recreate a 'PolygonM' instance from its compressed binary form.
 
 		Args:
 			bin_str (str): A bit-packed representation of a `PolygonM`, as
-				written by `PolygonM.write_to_binary_string()`.
+				written by `PolygonM.to_binary()`.
 
 		Returns:
 			PolygonM: A `PolygonM` instance with its member values as read from
@@ -372,7 +387,7 @@ class PolygonM(object):
 
 		pass
 
-	def write_to_binary_string(self):
+	def to_binary(self):
 		"""
 		Convert a `PolygonM` to its binary representation.
 
@@ -401,13 +416,13 @@ class PointZ(object):
 	def __init__(self, ):
 		pass
 
-	def read_from_binary_string(self, bin_str):
+	def from_binary(self, bin_str):
 		"""
 		Recreate a 'PointZ' instance from its compressed binary form.
 
 		Args:
 			bin_str (str): A bit-packed representation of a `PointZ`, as
-				written by `PointZ.write_to_binary_string()`.
+				written by `PointZ.to_binary()`.
 
 		Returns:
 				PointZ: A `PointZ` instance with its member values as read from `bin_str`.
@@ -415,7 +430,7 @@ class PointZ(object):
 
 		pass
 
-	def write_to_binary_string(self):
+	def to_binary(self):
 		"""
 		Convert a `PointZ` to its binary representation.
 
@@ -440,13 +455,13 @@ class MultiPointZ(object):
 	def __init__(self, ):
 		pass
 
-	def read_from_binary_string(self, bin_str):
+	def from_binary(self, bin_str):
 		"""
 		Recreate a 'MultiPointZ' instance from its compressed binary form.
 
 		Args:
 			bin_str (str): A bit-packed representation of a `MultiPointZ`, as
-				written by `MultiPointZ.write_to_binary_string()`.
+				written by `MultiPointZ.to_binary()`.
 
 		Returns:
 			MultiPointZ: A `MultiPointZ` instance with its member values as
@@ -455,7 +470,7 @@ class MultiPointZ(object):
 
 		pass
 
-	def write_to_binary_string(self):
+	def to_binary(self):
 		"""
 		Convert a `MultiPointZ` to its binary representation.
 
@@ -485,13 +500,13 @@ class PolyLineZ(object):
 	def __init__(self, ):
 		pass
 
-	def read_from_binary_string(self, bin_str):
+	def from_binary(self, bin_str):
 		"""
 		Recreate a 'PolyLineZ' instance from its compressed binary form.
 
 		Args:
 			bin_str (str): A bit-packed representation of a `PolyLineZ`, as
-				written by `PolyLineZ.write_to_binary_string()`.
+				written by `PolyLineZ.to_binary()`.
 
 		Returns:
 			PolyLineZ: A `PolyLineZ` instance with its member values as read
@@ -500,7 +515,7 @@ class PolyLineZ(object):
 
 		pass
 
-	def write_to_binary_string(self):
+	def to_binary(self):
 		"""
 		Convert a `PolyLineZ` to its binary representation.
 
@@ -532,13 +547,13 @@ class PolygonZ(object):
 	def __init__(self, ):
 		pass
 
-	def read_from_binary_string(self, bin_str):
+	def from_binary(self, bin_str):
 		"""
 		Recreate a 'PolygonZ' instance from its compressed binary form.
 
 		Args:
 			bin_str (str): A bit-packed representation of a `PolygonZ`, as
-				written by `PolygonZ.write_to_binary_string()`.
+				written by `PolygonZ.to_binary()`.
 
 		Returns:
 			PolygonZ: A `PolygonZ` instance with its member values as read from
@@ -547,7 +562,7 @@ class PolygonZ(object):
 
 		pass
 
-	def write_to_binary_string(self):
+	def to_binary(self):
 		"""
 		Convert a `PolygonZ` to its binary representation.
 
@@ -579,13 +594,13 @@ class MultiPatch(object):
 	def __init__(self, ):
 		pass
 
-	def read_from_binary_string(self, bin_str):
+	def from_binary(self, bin_str):
 		"""
 		Recreate a 'MultiPatch' instance from its compressed binary form.
 
 		Args:
 			bin_str (str): A bit-packed representation of a `MultiPatch`, as
-				written by `MultiPatch.write_to_binary_string()`.
+				written by `MultiPatch.to_binary()`.
 
 		Returns:
 			MultiPatch: A `MultiPatch` instance with its member values as read
@@ -594,7 +609,7 @@ class MultiPatch(object):
 
 		pass
 
-	def write_to_binary_string(self):
+	def to_binary(self):
 		"""
 		Convert a `MultiPatch` to its binary representation.
 
