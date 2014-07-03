@@ -76,6 +76,34 @@ void insertAfterSLNode(SLList_t *list, SLNode_t *node, void *data);
 void *removeAfterSLNode(SLList_t *list, SLNode_t *node);
 
 /*
+ * @brief Inserts an ::SLNode_t at an ::SLList_t index.
+ *
+ * @param list The list to insert a new ::SLNode_t into.
+ * @param index The index of `list` into which the new ::SLNode_t will be
+ *      inserted. Indexing begins at 0, and ends at `list->len` (unlike in
+ *      primitive array types in most languages, where it'd end at
+ *      `list->len - 1`). Given the following list:
+ *
+ *          0    1    2    3
+ *          a -> b -> d -> NULL
+ *
+ *      Inserting "c" at index 2 would result in:
+ *
+ *          0    1    2    3    4
+ *          a -> b -> c -> d -> NULL
+ *
+ *      Inserting "c" at index 3 would have resulted in:
+ *
+ *          0    1    2    3    4
+ *          a -> b -> d -> c -> NULL
+ *
+ * @param data The ::data to be contained inside the ::SLNode_t that will be
+ *      created and inserted into `list`.
+*/
+void insertAtIndex(SLList_t *list, int index, void *data);
+void *removeAtIndex(SLList_t *list, int index);
+
+/*
  * @brief Remove a ::SLNode_t from a ::SLList_t.
  *
  * @param list A list.
