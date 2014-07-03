@@ -101,6 +101,28 @@ void *removeAfterSLNode(SLList_t *list, SLNode_t *node);
  *      created and inserted into `list`.
 */
 void insertAtIndex(SLList_t *list, int index, void *data);
+
+/*
+ * @brief Removes an ::SLNode_t from an ::SLList_t index.
+ *
+ * @param list The list to remove an ::SLNode_t from.
+ * @param index The index in `list` from which an ::SLNode_t will be removed.
+ *      Indexing begins at 0 and ends at (len->list - 1) -- other values will
+ *      be safely handled, and no ::SLNode_t will be removed. Example:
+ *
+ *      Given the following list:
+ *
+ *          0    1    2    3
+ *          a -> b -> d -> NULL
+ *
+ *      Removing the ::SLNode_t at index 1 would result in:
+ *
+ *          0    1    2
+ *          a -> d -> NULL
+ *
+ * @return If a valid 'index' was supplied, the ::data of the removed
+ *      ::SLNode_t; otherwise, NULL.
+*/
 void *removeAtIndex(SLList_t *list, int index);
 
 /*

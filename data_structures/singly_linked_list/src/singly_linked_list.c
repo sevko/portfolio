@@ -79,16 +79,12 @@ void *removeAfterSLNode(SLList_t *list, SLNode_t *node){
 
 void insertAtIndex(SLList_t *list, int index, void *data){
 	if(0 < index && index < list->len){
-		list->len++;
-		SLNode_t *currNode = list->head,
-			*newNode = createSLNode(data);
-
+		SLNode_t *currNode = list->head;
 		int ind;
 		for(ind = 0; ind < index; ind++)
 			currNode = currNode->next;
 
-		newNode->next = currNode->next;
-		currNode->next = newNode;
+		insertAfterSLNode(list, currNode, data);
 	}
 	else if(index == 0)
 		insertSLListHead(list, data);
@@ -98,7 +94,17 @@ void insertAtIndex(SLList_t *list, int index, void *data){
 }
 
 void *removeAtIndex(SLList_t *list, int index){
+	if(0 < index && index < list->len){
+		SLNode_t *currNode = list->head;
+		int ind;
+		for(ind = 0; ind < index - 1; ind++)
+			currNode = currNode->next;
 
+		return removeAfterSLNode(list, currNode);
+	}
+	else if(index == 0)
+		return removeSLListHead(list);
+	return NULL;
 }
 
 void *removeSLNode(SLList_t *list, SLNode_t *node){

@@ -45,34 +45,27 @@ static void printSLList(SLList_t *list){
 }
 
 static void testSLList(void){
-	char *s0 = malloc(20);
-	strcpy(s0, "0000000000");
-	char *s1 = malloc(20);
-	strcpy(s1, "1111111111");
-	char *s2 = malloc(20);
-	strcpy(s2, "2222222222");
-	char *s3 = malloc(20);
-	strcpy(s3, "3333333333");
-	char *s4 = malloc(20);
-	strcpy(s4, "4444444444");
-	char *s5 = malloc(20);
-	strcpy(s5, "5555555555");
-	char *s6 = malloc(20);
-	strcpy(s6, "6666666666");
-	char *s7 = malloc(20);
-	strcpy(s7, "7777777777");
+	int numStrings = 9;
+	char *strings[numStrings];
+	int ind;
+	for(ind = 0; ind < numStrings; ind++){
+		strings[ind] = malloc(2);
+		sprintf(strings[ind], "%d", ind);
+	}
 
 	SLList_t *list = createSLList(freeData);
-	insertSLListHead(list, s7);
-	insertAfterSLNode(list, list->tail, s6);
-	insertAfterSLNode(list, list->tail, s5);
-	insertAfterSLNode(list, list->tail, s4);
-	insertAfterSLNode(list, list->tail, s3);
-	insertAfterSLNode(list, list->tail, s2);
-	insertAfterSLNode(list, list->tail, s1);
-	insertAfterSLNode(list, list->tail, s0);
+	insertSLListHead(list, strings[7]);
+	insertAfterSLNode(list, list->tail, strings[6]);
+	insertAfterSLNode(list, list->tail, strings[5]);
+	insertAfterSLNode(list, list->tail, strings[4]);
+	insertAfterSLNode(list, list->tail, strings[3]);
+	insertAfterSLNode(list, list->tail, strings[2]);
+	insertAfterSLNode(list, list->tail, strings[1]);
+	insertAfterSLNode(list, list->tail, strings[0]);
 	freeData(removeSLListHead(list));
 	freeData(removeSLNode(list, list->head));
+	insertAtIndex(list, 0, strings[8]);
+	insertAtIndex(list, list->len, strings[8]);
 
 	printSLList(list);
 	freeSLList(list);
