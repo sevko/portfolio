@@ -32,7 +32,7 @@ class NullShape(Shape):
 	def __init__(self):
 		super(NullShape, self).__init__(Shape.NULL_SHAPE)
 
-	def to_binary():
+	def to_binary(self):
 		"""
 		Convert a `NullShape` to its binary representation.
 
@@ -149,7 +149,7 @@ class MultiPoint(Shape):
 			struct.pack("<i", self.shape_type),
 			self.bounding_box.to_binary(),
 			struct.pack("<i", len(self.points)),
-			"".join([point.to_binary() for pt in self.points]))
+			"".join([pt.to_binary() for pt in self.points]))
 
 class Polygon(Shape):
 	"""
@@ -221,7 +221,7 @@ class Polygon(Shape):
 				*self.parts),
 			"".join([pt.to_binary() for pt in self.points]))
 
-class Shapefile(Shape):
+class Shapefile(object):
 	"""
 	A Shapefile representation.
 
@@ -237,6 +237,7 @@ class Shapefile(Shape):
 		self.length = length
 		self.shape_type = shape_type
 		self.bounding_box = bounding_box
+		self.shapes = shapes
 
 		if filename:
 			self.read_from_file(filename)
@@ -253,10 +254,14 @@ class Shapefile(Shape):
 		if not self._valid_filename(path):
 			logging.warning(
 				"Shapefile filename '%s' does not satisfy 8.3 filename"
-				" convention." % path)
+				" convention.", path)
 
 		with open(path) as shapefile:
 			def read_and_unpack(fmt, num_bytes):
+				"""
+				Read and unpack bytes from the `shapefile` file object.
+				"""
+
 				return struct.unpack(fmt, shapefile.read(num_bytes))
 
 			shapefile.seek(24)
@@ -267,10 +272,15 @@ class Shapefile(Shape):
 			self.shapes = []
 
 			def read_header_content_len():
+				"""
+				Read the shape-type from the next few bytes in the `shapefile`
+				file object.
+				"""
+
 				shapefile.seek(4, 1)
 				return shapefile.read(4)
 
-			SHAPE_TYPES = {
+			shape_types = {
 				Shape.NULL_SHAPE : NullShape,
 				Shape.POINT : Point,
 				Shape.MULTI_POINT : MultiPoint,
@@ -284,13 +294,14 @@ class Shapefile(Shape):
 				shape_bin_str = shapefile.read(content_len - 4)
 
 				self.shapes.append(
-					SHAPE_TYPES[shape_type].from_binary(shape_bin_str))
+					shape_types[shape_type].from_binary(shape_bin_str))
 				content_len_str = read_header_content_len()
 
 	def write_to_file(self, path):
 		pass
 
-	def _valid_filename(self, path):
+	@classmethod
+	def _valid_filename(cls, path):
 		"""
 		Verify whether a shapefile filename satisfies the 8.3 convention.
 
@@ -309,7 +320,7 @@ class Shapefile(Shape):
 			re.compile("^[a-zA-Z0-9][a-zA-Z0-9_-]{7}$").match(filename[0])
 			and filename[1] == "shp")
 
-class BoundingBox(Shape):
+class BoundingBox(object):
 	"""
 	A Shapefile bounding box, which specifies the goemetric bounds for
 	`Shape`s.
@@ -355,13 +366,14 @@ class BoundingBox(Shape):
 			56 | self.max_m | double
 		"""
 
-		bin_str = struct.pack("<4d", min_x, min_y, max_x, max_y)
+		bin_str = struct.pack(
+				"<4d", self.min_x, self.min_y, self.max_x, self.max_y)
 		for attribute in [self.min_z, self.max_z, self.min_m, self.max_m]:
 			if attribute:
 				bin_str += struct.pack("<d", attribute)
 		return bin_str
 
-def _handleCommandLineArgs():
+def _handle_command_line_args():
 	"""
 	Handles and prints diagnostic messages for command-line arguments.
 	"""
@@ -372,7 +384,7 @@ def _handleCommandLineArgs():
 			_unit_tests()
 		elif sys.argv[1] == "--file":
 			path = os.path.expanduser(sys.argv[2])
-			logging.info("Reading shapefile %s." % path)
+			logging.info("Reading shapefile %s.", path)
 			shapefile = Shapefile(path)
 
 	else:
@@ -384,6 +396,10 @@ def _handleCommandLineArgs():
 			"\t\tSHAPEFILE_PATH : the path of a shapefile (.shp) file.")
 
 def _unit_tests():
+	"""
+	Execute the module's unit-tests.
+	"""
+
 	shapefile = Shapefile("test/test.shp")
 	accepted_shapefile = {
 		"length" : 22444,
@@ -417,4 +433,4 @@ def _configure_logging():
 
 if __name__ == "__main__":
 	_configure_logging()
-	_handleCommandLineArgs()
+	_handle_command_line_args()
