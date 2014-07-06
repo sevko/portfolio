@@ -182,8 +182,7 @@ class Polygon(Shape):
 			`bin_str`.
 		"""
 
-		bounding_box = BoundingBox(
-			*struct.unpack("<4d", bin_str[:4 * 8]))
+		bounding_box = BoundingBox(*struct.unpack("<4d", bin_str[:4 * 8]))
 
 		num_parts = struct.unpack("<i", bin_str[32:36])[0]
 		num_points = struct.unpack("<i", bin_str[36:40])[0]
@@ -214,12 +213,14 @@ class Polygon(Shape):
 			X | Points | Point | NumPoints | Little
 		"""
 
-		return "%s%s" % (struct.pack(
-				struct.pack("<i", self.shape_type),
-				self.bounding_box.to_binary(),
-				"<2i<%di" % len(self.parts), len(self.parts), len(self.points),
-				*self.parts),
-			"".join([pt.to_binary() for pt in self.points]))
+		return "".join([
+			struct.pack("<i", self.shape_type),
+			self.bounding_box.to_binary(),
+			struct.pack(
+				"<%di" % (2 + len(self.parts)), len(self.parts),
+				len(self.points), *self.parts),
+			"".join([pt.to_binary()[4:] for pt in self.points])
+		])
 
 class Shapefile(object):
 	"""
@@ -315,7 +316,7 @@ class Shapefile(object):
 			header = "".join([
 				struct.pack(">7i", 9994, 0, 0, 0, 0, 0, self.length / 2),
 				struct.pack("<2i", 1000, self.shape_type),
-				self.bounding_box.to_binary()
+				self.bounding_box.to_binary(True)
 			])
 
 			record_strs = []
@@ -374,9 +375,16 @@ class BoundingBox(object):
 		self.min_z = min_z
 		self.max_z = max_z
 
-	def to_binary(self):
+	def to_binary(self, all_=False):
 		"""
 		Convert `self` to its binary form.
+
+		Args:
+			all_ (bool): If True, include the `BoundingBox`'s `z` and `m`
+				values in the output: this is only necessary for a
+				`Shapefile`'s global bounding box, and those of `Shape`
+				classes supporting `z` and `m` measures (not implemented in
+				this module).
 
 		Return:
 			A bit-packed binary string describing this `BoundingBox` as per the
@@ -395,8 +403,9 @@ class BoundingBox(object):
 
 		bin_str = struct.pack(
 				"<4d", self.min_x, self.min_y, self.max_x, self.max_y)
-		for attribute in [self.min_z, self.max_z, self.min_m, self.max_m]:
-			bin_str += struct.pack("<d", attribute if attribute else 0)
+		if all_:
+			for attribute in [self.min_z, self.max_z, self.min_m, self.max_m]:
+				bin_str += struct.pack("<d", attribute if attribute else 0)
 		return bin_str
 
 def _handle_command_line_args():
