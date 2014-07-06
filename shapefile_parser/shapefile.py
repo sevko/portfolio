@@ -92,7 +92,7 @@ class Point(Shape):
 			12 | `self.y` | Double | 1 | Little
 		"""
 
-		return struct.pack("<i<2d", self.shape_type, self.x, self.y)
+		return struct.pack("<i2d", self.shape_type, self.x, self.y)
 
 class MultiPoint(Shape):
 	"""
@@ -271,6 +271,9 @@ class Shapefile(object):
 			self.bounding_box = BoundingBox(*read_and_unpack("<8d", 64))
 			self.shapes = []
 
+			print "Length: %d" % self.length
+			print "Shape type: %d" % self.shape_type
+
 			def read_header_content_len():
 				"""
 				Read the shape-type from the next few bytes in the `shapefile`
@@ -298,7 +301,31 @@ class Shapefile(object):
 				content_len_str = read_header_content_len()
 
 	def write_to_file(self, path):
-		pass
+		"""
+		Write this Shapefile instance to a file.
+
+		The fields of this object are written in the bit-packed format
+		described by the Shapefile specification.
+
+		Args:
+			path (str): The path of the file to write.
+		"""
+
+		with open(path, "w") as shapefile:
+			header = "".join([
+				struct.pack(">7i", 9994, 0, 0, 0, 0, 0, self.length / 2),
+				struct.pack("<2i", 1000, self.shape_type),
+				self.bounding_box.to_binary()
+			])
+
+			record_strs = []
+			for rec_num in xrange(len(self.shapes)):
+				rec_body = self.shapes[rec_num].to_binary()
+				rec_header = struct.pack(
+					">2i", rec_num + 1, len(rec_body) / 2)
+				record_strs.append("%s%s" % (rec_header, rec_body))
+
+			shapefile.write("%s%s" % (header, "".join(record_strs)))
 
 	@classmethod
 	def _valid_filename(cls, path):
@@ -327,8 +354,8 @@ class BoundingBox(object):
 
 	Attributes:
 		min_x (double): The minimum x-coordinate in the parent `Shape.`
-		max_x (double): The maximum x-coordinate in the parent `Shape.`
 		min_y (double): The minimum y-coordinate in the parent `Shape.`
+		max_x (double): The maximum x-coordinate in the parent `Shape.`
 		max_y (double): The maximum y-coordinate in the parent `Shape.`
 		min_m (double): The minimum m-coordinate in the parent `Shape.`
 		max_m (double): The maximum m-coordinate in the parent `Shape.`
@@ -336,7 +363,7 @@ class BoundingBox(object):
 		max_z (double): The maximum z-coordinate in the parent `Shape.`
 	"""
 
-	def __init__(self, min_x, max_x, min_y, max_y, min_m=None, max_m=None,
+	def __init__(self, min_x, min_y, max_x, max_y, min_m=None, max_m=None,
 			min_z=None, max_z=None):
 		self.min_x = min_x
 		self.max_x = max_x
@@ -369,8 +396,7 @@ class BoundingBox(object):
 		bin_str = struct.pack(
 				"<4d", self.min_x, self.min_y, self.max_x, self.max_y)
 		for attribute in [self.min_z, self.max_z, self.min_m, self.max_m]:
-			if attribute:
-				bin_str += struct.pack("<d", attribute)
+			bin_str += struct.pack("<d", attribute if attribute else 0)
 		return bin_str
 
 def _handle_command_line_args():
@@ -378,22 +404,43 @@ def _handle_command_line_args():
 	Handles and prints diagnostic messages for command-line arguments.
 	"""
 
+	def fatal_error(msg):
+		logging.critical("%s. Use `--help` for use instructions.", msg)
+		exit(1)
+
+	usage_instructions = (
+		"Missing argument. Use:\n"
+		"\tpython shapefile_parser.py"
+		"(--test | --file SHAPEFILE_PATH | --help)\n\n"
+		"\t--test : run unit-tests.\n"
+		"\t--file : Read a shapefile.\n"
+		"\t\tSHAPEFILE_PATH : the path of a shapefile (.shp) file.\n"
+		"\t--help : Print usage information.")
+
 	if 1 < len(sys.argv):
 		if sys.argv[1] == "--test":
 			logging.info("Running unit-tests.")
 			_unit_tests()
+
 		elif sys.argv[1] == "--file":
+			if len(sys.argv) < 3:
+				fatal_error("`--file` flag requires a file-path parameter.")
+
+			elif len(sys.argv) > 3:
+				fatal_error("Too many arguments for the `--file` flag.")
 			path = os.path.expanduser(sys.argv[2])
 			logging.info("Reading shapefile %s.", path)
 			shapefile = Shapefile(path)
+			shapefile.write_to_file("a.shp")
+
+		elif sys.argv[1] == "--help":
+			print usage_instructions
+
+		else:
+			fatal_error("`%s` flag not recognized." % sys.argv[1])
 
 	else:
-		logging.critical(
-			"Missing argument. Use:\n"
-			"\tpython shapefile_parser.py (--test | --file SHAPEFILE_PATH)\n\n"
-			"\t--test : run unit-tests.\n"
-			"\t--script : Read a shapefile.\n"
-			"\t\tSHAPEFILE_PATH : the path of a shapefile (.shp) file.")
+		fatal_error(usage_instructions)
 
 def _unit_tests():
 	"""
@@ -429,7 +476,9 @@ def _configure_logging():
 	Configure settings for the `logging` module.
 	"""
 
-	logging.basicConfig(format="%(levelname)s: %(funcName)s: %(message)s")
+	logging.basicConfig(
+		format="%(levelname)s: %(funcName)s: %(message)s",
+		level=logging.INFO)
 
 if __name__ == "__main__":
 	_configure_logging()
