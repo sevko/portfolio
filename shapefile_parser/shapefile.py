@@ -2,6 +2,7 @@
 A module for ESRI Shapefile reading and writing.
 """
 
+import argparse
 import logging
 import os
 import re
@@ -272,9 +273,6 @@ class Shapefile(object):
 			self.bounding_box = BoundingBox(*read_and_unpack("<8d", 64))
 			self.shapes = []
 
-			print "Length: %d" % self.length
-			print "Shape type: %d" % self.shape_type
-
 			def read_header_content_len():
 				"""
 				Read the shape-type from the next few bytes in the `shapefile`
@@ -413,49 +411,36 @@ def _handle_command_line_args():
 	Handles and prints diagnostic messages for command-line arguments.
 	"""
 
-	def fatal_error(msg):
-		logging.critical("%s. Use `--help` for use instructions.", msg)
-		exit(1)
+	parser = argparse.ArgumentParser() # sys.modules[__name__].__doc__
+	group = parser.add_mutually_exclusive_group()
+	group.add_argument(
+		"-t", "--test", help="Run unit tests.", action="store_true")
+	group.add_argument(
+		"-r", "--read", metavar="PATH", help="Read in a file.")
+	args = parser.parse_args()
 
-	usage_instructions = (
-		"Missing argument. Use:\n"
-		"\tpython shapefile_parser.py"
-		"(--test | --file SHAPEFILE_PATH | --help)\n\n"
-		"\t--test : run unit-tests.\n"
-		"\t--file : Read a shapefile.\n"
-		"\t\tSHAPEFILE_PATH : the path of a shapefile (.shp) file.\n"
-		"\t--help : Print usage information.")
-
-	if 1 < len(sys.argv):
-		if sys.argv[1] == "--test":
-			logging.info("Running unit-tests.")
-			_unit_tests()
-
-		elif sys.argv[1] == "--file":
-			if len(sys.argv) < 3:
-				fatal_error("`--file` flag requires a file-path parameter.")
-
-			elif len(sys.argv) > 3:
-				fatal_error("Too many arguments for the `--file` flag.")
-			path = os.path.expanduser(sys.argv[2])
-			logging.info("Reading shapefile %s.", path)
-			shapefile = Shapefile(path)
-			shapefile.write_to_file("a.shp")
-
-		elif sys.argv[1] == "--help":
-			print usage_instructions
-
-		else:
-			fatal_error("`%s` flag not recognized." % sys.argv[1])
-
+	if args.test:
+		_unit_tests()
+	elif args.read:
+		shapefile = Shapefile()
+		shapefile.read_from_file(args.read)
 	else:
-		fatal_error(usage_instructions)
+		parser.error("Either `--test` or `--file` is necessary. See `--help`.")
 
 def _unit_tests():
 	"""
-	Execute the module's unit-tests.
+	Execute the module's unit-tests, and print results.
 	"""
 
+	def assert_(name, result):
+		"""
+		Print appropriate output for the result of a unit-test
+		"""
+
+		logging.info(
+			"%-24s: %s", name, "Success." if result else "Failure.\tx")
+
+	exit_status = 0
 	shapefile = Shapefile("test/test.shp")
 	accepted_shapefile = {
 		"length" : 22444,
@@ -464,8 +449,8 @@ def _unit_tests():
 
 	accepted_bounding_box = {
 		"min_x" : 13.564105429550633,
-		"max_x" : 50.9698128,
-		"min_y" : 13.9785217,
+		"min_y" : 50.9698128,
+		"max_x" : 13.9785217,
 		"max_y" : 51.1843726,
 		"min_z" : 0.0,
 		"max_z" : 0.0,
@@ -474,10 +459,14 @@ def _unit_tests():
 	}
 
 	for member in accepted_shapefile:
-		assert getattr(shapefile, member) == accepted_shapefile[member]
+		assert_(
+			"Shapefile.%s" % member,
+			getattr(shapefile, member) == accepted_shapefile[member])
 
 	for member in accepted_bounding_box:
-		assert (getattr(shapefile.bounding_box, member) ==
+		assert_(
+			"BoundingBox.%s" % member,
+			getattr(shapefile.bounding_box, member) ==
 				accepted_bounding_box[member])
 
 def _configure_logging():
