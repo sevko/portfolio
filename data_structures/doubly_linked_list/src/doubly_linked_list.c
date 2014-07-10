@@ -22,19 +22,32 @@ void freeDLList(DLList_t *list){
 	free(list);
 }
 
+DLNode_t *createDLNode(void *data){
+	DLNode_t *node = malloc(sizeof(DLNode_t));
+	node->data = data;
+	return data;
+}
+
 void *freeDLNode(DLNode_t *node){
 	void *data = node->data;
 	free(node);
 	return data;
 }
 
-void insertHead(DLList_t *list, const void *data){
+void insertHead(DLList_t *list, void *data){
+	list->len++;
+	DLNode_t *newHead = createDLNode(data);
+	newHead->next = list->head;
+	list->head = newHead;
+
+	if(list->len == 1)
+		list->tail = newHead;
 }
 
 void *removeHead(DLList_t *list){
 }
 
-void insertTail(DLList_t *list, const void *data){
+void insertTail(DLList_t *list, void *data){
 }
 
 void *removeTail(DLList_t *list){
