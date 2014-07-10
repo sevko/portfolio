@@ -21,8 +21,31 @@ typedef struct {
 	void (*freeData)(void *data);
 } DLList_t;
 
-DLList_t *createSLList(void (*freeData)(void *data));
-void *freeSLList(DLList_t *list);
+/*
+ * @brief Allocate an empty doubly-linked list.
+ *
+ * @return A pointer to the list. ::next and ::prev will be `NULL`, and ::len
+ *      `0`.
+*/
+DLList_t *createDLList(void (*freeData)(void *data));
+
+/*
+ * @brief Deallocate a ::DLList_t.
+ *
+ * @param list The list to free. All associated memory (meaning member
+ *      ::DLNode_t) will be deallocated.
+*/
+void freeDLList(DLList_t *list);
+
+/*
+ * @brief Deallocate a ::DLNode_t.
+ *
+ * @param node The node to be freed. Only the node itself will be freed -- not
+ *      its allocated members (namely ::data)!
+ *
+ * @return The argument node's ::data, to be freed at the user's discretion.
+*/
+void *freeDLNode(DLNode_t *node);
 void insertHead(DLList_t *list, const void *data);
 void *removeHead(DLList_t *list);
 void insertTail(DLList_t *list, const void *data);
