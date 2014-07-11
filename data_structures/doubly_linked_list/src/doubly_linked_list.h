@@ -63,8 +63,34 @@ void *freeDLNode(DLNode_t *node);
  * @param data The ::data of the new ::head ::DLNode_t.
 */
 void insertHead(DLList_t *list, void *data);
+
+/*
+ * @brief Remove a ::DLList_t ::head.
+ *
+ * @param list The list to remove the leading node from. Can be of any length.
+ *
+ * @return If the length of the list is 0, NULL. Otherwise, the ::data of the
+ *      removed ::head (the ::DLNode_t itself is deallocated).
+*/
 void *removeHead(DLList_t *list);
+
+/*
+ * @brief Create and insert a new ::tail into a ::DLList_t.
+ *
+ * @param list The list to insert into.
+ * @param data The ::data of the new tail.
+*/
 void insertTail(DLList_t *list, void *data);
+
+/*
+ * @brief Remove a ::DLList_t ::tail.
+ *
+ * @param list The list to remove the last node from. Can be of any length.
+ *
+ * @return If the length of the list is 0, NULL. Otherwise, the ::data of the
+ *      removed ::tail (the ::DLNode_t itself is deallocated).
+*/
 void *removeTail(DLList_t *list);
+
 void insertDLLNodeAtIndex(DLList_t *list, void *data, int ind);
 void *removeDLLNodeAtIndex(DLList_t *list, int ind);

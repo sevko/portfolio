@@ -42,15 +42,59 @@ void insertHead(DLList_t *list, void *data){
 
 	if(list->len == 1)
 		list->tail = newHead;
+	else
+		newHead->next->prev = newHead;
 }
 
 void *removeHead(DLList_t *list){
+	switch(list->len){
+		case 0:
+			return NULL;
+
+		case 1:
+			list->tail = NULL;
+			break;
+
+		default:
+			list->head->next->prev = NULL;
+	}
+
+	list->len--;
+
+	DLNode_t *head = list->head;
+	list->head = head->next;
+	return freeDLNode(head);
 }
 
 void insertTail(DLList_t *list, void *data){
+	list->len++;
+	DLNode_t *newTail = createDLNode(data);
+	newTail->prev = list->tail;
+
+	if(list->len == 1)
+		list->head = list->tail;
+	else
+		newTail->prev->next = newTail;
 }
 
 void *removeTail(DLList_t *list){
+	switch(list->len){
+		case 0:
+			return NULL;
+
+		case 1:
+			list->head = NULL;
+			break;
+
+		default:
+			list->tail->prev->next = NULL;
+	}
+
+	list->len--;
+
+	DLNode_t *tail = list->tail;
+	list->tail = tail->prev;
+	return freeDLNode(tail);
 }
 
 void insertDLLNodeAtIndex(DLList_t *list, void *data, int ind){
