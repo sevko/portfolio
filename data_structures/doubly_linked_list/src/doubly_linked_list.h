@@ -92,5 +92,43 @@ void insertTail(DLList_t *list, void *data);
 */
 void *removeTail(DLList_t *list);
 
+/*
+ * @brief Insert a ::DLNode_t at an index of a ::DLList_t.
+ *
+ * @param list The list to insert a node into.
+ * @param data The data to be contained within the new node.
+ * @param ind The index of the list where the node will be inserted; must be in
+ *      the inclusive range [0, list->len]. The indexing of a ::DLList_t begins
+ *      at 0, and, unlike in arrays in most languages, ends at `list->len`
+ *      (instead of `list->len - 1`). Given the following ::DLList_t:
+ *
+ *          0    1    2    3
+ *          A -> B -> C -> NULL
+ *
+ *      inserting "D" at index 1 would result in:
+ *
+ *          0    1    2    3    4
+ *          A -> D -> B -> C -> NULL
+*/
 void insertDLLNodeAtIndex(DLList_t *list, void *data, int ind);
+
+/*
+ * @brief Remove a ::DLNode_t from an index of a ::DLList_t.
+ *
+ * @param list The list to remove a node from.
+ * @param ind The index of the list to remove from; must be in the inclusive
+ *      range [0, list->len - 1]. ::DLList_t indexing begins at 0, and, as with
+ *      arrays in most languages, ends at `list->len - 1`. Given the following
+ *      ::DLList_t:
+ *
+ *          0    1    2    3
+ *          A -> B -> C -> NULL
+ *
+ *      remove the node at index 1 would result in:
+ *
+ *          0    1    2
+ *          A -> C -> NULL
+ *
+ * @return A pointer to the ::data of the removed ::DLNode_t.
+*/
 void *removeDLLNodeAtIndex(DLList_t *list, int ind);

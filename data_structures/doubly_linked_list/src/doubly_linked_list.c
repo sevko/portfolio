@@ -98,7 +98,41 @@ void *removeTail(DLList_t *list){
 }
 
 void insertDLLNodeAtIndex(DLList_t *list, void *data, int ind){
+	if(ind == 0)
+		insertHead(list, data);
+
+	else if(ind == list->len)
+		insertTail(list, data);
+
+	DLNode_t *currNode = list->head,
+		*newNode = createDLNode(data);
+	int currInd = 0;
+	while(currInd < ind - 1){
+		currNode = currNode->next;
+		currInd++;
+	}
+
+	newNode->prev = currNode;
+	newNode->next = currNode->next;
+	currNode->next = newNode;
 }
 
 void *removeDLLNodeAtIndex(DLList_t *list, int ind){
+	if(ind == 0)
+		return removeHead(list);
+
+	else if(ind == list->len - 1)
+		return removeTail(list);
+
+	DLNode_t *currNode = list->head;
+	int currInd = 0;
+	while(currInd < ind - 1){
+		currNode = currNode->next;
+		currInd++;
+	}
+
+	DLNode_t *removedNode = currNode->next;
+	currNode->next = currNode->next->next;
+	currNode->next->prev = currNode;
+	return freeDLNode(removedNode);
 }
