@@ -22,7 +22,25 @@ static void testDLList(void);
 static void freeData(void *data);
 
 static void testDLList(void){
+	int numStrings = 9;
+	char *strings[numStrings];
+	int ind;
+	for(ind = 0; ind < numStrings; ind++){
+		strings[ind] = malloc(2);
+		sprintf(strings[ind], "%d", ind);
+	}
+
 	DLList_t *list = createDLList(freeData);
+	insertDLLNodeAtIndex(list, strings[0], 0);
+	insertDLLNodeAtIndex(list, strings[1], 0);
+	insertDLLNodeAtIndex(list, strings[2], 0);
+	insertDLLNodeAtIndex(list, strings[3], 0);
+	insertDLLNodeAtIndex(list, strings[4], 0);
+	insertDLLNodeAtIndex(list, strings[5], 0);
+	insertDLLNodeAtIndex(list, strings[6], 0);
+	insertDLLNodeAtIndex(list, strings[7], 0);
+	insertDLLNodeAtIndex(list, strings[8], 0);
+	printDLList(list, "%s\n");
 	freeDLList(list);
 }
 

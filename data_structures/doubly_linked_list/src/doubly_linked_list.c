@@ -3,6 +3,32 @@
 
 #include "doubly_linked_list.h"
 
+// A doubly-linked node that composes a ::DLList_t.
+struct DLNode {
+	void *data; // The contained data.
+	struct DLNode *next, // The next node in the sequence.
+		*prev; // The previous node in the sequence.
+};
+
+/*
+ * @brief Allocate a ::DLNode_t.
+ *
+ * @param data The new node's ::data member.
+ *
+ * @return A pointer to the newly allocated node.
+*/
+static DLNode_t *createDLNode(void *data);
+
+/*
+ * @brief Deallocate a ::DLNode_t.
+ *
+ * @param node The node to be freed. Only the node itself will be freed -- not
+ *      its allocated members (namely ::data)!
+ *
+ * @return The argument node's ::data, to be freed at the user's discretion.
+*/
+static void *freeDLNode(DLNode_t *node);
+
 DLList_t *createDLList(void (*freeData)(void *data)){
 	DLList_t *list = malloc(sizeof(DLList_t));
 	list->head = list->tail = NULL;
@@ -20,18 +46,6 @@ void freeDLList(DLList_t *list){
 	}
 
 	free(list);
-}
-
-DLNode_t *createDLNode(void *data){
-	DLNode_t *node = malloc(sizeof(DLNode_t));
-	node->data = data;
-	return data;
-}
-
-void *freeDLNode(DLNode_t *node){
-	void *data = node->data;
-	free(node);
-	return data;
 }
 
 void insertHead(DLList_t *list, void *data){
@@ -70,6 +84,7 @@ void insertTail(DLList_t *list, void *data){
 	list->len++;
 	DLNode_t *newTail = createDLNode(data);
 	newTail->prev = list->tail;
+	list->tail = newTail;
 
 	if(list->len == 1)
 		list->head = list->tail;
@@ -99,10 +114,10 @@ void *removeTail(DLList_t *list){
 
 void insertDLLNodeAtIndex(DLList_t *list, void *data, int ind){
 	if(ind == 0)
-		insertHead(list, data);
+		return insertHead(list, data);
 
 	else if(ind == list->len)
-		insertTail(list, data);
+		return insertTail(list, data);
 
 	DLNode_t *currNode = list->head,
 		*newNode = createDLNode(data);
@@ -115,6 +130,7 @@ void insertDLLNodeAtIndex(DLList_t *list, void *data, int ind){
 	newNode->prev = currNode;
 	newNode->next = currNode->next;
 	currNode->next = newNode;
+	list->len++;
 }
 
 void *removeDLLNodeAtIndex(DLList_t *list, int ind){
@@ -134,5 +150,29 @@ void *removeDLLNodeAtIndex(DLList_t *list, int ind){
 	DLNode_t *removedNode = currNode->next;
 	currNode->next = currNode->next->next;
 	currNode->next->prev = currNode;
+	list->len--;
 	return freeDLNode(removedNode);
+}
+
+void printDLList(const DLList_t * list, const char *fmt){
+	DLNode_t *currNode = list->head;
+	puts("Printing doubly-linked list.");
+	while(currNode != NULL){
+		printf(fmt, currNode->data);
+		currNode = currNode->next;
+	}
+	puts("Finished.");
+}
+
+static DLNode_t *createDLNode(void *data){
+	DLNode_t *node = malloc(sizeof(DLNode_t));
+	node->data = data;
+	node->prev = node->next = NULL;
+	return node;
+}
+
+static void *freeDLNode(DLNode_t *node){
+	void *data = node->data;
+	free(node);
+	return data;
 }

@@ -4,12 +4,7 @@
 
 #pragma once
 
-// A doubly-linked node that composes a ::DLList_t.
-typedef struct DLNode {
-	void *data; // The contained data.
-	struct DLNode *next, // The next node in the sequence.
-		*prev; // The previous node in the sequence.
-} DLNode_t;
+typedef struct DLNode DLNode_t;
 
 // A doubly-linked-list, composed of ::DLNode_t.
 typedef struct {
@@ -35,25 +30,6 @@ DLList_t *createDLList(void (*freeData)(void *data));
  *      ::DLNode_t) will be deallocated.
 */
 void freeDLList(DLList_t *list);
-
-/*
- * @brief Allocate a ::DLNode_t.
- *
- * @param data The new node's ::data member.
- *
- * @return A pointer to the newly allocated node.
-*/
-DLNode_t *createDLNode(void *data);
-
-/*
- * @brief Deallocate a ::DLNode_t.
- *
- * @param node The node to be freed. Only the node itself will be freed -- not
- *      its allocated members (namely ::data)!
- *
- * @return The argument node's ::data, to be freed at the user's discretion.
-*/
-void *freeDLNode(DLNode_t *node);
 
 /*
  * @brief Create and insert a new head ::DLNode_t into a ::DLList_t.
@@ -132,3 +108,15 @@ void insertDLLNodeAtIndex(DLList_t *list, void *data, int ind);
  * @return A pointer to the ::data of the removed ::DLNode_t.
 */
 void *removeDLLNodeAtIndex(DLList_t *list, int ind);
+
+/*
+ * @brief Prints the contents of a ::DLList_t.
+ *
+ * Prints the list's ::DLNode_t's ::data, starting at its ::head and ending at
+ * its ::tail.
+ *
+ * @param list The list to print.
+ * @param fmt The format string `printf()` will use to print the value of the
+ *      list's nodes' ::data (which are void pointers).
+*/
+void printDLList(const DLList_t * list, const char *fmt);
