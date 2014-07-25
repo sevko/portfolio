@@ -2,8 +2,8 @@
 `sha1` contains an implementation of the SHA-1 hash algorithm.
 
 It adheres to the pseudocode in `http://en.wikipedia.org/wiki/SHA-1` (checked
-against official documentation). Some of the code is thus a little inelegant,
-unoptimized, and PEP8-incompliant.
+against official documentation), for purposes of readability. Some of the code
+is thus a little inelegant, unoptimized, and PEP8-incompliant.
 """
 
 def sha1(string):
@@ -111,7 +111,7 @@ def sha1(string):
 if __name__ == "__main__":
 	msg = "The quick brown fox jumps over the lazy dog"
 	expected = 0x2fd4e1c67a2d28fced849ee1bb76e7391b93eb12
-	hex_hash = sha1(msg)
-	print "Hash of '%s': %s\nMatches expected: %s." % (
-		msg, hex_hash, hex_hash == expected
+	hash_digest = sha1(msg)
+	print "Hash of '%s': %d\nMatches expected: %s." % (
+		msg, hash_digest, hash_digest == expected
 	)
