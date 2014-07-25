@@ -6,6 +6,8 @@ against official documentation), for purposes of readability. Some of the code
 is thus a little inelegant, unoptimized, and PEP8-incompliant.
 """
 
+import hashlib
+
 def sha1(string):
 	"""
 	Return the SHA1 digest of a string.
@@ -110,7 +112,7 @@ def sha1(string):
 
 if __name__ == "__main__":
 	msg = "The quick brown fox jumps over the lazy dog"
-	expected = 0x2fd4e1c67a2d28fced849ee1bb76e7391b93eb12
+	expected = int(hashlib.sha1(msg).hexdigest(), 16)
 	hash_digest = sha1(msg)
 	print "Hash of '%s': %d\nMatches expected: %s." % (
 		msg, hash_digest, hash_digest == expected

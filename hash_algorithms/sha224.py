@@ -7,6 +7,8 @@ for purposes of readability. Some of the code is thus a little inelegant,
 unoptimized, and PEP8-incompliant.
 """
 
+import hashlib
+
 def sha224(string):
 	"""
 	Generate the SHA-224 digest of a string.
@@ -64,7 +66,7 @@ def sha224(string):
 	bin_msg += bin(len(string) * 8)[2:].zfill(64)
 
 	# Partition bin_msg into 512-bit chunks.
-	for chunk in range(len(bin_msg)/512):
+	for chunk in range(len(bin_msg) / 512):
 
 		#partition chunk into an array 'w' containing 16 32-bit words.
 		w = []
@@ -129,7 +131,7 @@ def sha224(string):
 
 if __name__ == "__main__":
 	msg = "The quick brown fox jumps over the lazy dog"
-	expected = 0x730e109bd7a8a32b1cb9d9a09aa2325d2430587ddbc0c38bad911525
+	expected = int(hashlib.sha224(msg).hexdigest(), 16)
 	hash_digest = sha224(msg)
 	print "Hash of '%s': %x\nMatches expected: %s." % (
 		msg, hash_digest, hash_digest == expected

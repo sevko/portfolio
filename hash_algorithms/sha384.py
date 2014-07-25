@@ -6,6 +6,8 @@ It adheres as much as possible to the pseudocode in
 code is thus a little inelegant, unoptimized, and PEP8-incompliant.
 """
 
+import hashlib
+
 def sha384(string):
 	"""
 	Generate the SHA-384 digest of a string.
@@ -142,8 +144,7 @@ def sha384(string):
 
 if __name__ == "__main__":
 	msg = "The quick brown fox jumps over the lazy dog"
-	expected = \
-		0xca737f1014a48f4c0b6dd43cb177b0afd9e5169367544c494011e3317dbf9a509cb1e5dc1e85a941bbee3d7f2afbc9b1
+	expected = int(hashlib.sha384(msg).hexdigest(), 16)
 	hash_digest = sha384(msg)
 	print "Hash of '%s': %x\nMatches expected: %s." % (
 		msg, hash_digest, hash_digest == expected

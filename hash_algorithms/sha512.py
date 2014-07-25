@@ -6,6 +6,8 @@ It adheres as much as possible to the pseudocode in
 code is thus a little inelegant, unoptimized, and PEP8-incompliant.
 """
 
+import hashlib
+
 def sha512(string):
 	"""
 	Generate the SHA-512 digest of a string.
@@ -141,8 +143,7 @@ def sha512(string):
 
 if __name__ == "__main__":
 	msg = "The quick brown fox jumps over the lazy dog"
-	expected = \
-		0x07e547d9586f6a73f73fbac0435ed76951218fb7d0c8d788a309d785436bbb642e93a252a954f23912547d1e8a3b5ed6e1bfd7097821233fa0538f3db854fee6
+	expected = int(hashlib.sha512(msg).hexdigest(), 16)
 	hash_digest = sha512(msg)
 	print "Hash of '%s': %x\nMatches expected: %s." % (
 		msg, hash_digest, hash_digest == expected

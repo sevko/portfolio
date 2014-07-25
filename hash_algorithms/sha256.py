@@ -6,6 +6,8 @@ It adheres as much as possible to the pseudocode in
 code is thus a little inelegant, unoptimized, and PEP8-incompliant.
 """
 
+import hashlib
+
 def sha256(string):
 	"""
 	Generate the SHA-256 digest of a string.
@@ -62,7 +64,7 @@ def sha256(string):
 	bin_msg += bin(len(string) * 8)[2:].zfill(64)
 
 	# Partition bin_msg into 512-bit chunks.
-	for chunk in range(len(bin_msg)/512):
+	for chunk in range(len(bin_msg) / 512):
 
 		# Partition chunk into an array `w` containing 16 32-bit words.
 		w = []
@@ -127,8 +129,7 @@ def sha256(string):
 
 if __name__ == "__main__":
 	msg = "The quick brown fox jumps over the lazy dog"
-	expected = \
-		0xd7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592
+	expected = int(hashlib.sha256(msg).hexdigest(), 16)
 	hash_digest = sha256(msg)
 	print "Hash of '%s': %x\nMatches expected: %s." % (
 		msg, hash_digest, hash_digest == expected
