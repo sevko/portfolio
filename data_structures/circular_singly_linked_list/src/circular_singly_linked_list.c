@@ -10,6 +10,14 @@ struct CSLNode {
 };
 
 static CSLNode_t *createCSLNode(void *data);
+
+/*
+	@brief Deallocate a ::CSLNode_t.
+
+	@param node The node to free. Its ::data will NOT be freed.
+
+	@return The ::data of the now deallocated `node`.
+*/
 static void *freeCSLNode(CSLNode_t *node);
 
 CSLList_t *createCSLList(void (*freeData)(void *data)){
@@ -40,6 +48,13 @@ void freeCSLList(CSLList_t *list){
 	free(list);
 }
 
+void insertCSLListHead(CSLList_t *list, void *data){
+	list->len++;
+	CSLNode_t *newHead = createCSLNode(data);
+	newHead->next = list->head;
+	list->head = newHead;
+}
+
 void printCSLList(const CSLList_t *list, const char *nodeDataFmt){
 	puts("Printing circular-singly-linked-list.");
 
@@ -52,12 +67,19 @@ void printCSLList(const CSLList_t *list, const char *nodeDataFmt){
 	CSLNode_t *currNode = list->head;
 	int ind = 0;
 	while(ind < list->len){
-		printf(nodeDataFmt, currNode);
+		printf(nodeDataFmt, currNode->data);
 		currNode = currNode->next;
 		ind++;
 	}
 
 	puts("Finished printing.");
+}
+
+static CSLNode_t *createCSLNode(void *data){
+	CSLNode_t *node = malloc(sizeof(CSLNode_t));
+	node->data = data;
+	node->next = NULL;
+	return node;
 }
 
 static void *freeCSLNode(CSLNode_t *node){

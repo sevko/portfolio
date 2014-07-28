@@ -1,3 +1,7 @@
+/*
+	An implementation of a circular, singly-linked list.
+*/
+
 typedef struct CSLNode CSLNode_t;
 
 // A singly-linked-list.
@@ -8,7 +12,22 @@ typedef struct {
 	void (*freeData)(void *data);
 } CSLList_t;
 
+/*
+	@brief Allocate a ::CSLList_t.
+
+	@param freeData Function that will be used to deallocate the data contained
+		inside the new list's nodes.
+
+	@return The new list.
+*/
 CSLList_t *createCSLList(void (*freeData)(void *data));
+
+/*
+	@brief Deallocate a ::CSLList_t.
+
+	@param list The list to be freed. All member nodes will also be
+		deallocated.
+*/
 void freeCSLList(CSLList_t *list);
 void insertCSLListHead(CSLList_t *list, void *data);
 void *removeCSLListHead(CSLList_t *list);
