@@ -72,8 +72,49 @@ void insertAfterCSLNode(CSLList_t *list, CSLNode_t *node, void *data);
 	@return The ::data of the removed node, which is itself deallocated.
 */
 void *removeAfterCSLNode(CSLList_t *list, CSLNode_t *node);
+
+/*
+	@brief Insert a ::CSLNode_t at a specific index of a ::CSLList_t.
+
+	@param list The list to insert a new node into.
+	@param index The index of `list` to insert the new node into. Must be
+		within the inclusive range [0, list->len] (note that, unlike array
+		indexing in most languages, the last valid index in the context of
+		function is `length`, instead of `length - 1`). Given the following
+		list:
+
+			0    1    2    0
+			a -> b -> c -> a   (note the circularity)
+
+		Inserting node 'd' at index 1 would result in:
+
+			0    1    2    3    0
+			a -> d -> b -> c -> a   (note the circularity)
+
+	@param data The ::data of the new ::CSLNode_t.
+*/
 void insertAtIndex(CSLList_t *list, int index, void *data);
+
+/*
+	@brief Remove a ::CSLNode_t from a specific index of a ::CSLList_t.
+
+	@param list The list to remove a node into.
+	@param index The index of `list` to remove the node from. Must be
+		within the inclusive range [0, list->len - 1]. Given the following
+		list:
+
+			0    1    2    0
+			a -> b -> c -> a   (note the circularity)
+
+		Removing the node at index 1 would result in:
+
+			0    1    0
+			a -> c -> a
+
+	@return The ::data of the removed ::CSLNode_t (itself deallocated).
+*/
 void *removeAtIndex(CSLList_t *list, int index);
+
 void *removeCSLNode(CSLList_t *list, CSLNode_t *node);
 
 /*

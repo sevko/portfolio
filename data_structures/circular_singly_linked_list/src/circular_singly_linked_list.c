@@ -80,6 +80,28 @@ void *removeAfterCSLNode(CSLList_t *list, CSLNode_t *node){
 	return freeCSLNode(removedNode);
 }
 
+void insertAtIndex(CSLList_t *list, int index, void *data){
+	if(index == 0)
+		insertCSLListHead(list, data);
+	else {
+		CSLNode_t *currNode = list->head;
+		for(int ind = 0; ind < index - 1; ind++)
+			currNode = currNode->next;
+		insertAfterCSLNode(list, currNode, data);
+	}
+}
+
+void *removeAtIndex(CSLList_t *list, int index){
+	if(index == 0)
+		return removeCSLListHead(list);
+	else {
+		CSLNode_t *currNode = list->head;
+		for(int ind = 0; ind < index - 1; ind++)
+			currNode = currNode->next;
+		return removeAfterCSLNode(list, currNode);
+	}
+}
+
 void printCSLList(const CSLList_t *list, const char *nodeDataFmt){
 	puts("Printing circular-singly-linked-list.");
 
