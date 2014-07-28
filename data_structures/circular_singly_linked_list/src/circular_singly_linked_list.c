@@ -4,10 +4,10 @@
 #include "circular_singly_linked_list.h"
 
 // A singly-linked node that composes an ::CSLList_t.
-struct CSLNode {
-	void *data; // The contained data.
-	struct CSLNode *next; // The next node in the sequence.
-};
+// struct CSLNode {
+	// void *data; // The contained data.
+	// struct CSLNode *next; // The next node in the sequence.
+// };
 
 static CSLNode_t *createCSLNode(void *data);
 
@@ -53,6 +53,31 @@ void insertCSLListHead(CSLList_t *list, void *data){
 	CSLNode_t *newHead = createCSLNode(data);
 	newHead->next = list->head;
 	list->head = newHead;
+}
+
+void *removeCSLListHead(CSLList_t *list){
+	if(0 < list->len){
+		list->len--;
+		CSLNode_t *removedHead = list->head;
+		list->head = list->head->next;
+		return freeCSLNode(removedHead);
+	}
+	else
+		return NULL;
+}
+
+void insertAfterCSLNode(CSLList_t *list, CSLNode_t *node, void *data){
+	list->len++;
+	CSLNode_t *newNode = createCSLNode(data);
+	newNode->next = node->next;
+	node->next = newNode;
+}
+
+void *removeAfterCSLNode(CSLList_t *list, CSLNode_t *node){
+	list->len--;
+	CSLNode_t *removedNode = node->next;
+	node->next = node->next->next;
+	return freeCSLNode(removedNode);
 }
 
 void printCSLList(const CSLList_t *list, const char *nodeDataFmt){
