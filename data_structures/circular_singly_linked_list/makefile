@@ -1,4 +1,4 @@
-PROJECT_EXECUTABLE = circular_singly_linked_list
+PROJECT_EXECUTABLE = bin/circular_singly_linked_list
 FLAGS = -Wall -Wextra -I ./
 C_COMPILER = gcc $(FLAGS)
 CC = @echo "\tcc $@" && $(C_COMPILER)
