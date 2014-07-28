@@ -4,26 +4,11 @@
 #include "circular_singly_linked_list.h"
 
 // A singly-linked node that composes an ::CSLList_t.
-typedef struct CSLNode {
+struct CSLNode {
 	void *data; // The contained data.
 	struct CSLNode *next; // The next node in the sequence.
-} CSLNode_t;
+};
 
-// A singly-linked-list.
-typedef struct {
-	int len; // The number of ::CSLNode_t inside the list.
-	CSLNode_t *head; // The beginning of the list.
-	// Function to deallocate the data stored inside this list's ::CSLNode_t.
-	void (*freeData)(void *data);
-} CSLList_t;
-
-void insertCSLListHead(CSLList_t *list, void *data);
-void *removeCSLListHead(CSLList_t *list);
-void insertAfterCSLNode(CSLList_t *list, CSLNode_t *node, void *data);
-void *removeAfterCSLNode(CSLList_t *list, CSLNode_t *node);
-void insertAtIndex(CSLList_t *list, int index, void *data);
-void *removeAtIndex(CSLList_t *list, int index);
-void *removeCSLNode(CSLList_t *list, CSLNode_t *node);
 static CSLNode_t *createCSLNode(void *data);
 static void *freeCSLNode(CSLNode_t *node);
 
@@ -39,12 +24,40 @@ void freeCSLList(CSLList_t *list){
 	CSLNode_t *currNode = list->head;
 	int ind = 0;
 
+	/*
+		Traversal based on an incremented index and ::CSLList_t::len is
+		preferred to comparing a current ::CSLNode_t against the next, and then
+		setting it to the ::next node, because of various edge-cases specific
+		to circular lists.
+	*/
 	while(ind < list->len){
 		CSLNode_t *nextNode = currNode->next;
 		list->freeData(freeCSLNode(currNode));
 		currNode = nextNode;
 		ind++;
 	}
+
+	free(list);
+}
+
+void printCSLList(const CSLList_t *list, const char *nodeDataFmt){
+	puts("Printing circular-singly-linked-list.");
+
+	/*
+		Traversal based on an incremented index and ::CSLList_t::len is
+		preferred to comparing a current ::CSLNode_t against the next, and then
+		setting it to the ::next node, because of various edge-cases specific
+		to circular lists.
+	*/
+	CSLNode_t *currNode = list->head;
+	int ind = 0;
+	while(ind < list->len){
+		printf(nodeDataFmt, currNode);
+		currNode = currNode->next;
+		ind++;
+	}
+
+	puts("Finished printing.");
 }
 
 static void *freeCSLNode(CSLNode_t *node){
