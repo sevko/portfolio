@@ -50,7 +50,7 @@ static void testStack(void){
 	freeData(pop(stack));
 	freeData(pop(stack));
 	freeData(pop(stack));
-	printf("%s\n", peek(stack));
+	printf("%s\n", (char *)peek(stack));
 	freeStack(stack);
 }
 
