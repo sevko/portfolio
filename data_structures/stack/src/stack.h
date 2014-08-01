@@ -26,6 +26,29 @@ Stack_t *createStack(void (*freeData)(void *data));
 		(eg the stack itself, its nodes).
 */
 void freeStack(Stack_t *stack);
+
+/*
+	@brief Return the data contained in the top node of the ::Stack_t.
+
+	@param stack A stack.
+
+	@return The ::data of the ::head of `stack`'s singly-linked-list.
+*/
 void *peek(Stack_t *stack);
+
+/*
+	@brief Remove the top node of a ::Stack_t.
+
+	@param stack A stack. Must have at least one element.
+
+	@return The ::data of the removed ::head of `stack`'s singly-linked-list.
+*/
 void *pop(Stack_t *stack);
+
+/*
+	@brief Insert a new node on top of a ::Stack_t.
+
+	@param stack The stack to insert onto. Must have at least one element.
+	@param data The data to be contained in the new top node of `stack`.
+*/
 void push(Stack_t *stack, void *data);
