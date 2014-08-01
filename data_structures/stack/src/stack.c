@@ -3,7 +3,10 @@
 
 #include "stack.h"
 
-int main(){
-	puts("Hello world.");
-	return EXIT_SUCCESS;
+Stack_t *createStack(void (*freeData)(void *data)){
+	return createSLList(freeData);
+}
+
+void freeStack(Stack_t *stack){
+	freeSLList(stack);
 }
