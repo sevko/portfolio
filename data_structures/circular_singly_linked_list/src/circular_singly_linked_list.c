@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "circular_singly_linked_list.h"
 
@@ -51,8 +52,19 @@ void freeCSLList(CSLList_t *list){
 void insertCSLListHead(CSLList_t *list, void *data){
 	list->len++;
 	CSLNode_t *newHead = createCSLNode(data);
-	newHead->next = list->head;
+
+	if(1 < list->len){
+		CSLNode_t *currNode = list->head;
+		while(currNode->next != list->head)
+			currNode = currNode->next;
+		currNode->next = newHead;
+		newHead->next = list->head;
+	}
+	else
+		newHead->next = newHead;
+
 	list->head = newHead;
+
 }
 
 void *removeCSLListHead(CSLList_t *list){
@@ -60,6 +72,12 @@ void *removeCSLListHead(CSLList_t *list){
 		list->len--;
 		CSLNode_t *removedHead = list->head;
 		list->head = list->head->next;
+
+		CSLNode_t *currNode = removedHead;
+		while(currNode->next != removedHead)
+			currNode = currNode->next;
+		currNode->next = list->head;
+
 		return freeCSLNode(removedHead);
 	}
 	else
@@ -74,10 +92,14 @@ void insertAfterCSLNode(CSLList_t *list, CSLNode_t *node, void *data){
 }
 
 void *removeAfterCSLNode(CSLList_t *list, CSLNode_t *node){
-	list->len--;
-	CSLNode_t *removedNode = node->next;
-	node->next = node->next->next;
-	return freeCSLNode(removedNode);
+	if(node->next == list->head)
+		return removeCSLListHead(list);
+	else {
+		list->len--;
+		CSLNode_t *removedNode = node->next;
+		node->next = node->next->next;
+		return freeCSLNode(removedNode);
+	}
 }
 
 void insertAtIndex(CSLList_t *list, int index, void *data){
@@ -100,6 +122,13 @@ void *removeAtIndex(CSLList_t *list, int index){
 			currNode = currNode->next;
 		return removeAfterCSLNode(list, currNode);
 	}
+}
+
+void *removeCSLNode(CSLList_t *list, CSLNode_t *node){
+	CSLNode_t *currNode = list->head;
+	while(currNode->next != node)
+		currNode = currNode->next;
+	return removeAfterCSLNode(list, currNode);
 }
 
 void printCSLList(const CSLList_t *list, const char *nodeDataFmt){

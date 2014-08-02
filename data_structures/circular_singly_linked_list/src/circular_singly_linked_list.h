@@ -115,6 +115,15 @@ void insertAtIndex(CSLList_t *list, int index, void *data);
 */
 void *removeAtIndex(CSLList_t *list, int index);
 
+/*
+	@brief Remove a ::CSLNode_t from a ::CSLList_t.
+
+	@param list The list to remove a node from.
+	@param node The specific node to be removed. This node MUST be in the list
+		to begin with.
+
+	@return The ::data of `node`.
+*/
 void *removeCSLNode(CSLList_t *list, CSLNode_t *node);
 
 /*
