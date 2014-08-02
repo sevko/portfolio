@@ -49,7 +49,6 @@ static void testCSLList(void){
 	insertAtIndex(list, 2, strings[8]);
 	insertAtIndex(list, 3, strings[7]);
 	freeData(removeAtIndex(list, 1));
-	freeData(removeCSLNode(list, list->head));
 
 	printCSLList(list, "%s\n");
 	freeCSLList(list);

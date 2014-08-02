@@ -5,10 +5,10 @@
 #include "circular_singly_linked_list.h"
 
 // A singly-linked node that composes an ::CSLList_t.
-// struct CSLNode {
-	// void *data; // The contained data.
-	// struct CSLNode *next; // The next node in the sequence.
-// };
+struct CSLNode {
+	void *data; // The contained data.
+	struct CSLNode *next; // The next node in the sequence.
+};
 
 static CSLNode_t *createCSLNode(void *data);
 

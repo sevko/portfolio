@@ -2,11 +2,6 @@
 	An implementation of a circular, singly-linked list.
 */
 
-// A singly-linked node that composes an ::CSLList_t.
-struct CSLNode {
-	void *data; // The contained data.
-	struct CSLNode *next; // The next node in the sequence.
-};
 typedef struct CSLNode CSLNode_t;
 
 // A singly-linked-list.
