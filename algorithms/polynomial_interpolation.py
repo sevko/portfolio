@@ -72,6 +72,3 @@ def test_polynomial_interpolation():
 			abs(interpolate_polynomial_value(poly_points, test[0]) - test[1]) <
 			1e-6
 		)
-
-if __name__ == "__main__":
-	test_polynomial_interpolation()
