@@ -101,7 +101,9 @@ def animate():
 		figure, render_frame, init_func=reset_frame, frames=12, interval=1000,
 		blit=True
 	)
-	anim.save("interpolation.mp4", fps=1, extra_args=["-vcodec", "libx264"])
+	anim.save(
+		"animation/interpolation.mp4", fps=1, extra_args=["-vcodec", "libx264"]
+	)
 	pyplot.show()
 
 if __name__ == "__main__":
