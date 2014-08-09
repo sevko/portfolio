@@ -1,53 +1,107 @@
+"""
+Render an animation of polynomial interpolation with the
+`polynomial_interpolation` module and `matplotlib`.
+"""
+
 from matplotlib import animation, pyplot
 import numpy
 
 import polynomial_interpolation
 
 def animate():
-	domain = [-4, 4]
+	"""
+	Render a visual demonstration of polynomial interpolation.
 
-	def init():
-		# Draw the background of every frame.
+	Use `matplotlib` to render an animation of polynomial interpolation using
+	the `polynomial_interpolation` module.
+	"""
+
+	domain = [-3, 3]
+
+	def reset_frame():
+		"""
+		Reset the visual buffer at the beginning of a new frame.
+
+		Returns:
+			(tuple of `matplotlib` objects) A tuple of the shapes rendered by
+			`matplotlib`.
+		"""
 
 		line.set_data([], [])
 		points.set_data([], [])
-		interpolated_point.set_data([], [])
-		return line, points, interpolated_point
+		interpolated_line.set_data([], [])
+		return line, points, interpolated_line
 
-	def animate(i):
-		# Animation function.
+	def render_frame(frame):
+		"""
+		Render a frame of the animation.
 
-		line_x = numpy.linspace(domain[0], domain[1], 1000)
-		line_y = polynomial(line_x)
-		line.set_data(line_x, line_y)
+		Args:
+			frame (int): The number of the frame.
 
-		point_x = numpy.linspace(domain[0], domain[1], i + 2)
-		point_y = polynomial(point_x)
-		points.set_data(point_x, point_y)
+		Returns:
+			(tuple of `matplotlib` objects) A tuple of the shapes rendered by
+			`matplotlib`.
+		"""
 
-		interpolated_x = numpy.linspace(domain[0], domain[1], 40)
-		interpolated_y = polynomial_interpolation.\
-			interpolate_polynomial_value(zip(point_x, point_y), interpolated_x)
-		interpolated_point.set_data(interpolated_x, interpolated_y)
-		return line, points, interpolated_point
+		# Render the full curve.
+		line_domain = numpy.linspace(domain[0], domain[1], 1000)
+		line.set_data(line_domain, polynomial(line_domain))
+
+		# Render points on the curve.
+		point_domain = numpy.linspace(domain[0], domain[1], frame + 1)
+		point_range = polynomial(point_domain)
+		points.set_data(point_domain, point_range)
+
+		# Render the interpolated curve.
+		interpolated_domain = numpy.linspace(domain[0], domain[1], 60)
+		interpolated_line.set_data(
+			interpolated_domain,
+			polynomial_interpolation.interpolate_polynomial_value(
+				zip(point_domain, point_range),
+				interpolated_domain
+			)
+		)
+		return line, points, interpolated_line
 
 	def polynomial(x):
+		"""
+		The polynomial this animation is based on.
+
+		The polynomial is alternating, 9th degree.
+
+		Args:
+			x (int/float): The argument to the polynomial.
+
+		Returns:
+			The output given by an input of `x`.
+		"""
+
 		y = 0
 		for order in xrange(10):
 			y += (1 if order % 2 == 0 else -1) * x ** order
-		return 0.5 * y
+		return y
 
+	# Configure `pyplot`.
 	figure = pyplot.figure()
 	axes = pyplot.axes(
-		xlim=(domain[0], domain[1]),
-		ylim=(polynomial(domain[0]), polynomial(domain[1]))
+		xlim=(domain[0] * 1.1, domain[1] * 1.1),
+		ylim=(polynomial(domain[0]) * 1.1, polynomial(domain[1]) * 1.1)
 	)
-	line, = axes.plot([], [], linewidth=1)
-	points, = axes.plot([], [], "ro", markersize=8)
-	interpolated_point, = axes.plot([], [], "go", markersize=4)
+	line, = axes.plot([], [], label="f(x)", linewidth=1.2)
+	points, = axes.plot([], [], "ro", label="points on f(x)", markersize=8)
+	interpolated_line, = axes.plot(
+		[], [], "g-", label="interpolated f(x)", linewidth=1.2
+	)
+	pyplot.legend(loc="lower right")
+	pyplot.title("Polynomial Interpolation")
+
+	# Run the animation and save it to an `mp4`.
 	anim = animation.FuncAnimation(
-		figure, animate, init_func=init, frames=200, interval=1000, blit=True
+		figure, render_frame, init_func=reset_frame, frames=12, interval=1000,
+		blit=True
 	)
+	anim.save("interpolation.mp4", fps=1, extra_args=["-vcodec", "libx264"])
 	pyplot.show()
 
 if __name__ == "__main__":
