@@ -16,7 +16,8 @@ def animate():
 	the `polynomial_interpolation` module.
 	"""
 
-	domain = [-3, 3]
+	import math
+	domain = [-2 * math.pi, 2 * math.pi]
 
 	def reset_frame():
 		"""
@@ -77,16 +78,18 @@ def animate():
 			The output given by an input of `x`.
 		"""
 
-		y = 0
-		for order in xrange(10):
-			y += (1 if order % 2 == 0 else -1) * x ** order
-		return y
+		return numpy.sin(x)
+		# y = 0
+		# for order in xrange(10):
+			# y += (1 if order % 2 == 0 else -1) * x ** order
+		# return y
 
 	# Configure `pyplot`.
 	figure = pyplot.figure()
 	axes = pyplot.axes(
 		xlim=(domain[0] * 1.1, domain[1] * 1.1),
-		ylim=(polynomial(domain[0]) * 1.1, polynomial(domain[1]) * 1.1)
+		ylim=(-1.3, 1.3)
+		# ylim=(polynomial(domain[0]) * 1.1, polynomial(domain[1]) * 1.1)
 	)
 	line, = axes.plot([], [], label="f(x)", linewidth=1.2)
 	points, = axes.plot([], [], "ro", label="points on f(x)", markersize=8)
@@ -102,9 +105,10 @@ def animate():
 		blit=True
 	)
 	anim.save(
-		"animation/interpolation.mp4", fps=1, extra_args=["-vcodec", "libx264"]
+		"animation/interpolation2.mp4", fps=1, extra_args=["-vcodec", "libx264"]
 	)
 	pyplot.show()
 
 if __name__ == "__main__":
-	animate()
+	# animate()
+	polynomial_interpolation.test_polynomial_interpolation()
