@@ -36,3 +36,33 @@ def estimate_coefficients(pts):
 	b0 = (sum_y - b1 * sum_x) / num_points
 
 	return b1, b0
+
+def unit_test():
+	"""
+	Test the output of `estimate_coefficients()` against a hand-written
+	data-set and expected output.
+	"""
+
+	pts = [
+		(-4.0, -3.0),
+		(-3.0, -1.0),
+		(-2.0, -2.0),
+		(-1.5, -0.5),
+		(-0.5, 1.0),
+		(1.0, 0.0),
+		(2.0, 1.5),
+		(3.5, 1.0),
+		(4.0, 2.5)
+	]
+
+	expected = (0.5519, 0.0249)
+	received = estimate_coefficients(pts)
+	error_allowance = 1e-6
+	if abs(expected[0] - received[0]) < error_allowance or \
+		abs(expected[1] - received[1]) < error_allowance:
+		print "Unit-test failed.\nExpected: %s\nReceived:%s\n" % (
+			expected, received
+		)
+
+if __name__ == "__main__":
+	unit_test()
