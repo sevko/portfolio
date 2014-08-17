@@ -16,14 +16,9 @@ def demo():
 
 	# Create a randomized dataset.
 	bounds = [-100, 100]
-	num_points = 60
-	pts_x = [
-		float(random.randint(bounds[0], bounds[1])) for pt in
-		xrange(num_points)
-	]
+	pts_x = range(bounds[0], bounds[1], 4)
 	pts_y = [
-		float(random.randint(bounds[0], bounds[1])) for pt in
-		xrange(num_points)
+		pts_x[pt] * 0.5 + (pt * 0.5) ** 2 + random.random() * 40 for pt in xrange(len(pts_x))
 	]
 
 	# Create a best-fit line.
@@ -34,8 +29,8 @@ def demo():
 	# Configure matplotlib and render the dataset/line.
 	figure = pyplot.figure()
 	axes = pyplot.axes(
-		xlim=(bounds[0], bounds[1]),
-		ylim=(bounds[0], bounds[1])
+		xlim=(min(pts_x), max(pts_x)),
+		ylim=(min(pts_y), max(pts_y))
 	)
 	points, = axes.plot(
 		pts_x, pts_y, "ro", label="randomized dataset",
