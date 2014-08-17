@@ -18,7 +18,8 @@ def demo():
 	bounds = [-100, 100]
 	pts_x = range(bounds[0], bounds[1], 4)
 	pts_y = [
-		pts_x[pt] * 0.5 + (pt * 0.5) ** 2 + random.random() * 40 for pt in xrange(len(pts_x))
+		pts_x[pt] * 0.5 + (pt * 0.5) ** 2 + random.random() * 40 for pt in
+		xrange(len(pts_x))
 	]
 
 	# Create a best-fit line.
