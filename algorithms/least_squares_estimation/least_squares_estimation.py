@@ -37,12 +37,13 @@ def estimate_coefficients(pts):
 
 	return b1, b0
 
-def unit_test():
+def _unit_test():
 	"""
 	Test the output of `estimate_coefficients()` against a hand-written
 	data-set and expected output.
 	"""
 
+	# The test dataset.
 	pts = [
 		(-4.0, -3.0),
 		(-3.0, -1.0),
@@ -55,6 +56,7 @@ def unit_test():
 		(4.0, 2.5)
 	]
 
+	# Test the output of `estimate_coefficients()` against expected values.
 	expected = (0.5519, 0.0249)
 	received = estimate_coefficients(pts)
 	error_allowance = 1e-6
@@ -63,6 +65,3 @@ def unit_test():
 		print "Unit-test failed.\nExpected: %s\nReceived:%s\n" % (
 			expected, received
 		)
-
-if __name__ == "__main__":
-	unit_test()
