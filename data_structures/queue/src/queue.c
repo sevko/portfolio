@@ -25,3 +25,9 @@ void enqueue(Queue_t *queue, void *data){
 void *dequeue(Queue_t *queue){
 	return removeSLListHead(queue);
 }
+
+void printQueue(Queue_t *queue, char *fmt){
+	puts("Queue head.");
+	printSLList(queue, fmt);
+	puts("Queue tail.");
+}

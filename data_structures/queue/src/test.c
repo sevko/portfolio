@@ -42,6 +42,7 @@ static void testQueue(void){
 	enqueue(queue, strings[6]);
 	enqueue(queue, strings[7]);
 	enqueue(queue, strings[8]);
+	printQueue(queue, "%s\n");
 	freeQueue(queue);
 }
 
