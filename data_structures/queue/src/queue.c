@@ -16,7 +16,10 @@ void *peek(Queue_t *queue){
 }
 
 void enqueue(Queue_t *queue, void *data){
-	insertAfterSLNode(queue, queue->tail, data);
+	if(queue->len == 0)
+		insertSLListHead(queue, data);
+	else
+		insertAfterSLNode(queue, queue->tail, data);
 }
 
 void *dequeue(Queue_t *queue){
