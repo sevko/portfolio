@@ -5,3 +5,13 @@ def polynomial_root(polynomial, derivative, x, max_delta=1e-6):
 		x -= polynomial(x) / derivative(x)
 
 	return x
+
+if __name__ == "__main__":
+	def polynomial(x):
+		return x ** 3 - x ** 2 - 3 * x
+
+	def derivative(x):
+		return 3 * x ** 2 - 2 * x - 3
+
+	root = polynomial_root(polynomial, derivative, 1.5)
+	print "Estimated root: %f.\nf(%f) = %f" % (root, root, polynomial(root))
