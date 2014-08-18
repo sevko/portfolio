@@ -3,7 +3,22 @@
 
 #include "queue.h"
 
-int main(){
-	puts("Hello world.");
-	return EXIT_SUCCESS;
+Queue_t *createQueue(void (*freeData)(void *data)){
+	return createSLList(freeData);
+}
+
+void freeQueue(Queue_t *queue){
+	freeSLList(queue);
+}
+
+void *peek(Queue_t *queue){
+	return queue->head->data;
+}
+
+void enqueue(Queue_t *queue, void *data){
+	insertAfterSLNode(queue, queue->tail, data);
+}
+
+void *dequeue(Queue_t *queue){
+	return removeSLListHead(queue);
 }
