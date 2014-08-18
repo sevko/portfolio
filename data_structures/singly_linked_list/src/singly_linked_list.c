@@ -120,6 +120,16 @@ void *removeSLNode(SLList_t *list, SLNode_t *node){
 	return freeSLNode(node);
 }
 
+void printSLList(const SLList_t *list, const char *fmt){
+	SLNode_t *currNode = list->head;
+	puts("Printing singly-linked list.");
+	while(currNode != NULL){
+		printf(fmt, (char *)currNode->data);
+		currNode = currNode->next;
+	}
+	puts("Finished.");
+}
+
 static SLNode_t *createSLNode(void *data){
 	SLNode_t *node = malloc(sizeof(SLNode_t));
 	node->data = data;

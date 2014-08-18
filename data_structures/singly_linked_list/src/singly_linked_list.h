@@ -134,3 +134,15 @@ void *removeAtIndex(SLList_t *list, int index);
  * @return A pointer to the removed ::SLNode_t.
 */
 void *removeSLNode(SLList_t *list, SLNode_t *node);
+
+/*
+ * @brief Prints the contents of a ::SLList_t.
+ *
+ * Prints the list's ::SLNode_t's ::data, starting at its ::head and ending at
+ * its ::tail.
+ *
+ * @param list The list to print.
+ * @param fmt The format string `printf()` will use to print the value of the
+ *      list's nodes' ::data (which are void pointers).
+*/
+void printSLList(const SLList_t * list, const char *fmt);
