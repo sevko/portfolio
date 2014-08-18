@@ -15,33 +15,8 @@
 */
 static void freeData(void *data);
 
-/*
- * @brief Prints an ::SLList_t.
- *
- * Prints the list's ::SLNode_t's ::data, starting at its ::head and ending at
- * its ::tail.
- *
- * @param list Assumed to contain `char *` data.
-*/
-static void printSLList(SLList_t *list);
-
-/*
- * @brief Tests the functions defined in `src/singly_linked_list.h`.
-*/
-static void testSLList(void);
-
 static void freeData(void *data){
 	free((char *)data);
-}
-
-static void printSLList(SLList_t *list){
-	SLNode_t *currNode = list->head;
-	puts("Printing singly-linked list.");
-	while(currNode != NULL){
-		printf("%s\n", (char *)currNode->data);
-		currNode = currNode->next;
-	}
-	puts("Finished.");
 }
 
 static void testSLList(void){
@@ -62,12 +37,9 @@ static void testSLList(void){
 	insertAfterSLNode(list, list->tail, strings[2]);
 	insertAfterSLNode(list, list->tail, strings[1]);
 	insertAfterSLNode(list, list->tail, strings[0]);
-	freeData(removeSLListHead(list));
-	freeData(removeSLNode(list, list->head));
 	insertAtIndex(list, 0, strings[8]);
-	insertAtIndex(list, list->len, strings[8]);
 
-	printSLList(list);
+	printSLList(list, "%s\n");
 	freeSLList(list);
 }
 
