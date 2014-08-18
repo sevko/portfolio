@@ -42,6 +42,9 @@ static void testQueue(void){
 	enqueue(queue, strings[6]);
 	enqueue(queue, strings[7]);
 	enqueue(queue, strings[8]);
+	printf("%s\n", (char *)dequeue(queue));
+	printf("%s\n", (char *)dequeue(queue));
+	printf("%s\n", (char *)dequeue(queue));
 	printQueue(queue, "%s\n");
 	freeQueue(queue);
 }

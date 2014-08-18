@@ -27,7 +27,7 @@ void *dequeue(Queue_t *queue){
 }
 
 void printQueue(Queue_t *queue, char *fmt){
-	puts("Queue head.");
+	puts("Queue head (front).");
 	printSLList(queue, fmt);
-	puts("Queue tail.");
+	puts("Queue tail (back).");
 }
