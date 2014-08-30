@@ -19,6 +19,8 @@ poly_points = [
 interpolate_polynomial_value(poly_points, -2.5) # approx. -2.69375
 ```
 
+Running `animation.py` will simply execute `polynomial_interpolation`'s inbuilt unit test.
+
 [interpolation_animation_1]: animation/interpolation0.gif
 [interpolation_animation_2]: animation/interpolation1.gif
 [interpolation_animation_3]: animation/interpolation2.gif

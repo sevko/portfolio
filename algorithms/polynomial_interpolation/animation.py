@@ -105,7 +105,8 @@ def animate():
 		blit=True
 	)
 	anim.save(
-		"animation/interpolation2.mp4", fps=1, extra_args=["-vcodec", "libx264"]
+		"animation/interpolation2.mp4", fps=1,
+		extra_args=["-vcodec", "libx264"]
 	)
 	pyplot.show()
 

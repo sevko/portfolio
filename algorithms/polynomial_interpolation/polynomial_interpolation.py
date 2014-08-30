@@ -72,3 +72,5 @@ def test_polynomial_interpolation():
 			abs(interpolate_polynomial_value(poly_points, test[0]) - test[1]) <
 			1e-6
 		)
+
+	print "Unit tests completed successfully."
