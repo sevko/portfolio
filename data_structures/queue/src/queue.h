@@ -54,13 +54,13 @@ void enqueue(Queue_t *queue, void *data);
 void *dequeue(Queue_t *queue);
 
 /*
- * @brief Prints the contents of a ::Queue_t.
- *
- * Prints the queue's nodes' ::data, starting at its ::head (front) and ending
- * at its ::tail (back).
- *
- * @param queue The queue to print.
- * @param fmt The format string `printf()` will use to print the value of the
- *      queue's nodes' ::data (which are void pointers).
+	@brief Prints the contents of a ::Queue_t.
+
+	Prints the queue's nodes' ::data, starting at its ::head (front) and ending
+	at its ::tail (back).
+
+	@param queue The queue to print.
+	@param fmt The format string `printf()` will use to print the value of the
+		queue's nodes' ::data (which are void pointers).
 */
 void printQueue(Queue_t *queue, char *fmt);
