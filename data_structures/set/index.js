@@ -41,7 +41,18 @@ function Set(){
 		}
 	};
 
+	/**
+	 * Return the union of this Set and another.
+	 *
+	 * @param {Set} set Another Set instance to combine with this Set.
+	 * @return {Set} A new Set, containing all of the elements inside this Set
+	 *      and `set`, without duplicates.
+	 */
 	this.union = function union(set){
+		var unionSet = new Set();
+		this.insert.apply(unionSet, this.items);
+		this.insert.apply(unionSet, set.items);
+		return unionSet;
 	};
 
 	this.intersection = function intersection(set){
@@ -61,7 +72,22 @@ function Set(){
 	this.isSubset = function isSubset(set){
 	};
 
+	/**
+	 * Indicate whether two Sets contain the same items, or not.
+	 *
+	 * @param {Set} set The set to compare this Set against.
+	 * @return {boolean} Whether or not the items in this Set are all contained
+	 *      in `set`, and vice versa.
+	 */
 	this.isEqual = function isEqual(set){
+		if(this.length() !== set.length())
+			return false;
+
+		for(var ind = 0; ind < this.items.length; ind++)
+			if(set.items.indexOf(this.items[ind]) === -1)
+				return false;
+
+		return true;
 	};
 
 	/**
@@ -71,7 +97,7 @@ function Set(){
 		return this.items.length;
 	};
 
-	this.insert.apply(this, arguments)
+	this.insert.apply(this, arguments);
 }
 
 module.exports = Set;

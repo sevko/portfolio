@@ -66,7 +66,7 @@ describe("remove()", function(){
 		assert(set.length() === 1);
 		set.remove(1);
 		assert(set.length() === 0);
-	})
+	});
 	it("Should remove multiple items.", function(){
 		var set = new Set(1, 2, 3, 4);
 		assert(set.length() == 4);
@@ -80,5 +80,27 @@ describe("remove()", function(){
 		assert(set.length() === 1);
 		set.remove(1);
 		assert(set.length() === 0);
+	});
+});
+
+describe("union()", function(){
+	it("Should create a union of two sets.", function(){
+		var set1 = new Set(1, 2, 3, 4);
+		var set2 = new Set(4, 5, 6, 7);
+		var union = set1.union(set2);
+		assert(union.isEqual(new Set(1, 2, 3, 4, 5, 6, 7)));
+	});
+});
+
+describe("isEqual()", function (){
+	it("Should identify equal sets.", function (){
+		var set1 = new Set(1, 3, 2);
+		var set2 = new Set(2, 1, 3);
+		assert(set1.isEqual(set2));
+	});
+	it("Should identify unequal sets.", function (){
+		var set1 = new Set(1, 3, 2);
+		var set2 = new Set(4, 1, 3);
+		assert(!set1.isEqual(set2));
 	});
 });
