@@ -2,9 +2,7 @@
  * @file An implementation of a Set data-structure.
  */
 
-function test(){
-	console.log("Testing.");
-}
+"use strict";
 
 /**
  * Create a Set data-structure, which allows all mathematical set operations
@@ -23,7 +21,7 @@ function Set(){
 	 */
 	this.insert = function insert(item){
 		if(!this.isMember(item))
-			this.items.append(item);
+			this.items.push(item);
 	};
 
 	/**
@@ -32,7 +30,7 @@ function Set(){
 	 * @param {*} item The item to attempt removing.
 	 */
 	this.remove = function remove(item){
-		var ind = this.items.indOf(item);
+		var ind = this.items.indexOf(item);
 		if(ind != -1)
 			this.items.splice(ind, 1);
 	};
@@ -69,4 +67,3 @@ function Set(){
 }
 
 module.exports = Set;
-test();
