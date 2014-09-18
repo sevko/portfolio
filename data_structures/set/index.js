@@ -55,7 +55,19 @@ function Set(){
 		return unionSet;
 	};
 
+	/**
+	 * Return the intersection of this Set and another.
+	 *
+	 * @param {Set} set Another Set instance to intersect with this Set.
+	 * @return {Set} A new Set, containing all the elements shared by this Set
+	 *      and `set`.
+	 */
 	this.intersection = function intersection(set){
+		var intersectionSet = new Set();
+		for(var ind = 0; ind < this.items.length; ind++)
+			if(set.isMember(this.items[ind]))
+				intersectionSet.insert(this.items[ind]);
+		return intersectionSet;
 	};
 
 	this.difference = function difference(set){
@@ -69,12 +81,23 @@ function Set(){
 		return this.items.indexOf(item) != -1;
 	};
 
+	/**
+	 * @param {Set} set A set.
+	 * @return {boolean} Whether or not all of the items contained inside `set`
+	 *      are contained inside this Set.
+	 */
 	this.isSubset = function isSubset(set){
+		if(this.length() < set.length())
+			return false;
+
+		for(var ind = 0; ind < set.items.length; ind++)
+			if(!this.isMember(set.items[ind]))
+				return false;
+
+		return true;
 	};
 
 	/**
-	 * Indicate whether two Sets contain the same items, or not.
-	 *
 	 * @param {Set} set The set to compare this Set against.
 	 * @return {boolean} Whether or not the items in this Set are all contained
 	 *      in `set`, and vice versa.

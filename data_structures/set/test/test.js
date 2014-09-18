@@ -92,6 +92,27 @@ describe("union()", function(){
 	});
 });
 
+describe("intersection()", function (){
+	it("Should create an intersection.", function (){
+		var set1 = new Set(3, 4, 5, 6);
+		var set2 = new Set(1, 2, 3, 4);
+		assert(set1.intersection(set2).isEqual(new Set(3, 4)));
+	});
+})
+
+describe("isSubset()", function (){
+	it("Should detect subsets.", function (){
+		var set1 = new Set(3, 4, 5, 6);
+		var set2 = new Set(4, 5);
+		assert(set1.isSubset(set2));
+	});
+	it("Should detect non-subsets.", function (){
+		var set1 = new Set(3, 4, 5, 6);
+		var set2 = new Set(1, 2, 3);
+		assert(!set1.isSubset(set2));
+	});
+})
+
 describe("isEqual()", function (){
 	it("Should identify equal sets.", function (){
 		var set1 = new Set(1, 3, 2);
