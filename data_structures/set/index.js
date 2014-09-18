@@ -70,7 +70,19 @@ function Set(){
 		return intersectionSet;
 	};
 
+	/**
+	 * Return the difference of this Set and another.
+	 *
+	 * @param {Set} set Another Set instance to subtract from this Set.
+	 * @return {Set} A new Set, containing all the elements inside this Set
+	 *      that aren't inside `set`.
+	 */
 	this.difference = function difference(set){
+		var differenceSet = new Set();
+		for(var ind = 0; ind < this.items.length; ind++)
+			if(set.items.indexOf(this.items[ind]) === -1)
+				differenceSet.insert(this.items[ind]);
+		return differenceSet;
 	};
 
 	/**

@@ -98,7 +98,16 @@ describe("intersection()", function (){
 		var set2 = new Set(1, 2, 3, 4);
 		assert(set1.intersection(set2).isEqual(new Set(3, 4)));
 	});
-})
+});
+
+describe("difference()", function (){
+	it("Should create a difference.", function (){
+		var set1 = new Set(3, 4, 5, 6);
+		var set2 = new Set(1, 2, 3, 4, 7);
+		assert(set1.difference(set2).isEqual(new Set(5, 6)));
+		assert(set2.difference(set1).isEqual(new Set(1, 2, 7)));
+	});
+});
 
 describe("isSubset()", function (){
 	it("Should detect subsets.", function (){
@@ -111,7 +120,7 @@ describe("isSubset()", function (){
 		var set2 = new Set(1, 2, 3);
 		assert(!set1.isSubset(set2));
 	});
-})
+});
 
 describe("isEqual()", function (){
 	it("Should identify equal sets.", function (){
