@@ -9,30 +9,36 @@
  * and prevents data duplication.
  *
  * @constructor
- * @return {Set} An empty set.
+ * @param {*} * Any arguments will be inserted into the newly created Set.
+ * @return {Set} A set.
  */
 function Set(){
 	this.items = [];
 
 	/**
-	 * Insert an item into this Set, if it's not already present.
+	 * Insert items into this Set, if they're not already present.
 	 *
-	 * @param {*} item The item to attempt inserting.
+	 * @param {*} item At least one item to attempt inserting. Any number of
+	 *      additional arguments is accepted.
 	 */
 	this.insert = function insert(item){
-		if(!this.isMember(item))
-			this.items.push(item);
+		for(var arg = 0; arg < arguments.length; arg++)
+			if(!this.isMember(arguments[arg]))
+				this.items.push(arguments[arg]);
 	};
 
 	/**
-	 * Remove an item from this Set, if it's present.
+	 * Remove items from this Set, if they're present.
 	 *
-	 * @param {*} item The item to attempt removing.
+	 * @param {*} items At least one time to attempt removing. Any number of
+	 *      additional arguments is accepted.
 	 */
 	this.remove = function remove(item){
-		var ind = this.items.indexOf(item);
-		if(ind != -1)
-			this.items.splice(ind, 1);
+		for(var arg = 0; arg < arguments.length; arg++){
+			var ind = this.items.indexOf(arguments[arg]);
+			if(ind != -1)
+				this.items.splice(ind, 1);
+		}
 	};
 
 	this.union = function union(set){
@@ -64,6 +70,8 @@ function Set(){
 	this.length = function length(){
 		return this.items.length;
 	};
+
+	this.insert.apply(this, arguments)
 }
 
 module.exports = Set;
