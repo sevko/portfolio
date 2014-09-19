@@ -132,6 +132,13 @@ function Set(){
 		return this.items.length;
 	};
 
+	/**
+	 * @return {string} The string representation of `this.items`.
+	 */
+	this.toString = function toString(){
+		return this.items.toString();
+	};
+
 	this.insert.apply(this, arguments);
 }
 

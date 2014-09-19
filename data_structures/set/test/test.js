@@ -134,3 +134,13 @@ describe("isEqual()", function (){
 		assert(!set1.isEqual(set2));
 	});
 });
+
+describe("toString()", function (){
+	it("Should return a correct string.", function (){
+		var items = [1, 2, 3, 4, 5];
+		var set = new Set();
+		for(var ind = 0; ind < items.length; ind++)
+			set.insert(items[ind]);
+		assert(items.toString() === set.toString());
+	});
+});
