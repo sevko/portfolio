@@ -2,7 +2,7 @@
  * @file An implementation of an algorithm that finds a set's subsets.
  */
 
-var util = require("util");
+"use strict";
 
 /**
  * Generate all subsets of an array.
@@ -52,14 +52,5 @@ function generateSubsets(array){
 	}
 	return subsets;
 }
-
-(function testSetCover(){
-	var set = [1, 2, 3, 4];
-	var subsets = generateSubsets(set);
-	console.log(util.format(
-		"Original set: %s\nNumber of subsets: %d\nSubsets:\n%s",
-		set, subsets.length, subsets.join("\n")
-	));
-})();
 
 module.exports = generateSubsets;
