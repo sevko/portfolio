@@ -80,3 +80,17 @@ function findSetCover(sets){
 		}
 	}
 }
+
+/**
+ * Run `findSetCover()` for a sample array of sets.
+ */
+(function testSetCover(){
+	var sets = [
+		new Set(1, 5),
+		new Set(2),
+		new Set(3),
+		new Set(4)
+	];
+
+	console.log(findSetCover(sets).toString()); // 1 - 5
+})();
