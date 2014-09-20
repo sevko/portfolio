@@ -4,6 +4,8 @@
 
 "use strict";
 
+var util = require("util");
+
 /**
  * Create a Set data-structure, which allows all mathematical set operations
  * and prevents data duplication.
@@ -136,7 +138,7 @@ function Set(){
 	 * @return {string} The string representation of `this.items`.
 	 */
 	this.toString = function toString(){
-		return this.items.toString();
+		return util.format("[%s]", this.items.join(", "));
 	};
 
 	this.insert.apply(this, arguments);
