@@ -4,8 +4,8 @@
 
 "use strict";
 
-var Set = require("../../data_structures/set/"); // jshint ignore:line
 var generateSubsets = require("../generate_subsets/");
+var Set = require("../../data_structures/set/"); // jshint ignore:line
 
 /**
  * Find the set cover for an array of sets.
@@ -33,16 +33,4 @@ function findSetCover(sets){
 	}
 }
 
-/**
- * Run `findSetCover()` for a sample array of sets.
- */
-(function testSetCover(){
-	var sets = [
-		new Set(1, 5),
-		new Set(2),
-		new Set(3),
-		new Set(4)
-	];
-
-	console.log(findSetCover(sets).toString()); // 1 - 5
-})();
+module.exports = findSetCover;
