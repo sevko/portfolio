@@ -1,15 +1,15 @@
 /**
- * @file Unit tests for the the `generate_subsets_2` module.
+ * @file Unit tests for the the `power_set_2` module.
  */
 
 "use strict";
 
 var assert = require("assert");
-var generateSubsets = require("../index.js");
+var powerSet = require("../index.js");
 
-describe("generateSubsets()", function(){
+describe("powerSet()", function(){
 	it("should generate all subsets of a set", function(){
-		var subsets = generateSubsets([1, 2, 3]);
+		var subsets = powerSet([1, 2, 3]);
 		var expected = [[], [1], [2], [1, 2], [3], [1, 3], [2, 3], [1, 2, 3]];
 
 		// Relies on a precise order of the subsets in the returned set which,

@@ -10,7 +10,7 @@
  * @param {array} array An array.
  * @return {array} The set of all subsets of `array`.
  */
-function generateSubsets(array){
+function powerSet(array){
 	var subsets = [[]];
 	for(var item = 0; item < array.length; item++){
 		var numExistingSubsets = subsets.length;
@@ -23,4 +23,4 @@ function generateSubsets(array){
 	return subsets;
 }
 
-module.exports = generateSubsets;
+module.exports = powerSet;
