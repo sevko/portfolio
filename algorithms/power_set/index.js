@@ -43,7 +43,7 @@ function powerSet(array){
 		}
 	}
 
-	var subsets = [];
+	var subsets = [[]];
 	for(var subsetLen = 1; subsetLen <= array.length; subsetLen++){
 		var fixedLenSubsets = fixedLengthSubsets(subsetLen, 0, 0);
 		for(var subset = 0; subset < fixedLenSubsets.length; subset++){
