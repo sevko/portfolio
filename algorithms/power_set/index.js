@@ -1,5 +1,5 @@
 /**
- * @file An implementation of an algorithm that finds a set's subsets.
+ * @file An implementation of an algorithm that finds a set's power set.
  */
 
 "use strict";
@@ -11,7 +11,7 @@
  * @return {array} The set of all subsets of `array`, ordered by
  *      length.
  */
-function generateSubsets(array){
+function powerSet(array){
 	/**
 	 * Recursively generate all subsets of a certain length.
 	 *
@@ -53,4 +53,4 @@ function generateSubsets(array){
 	return subsets;
 }
 
-module.exports = generateSubsets;
+module.exports = powerSet;
