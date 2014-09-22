@@ -1,10 +1,10 @@
-# subset generator
-A Node module containing an implementation of a simple recursive algorithm that finds all the
-[subsets](http://en.wikipedia.org/wiki/Subset) of a set. Sample usage:
+# power set
+A Node module containing an implementation of a simple recursive algorithm that finds the
+[power set](http://en.wikipedia.org/wiki/Power_set) of a set. Sample usage:
 
 ```javascript
-> var generateSubsets = require("generate_subsets");
-> console.log(generateSubsets([1, 2, 3]));
+> var powerSet = require("power_set");
+> console.log(powerSet([1, 2, 3]));
 [ [ 1 ], [ 2 ], [ 3 ], [ 2, 1 ], [ 3, 1 ], [ 3, 2 ], [ 3, 2, 1 ] ]
 ```
 
