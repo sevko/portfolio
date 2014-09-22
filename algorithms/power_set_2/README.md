@@ -1,6 +1,6 @@
 # power set 2
 A Node module containing a second implementation of an algorithm that finds the
-[power set](http://en.wikipedia.org/wiki/Power_set) of a set (check out the [first](./power_set)).
+[power set](http://en.wikipedia.org/wiki/Power_set) of a set (check out the [first](../power_set)).
 
 ```javascript
 > var generateSubsets = require("power_set_2");
