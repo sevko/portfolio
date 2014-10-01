@@ -29,4 +29,28 @@ function ulamSpiral(numLayers){
 	}
 }
 
-ulamSpiral(300);
+/**
+ * Render a Sacks spiral on the page's canvas.
+ *
+ * @param {number} numLayers The number of squared values along the Sacks
+ *      spiral's "axis."
+ */
+function sacksSpiral(numLayers){
+	var drawPixel = setupCanvas(numLayers);
+
+	var currValue = 1;
+	for(var layer = 1; layer <= numLayers; layer++){
+		var numPoints = 2 * layer + 1;
+		var angle = 2 * Math.PI / numPoints;
+		for(var point = 1; point <= numPoints; point++){
+			if(primality(currValue++)){
+				var radius = layer + point / numPoints;
+				var x = Math.cos(point * angle) * radius;
+				var y = Math.sin(point * angle) * radius;
+				drawPixel(Math.floor(x), Math.floor(y));
+			}
+		}
+	}
+}
+
+sacksSpiral(200);
