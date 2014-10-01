@@ -12,6 +12,13 @@ function ulamSpiral(numLayers){
 	var y = 0;
 
 	for(var layer = 0, len = 0; layer <= numLayers; layer++, len += 2){
+		/**
+		 * Draw a line with a specified length and delta vector.
+		 *
+		 * @param dx The change in x between points.
+		 * @param dy The change in y between points.
+		 * @param len The number of points on the line.
+		 */
 		function drawLine(dx, dy, len){
 			for(var pixel = 0; pixel < len; pixel++){
 				if(primality(currValue++)){
@@ -53,4 +60,5 @@ function sacksSpiral(numLayers){
 	}
 }
 
-sacksSpiral(200);
+ulamSpiral(200);
+// sacksSpiral(200);
