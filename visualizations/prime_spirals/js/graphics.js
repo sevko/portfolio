@@ -1,4 +1,8 @@
 /**
+ * Wrapper interface for the HTML canvas.
+ */
+
+/**
  * Configure the HTML canvas for a certain number of layers.
  *
  * @param {number} numLayers The number of layers (concentric rings) in the

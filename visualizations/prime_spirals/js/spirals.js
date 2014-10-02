@@ -1,4 +1,8 @@
 /**
+ * Functions for rendering the Ulam and Sacks spirals.
+ */
+
+/**
  * Render an Ulam spiral on the page's canvas.
  *
  * @param {number} numLayers The number of concentric rings, or layers, in the
