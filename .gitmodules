@@ -1,0 +1,3 @@
+[submodule "visualizations/prime_number_spirals/js/primality"]
+	path = visualizations/prime_number_spirals/js/primality
+	url = https://github.com/KenanY/primality
