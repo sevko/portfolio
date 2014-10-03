@@ -9,30 +9,32 @@
  *      spiral.
  */
 function ulamSpiral(numLayers){
+	"use strict";
+
 	var drawPixel = setupCanvas(numLayers);
 
 	var currValue = 1;
 	var x = 0;
 	var y = 0;
 
-	for(var layer = 0, len = 0; layer <= numLayers; layer++, len += 2){
-		/**
-		 * Draw a line with a specified length and delta vector.
-		 *
-		 * @param dx The change in x between points.
-		 * @param dy The change in y between points.
-		 * @param len The number of points on the line.
-		 */
-		function drawLine(dx, dy, len){
-			for(var pixel = 0; pixel < len; pixel++){
-				if(primality(currValue++)){
-					drawPixel(x, y);
-				}
-				x += dx;
-				y += dy;
+	/**
+	 * Draw a line with a specified length and delta vector.
+	 *
+	 * @param dx The change in x between points.
+	 * @param dy The change in y between points.
+	 * @param len The number of points on the line.
+	 */
+	function drawLine(dx, dy, len){
+		for(var pixel = 0; pixel < len; pixel++){
+			if(primality(currValue++)){
+				drawPixel(x, y);
 			}
+			x += dx;
+			y += dy;
 		}
+	}
 
+	for(var layer = 0, len = 0; layer <= numLayers; layer++, len += 2){
 		drawLine(0, -1, len - 1);
 		drawLine(-1, 0, len);
 		drawLine(0, 1, len);
@@ -47,6 +49,8 @@ function ulamSpiral(numLayers){
  *      spiral's "axis."
  */
 function sacksSpiral(numLayers){
+	"use strict";
+
 	var drawPixel = setupCanvas(numLayers);
 
 	var currValue = 1;
@@ -55,9 +59,10 @@ function sacksSpiral(numLayers){
 		var angle = 2 * Math.PI / numPoints;
 		for(var point = 1; point <= numPoints; point++){
 			if(primality(currValue++)){
+				var theta = point * angle;
 				var radius = layer + point / numPoints;
-				var x = Math.cos(point * angle) * radius;
-				var y = Math.sin(point * angle) * radius;
+				var x = Math.cos(theta) * radius;
+				var y = Math.sin(theta) * radius;
 				drawPixel(Math.floor(x), Math.floor(y));
 			}
 		}

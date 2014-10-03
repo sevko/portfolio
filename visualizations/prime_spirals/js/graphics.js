@@ -12,14 +12,15 @@
  *      renders them at an offset equal to `numLayers` (half the height/width).
  */
 function setupCanvas(numLayers){
+	"use strict";
+
 	var sideLen = numLayers * 2 + 1;
 	var canvas = document.getElementsByTagName("canvas")[0];
 	canvas.setAttribute("width", sideLen);
 	canvas.setAttribute("height", sideLen);
 
 	var context = canvas.getContext("2d");
-	var halfSideLen = (sideLen - 1) / 2;
 	return function drawPixel(x, y){
-		context.fillRect(x + halfSideLen, y + halfSideLen, 1, 1);
+		context.fillRect(x + numLayers, y + numLayers, 1, 1);
 	};
-};
+}
