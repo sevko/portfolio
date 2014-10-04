@@ -14,16 +14,22 @@ class ChainedHashTable(object):
 		_length (int): The total number of items contained in this table.
 	"""
 
-	def __init__(self, num_buckets, hash_func):
+	def __init__(self, num_buckets, hash_func, items=None):
 		"""
 		Args:
 			num_buckets (int): The number of buckets this table will use.
 			hash_func: see `ChainedHashTable` docstring.
+			items (list, optional): An optional list of items to populate the
+				table with.
 		"""
 
 		self._buckets = [[] for _ in xrange(num_buckets)]
 		self._hash_func = hash_func
 		self._length = 0
+
+		if items is not None:
+			for item in items:
+				self.insert(item)
 
 	def insert(self, item):
 		"""
@@ -31,8 +37,8 @@ class ChainedHashTable(object):
 			item (object): An item to insert into this table.
 		"""
 
-		self._length += 1
 		self._get_bucket(item).append(item)
+		self._length += 1
 
 	def remove(self, item):
 		"""
@@ -40,8 +46,10 @@ class ChainedHashTable(object):
 			item (object): An item to remove from this table.
 		"""
 
-		self._length -= 1
-		self._get_bucket(item).remove(item)
+		bucket = self._get_bucket(item)
+		if item in bucket:
+			bucket.remove(item)
+			self._length -= 1
 
 	def contains(self, item):
 		"""
