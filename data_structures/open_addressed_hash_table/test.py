@@ -18,12 +18,11 @@ class TestOpenAddressedHashTable(unittest.TestCase):
 		Initialize `self.table`.
 		"""
 
-		num_buckets = 10
 		def hash_func(item, num_probes):
-			return item % num_buckets + num_probes
+			return item + num_probes
 
 		self.table = open_addressed_hash_table.OpenAddressedHashTable(
-			num_buckets, hash_func
+			10, hash_func
 		)
 
 	def test_insert(self):
@@ -57,6 +56,18 @@ class TestOpenAddressedHashTable(unittest.TestCase):
 		# finds vacant index
 		self.table._buckets[1] = 1
 		self.assertEqual(self.table.index(11), 2)
+
+	def test_resize(self):
+		"""
+		Test `OpenAddressedHashTable._resize()`.
+		"""
+
+		self.assertEqual(len(self.table._buckets), 10)
+		for num in xrange(4):
+			self.table.insert(num)
+		self.assertEqual(len(self.table._buckets), 10)
+		self.table.insert(5)
+		self.assertEqual(len(self.table._buckets), 20)
 
 if __name__ == "__main__":
 	unittest.main(verbosity=2)
