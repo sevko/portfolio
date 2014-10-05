@@ -7,8 +7,7 @@ class OpenAddressedHashTable(object):
 			into in this table.
 		_hash_func (lambda key, num_probes: index): A function that intakes a
 			`key` (an item being hashed into the table) and `num_probes` (the
-			number of attempted probes), and outputs `index`, in the range
-			[0, num_buckets - 1].
+			number of attempted probes), and outputs a numeric hash value.
 		_length (int): The number of items contained in this table.
 		_vacant (list): A sentinel value pointed to by positions in the table
 			after they contained an item that was removed. Used by
@@ -37,8 +36,11 @@ class OpenAddressedHashTable(object):
 
 	def insert(self, item):
 		"""
+		Inserts an item into this table if it's not already present; resizes if
+		the insertion increased the load-factor to (more than) 0.5.
+
 		Args:
-			item (item): An item to insert into this table. If it's already
+			item (object): An item to insert into this table. If it's already
 				present, it will get discarded.
 		"""
 
@@ -46,13 +48,20 @@ class OpenAddressedHashTable(object):
 		if self._buckets[ind] == item:
 			return
 
-		if self.load_factor() >= 0.5:
-			self._resize()
-
 		self._buckets[ind] = item
 		self._length += 1
 
+		if self.load_factor() >= 0.5:
+			self._resize()
+
 	def remove(self, item):
+		"""
+		Args:
+			item (object): An item to remove from this hash table; its position
+				will be set equal to `self._vacant`. If no such item is found,
+				nothing happens.
+		"""
+
 		ind = self.index(item)
 		if self._buckets[ind] == item:
 			self._buckets[ind] = self._vacant
@@ -73,7 +82,7 @@ class OpenAddressedHashTable(object):
 		"""
 
 		num_probes = 0
-		curr_ind = self._hash_func(item, num_probes)
+		curr_ind = self._hash_func(item, num_probes) % len(self._buckets)
 		vacant_ind = -1
 
 		while True:
@@ -84,13 +93,27 @@ class OpenAddressedHashTable(object):
 			elif self._buckets[curr_ind] == item:
 				return curr_ind
 			num_probes += 1
-			curr_ind = self._hash_func(item, num_probes)
+			curr_ind = self._hash_func(item, num_probes) % len(self._buckets)
 
 	def load_factor(self):
-		pass
+		"""
+		Returns:
+			The load-factor of this hash table.
+		"""
+
+		return float(self._length) / len(self._buckets)
 
 	def _resize(self):
-		pass
+		"""
+		Double the size of this hash table.
+		"""
+
+		buckets = self._buckets
+		self._buckets = [None for _ in xrange(len(buckets) * 2)]
+		self._length = 0
+		for item in buckets:
+			if item is not None and item is not self._vacant:
+				self.insert(item)
 
 	def __len__(self):
 		return self._length
