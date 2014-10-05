@@ -54,14 +54,14 @@ class TestChainedHashTable(unittest.TestCase):
 		self.assertTrue(self.table.contains(6))
 		self.assertFalse(self.table.contains(8))
 
-	def test_load_balance(self):
-		"""Test ChainedHashTable.load_balance().
+	def test_load_factor(self):
+		"""Test ChainedHashTable.load_factor().
 		"""
 
 		self.table.insert(5)
 		self.table.insert(6)
 		self.table.insert(8)
-		self.assertEqual(self.table.load_balance(), 3.0 / self.num_buckets)
+		self.assertEqual(self.table.load_factor(), 3.0 / self.num_buckets)
 
 if __name__ == "__main__":
 	unittest.main(verbosity=2)

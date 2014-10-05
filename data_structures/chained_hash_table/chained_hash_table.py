@@ -62,7 +62,7 @@ class ChainedHashTable(object):
 
 		return item in self._get_bucket(item)
 
-	def load_balance(self):
+	def load_factor(self):
 		"""
 		Returns:
 			(float) The load-balance (quotient of number of elements and
