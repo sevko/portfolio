@@ -43,7 +43,7 @@ class OpenAddressedHashTable(object):
 		"""
 
 		ind = self.index(item)
-		if ind == -1:
+		if self._buckets[ind] == item:
 			return
 
 		if self.load_factor() >= 0.5:
@@ -53,7 +53,10 @@ class OpenAddressedHashTable(object):
 		self._length += 1
 
 	def remove(self, item):
-		pass
+		ind = self.index(item)
+		if self._buckets[ind] == item:
+			self._buckets[ind] = self._vacant
+			self._length -= 1
 
 	def index(self, item):
 		"""
@@ -61,21 +64,27 @@ class OpenAddressedHashTable(object):
 			item (item): The item to search for by probing the table.
 
 		Returns:
-			int: -1 if `item` was not found inside this table; otherwise, its
-			index inside `_buckets`.
+			int: If `item` is not found, the index of either the first
+			encountered occurence of "vacant" (see `OpenAddressedHashTable`
+			docstring) or None. Otherwise, the index of `item`. This seems
+			convoluted, but it's flexible enough to be used to check
+			whether an item exists or not, and, depending on that, to
+			insert/remove a value.
 		"""
 
 		num_probes = 0
 		curr_ind = self._hash_func(item, num_probes)
-		while self._buckets[curr_ind] is not None and \
-			self._buckets[curr_ind] is not self._vacant:
-			if self._buckets[curr_ind] == item:
-				return -1
+		vacant_ind = -1
+
+		while True:
+			if self._buckets[curr_ind] is None:
+				return vacant_ind if vacant_ind != -1 else curr_ind
+			elif self._buckets[curr_ind] is self._vacant and vacant_ind == -1:
+				vacant_ind = curr_ind
+			elif self._buckets[curr_ind] == item:
+				return curr_ind
 			num_probes += 1
 			curr_ind = self._hash_func(item, num_probes)
-
-		return curr_ind
-
 
 	def load_factor(self):
 		pass
@@ -87,4 +96,7 @@ class OpenAddressedHashTable(object):
 		return self._length
 
 	def __str__(self):
-		return str(self._buckets)
+		strings = []
+		for item in self._buckets:
+			strings.append("vacant" if item is self._vacant else str(item))
+		return "[%s]" % ", ".join(strings)
