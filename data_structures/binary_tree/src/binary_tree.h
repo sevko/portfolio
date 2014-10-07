@@ -10,7 +10,13 @@ typedef struct {
 	BinaryTree_Node_t *root;
 } BinaryTree_Tree_t;
 
-BinaryTree_Tree_t *BinaryTree_create(void ( *freeData)(void *data));
+/**
+ * @brief Allocate memory for a new BinaryTree_Tree_t.
+ * @param freeData A function to free the data items (of arbitrary type) to be
+ *      contained inside this tree's nodes.
+ * @return A pointer to the new, empty tree.
+*/
+BinaryTree_Tree_t *BinaryTree_create(void (*freeData)(void *data));
 void BinaryTree_free(BinaryTree_Tree_t *tree);
 void BinaryTree_insertLeft(
 	BinaryTree_Tree_t *tree, BinaryTree_Node_t *node,
