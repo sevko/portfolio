@@ -8,7 +8,7 @@
  * @param data The `data` member of the new node.
  * @return A pointer to the new node.
 */
-static BinaryTree_Node_t *createNode(void *data);
+static BinaryTree_Node_t *BinaryTree_createNode(void *data);
 
 BinaryTree_Tree_t *BinaryTree_create(void (*freeData)(void *data)){
 	BinaryTree_Tree_t *tree = malloc(sizeof(BinaryTree_Tree_t));
@@ -16,6 +16,12 @@ BinaryTree_Tree_t *BinaryTree_create(void (*freeData)(void *data)){
 	tree->freeData = freeData;
 	tree->root = NULL;
 	return tree;
+}
+
+void BinaryTree_insertRoot(BinaryTree_Tree_t *tree, void *data){
+	BinaryTree_Node_t *newNode = BinaryTree_createNode(data);
+	tree->root = newNode;
+	tree->size++;
 }
 
 void BinaryTree_insertLeft(
@@ -36,7 +42,7 @@ void BinaryTree_insertRight(
 	tree->size++;
 }
 
-static BinaryTree_Node_t *createNode(void *data){
+static BinaryTree_Node_t *BinaryTree_createNode(void *data){
 	BinaryTree_Node_t *node = malloc(sizeof(BinaryTree_Node_t));
 	node->data = data;
 	node->left = NULL;

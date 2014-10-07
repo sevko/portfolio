@@ -18,11 +18,17 @@ typedef struct {
 */
 BinaryTree_Tree_t *BinaryTree_create(void (*freeData)(void *data));
 
+/*
+ * @brief Create and insert a root node into an empty tree.
+ * @param tree Must be a newly instantiatet tree, with a `size` of 0.
+ * @param data The `data` member of the newly created root node.
+*/
+void BinaryTree_insertRoot(BinaryTree_Tree_t *tree, void *data);
+
 void BinaryTree_free(BinaryTree_Tree_t *tree);
 
 /**
  * @brief Create and insert a node as the left child of another node.
- *
  * @param tree The tree containing 'node'.
  * @param node The node into whose `left` position a new node will be
  *      inserted; it'll inherit the current value of `left`.
