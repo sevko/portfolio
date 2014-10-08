@@ -30,19 +30,6 @@ static char **test_createDataItems(int numData){
 	return data;
 }
 
-/**
- * @brief Free the strings allocated by `test_createDataItems()`.
- * @param data As returned yb `test_createDataItems()`.
- * @param numData The number of `char *` inside `data` (ie, the `numData`
- *      argument to `test_createDataItems()`).
-*/
-static void test_freeDataItems(char **data, int numData){
-	for(int ind = 0; ind < numData; ind++){
-		free(data[ind]);
-	}
-	free(data);
-}
-
 static void test_create(void){
 	note("Test BinaryTree_create().");
 	BinaryTree_Tree_t *tree = BinaryTree_create(freeData);
@@ -105,6 +92,7 @@ static void test_isLeaf(void){
 	ok(!BinaryTree_isLeaf(tree->root), "Identifies non-leaves.");
 	ok(BinaryTree_isLeaf(tree->root->left), "Identifies leaves.");
 	BinaryTree_free(tree);
+	free(data);
 }
 
 int main(){
