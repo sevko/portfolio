@@ -67,11 +67,7 @@ bool BinaryTree_isLeaf(const BinaryTree_Node_t *node){
 void BinaryTree_preOrder(
 	const BinaryTree_Node_t *node, void action(void *data)
 ){
-	if(node == NULL){
-		return;
-	}
-	else {
-		// printf("%c\n", ((char *)node->data)[0]);
+	if(node != NULL){
 		action(node->data);
 		BinaryTree_preOrder(node->left, action);
 		BinaryTree_preOrder(node->right, action);
@@ -81,10 +77,7 @@ void BinaryTree_preOrder(
 void BinaryTree_inOrder(
 	const BinaryTree_Node_t *node, void action(void *data)
 ){
-	if(node == NULL){
-		return;
-	}
-	else {
+	if(node != NULL){
 		BinaryTree_inOrder(node->left, action);
 		action(node->data);
 		BinaryTree_inOrder(node->right, action);
@@ -94,10 +87,7 @@ void BinaryTree_inOrder(
 void BinaryTree_postOrder(
 	const BinaryTree_Node_t *node, void action(void *data)
 ){
-	if(node == NULL){
-		return;
-	}
-	else {
+	if(node != NULL){
 		BinaryTree_postOrder(node->left, action);
 		BinaryTree_postOrder(node->right, action);
 		action(node->data);
