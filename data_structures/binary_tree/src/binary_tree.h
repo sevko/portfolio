@@ -1,13 +1,21 @@
+/**
+ * @brief An implementation of a binary tree.
+*/
+
+// One node of the binary tree.
 typedef struct BinaryTree_Node {
-	void *data;
-	struct BinaryTree_Node *left,
-		*right;
+	void *data; // The data contained inside this node.
+	struct BinaryTree_Node *left, // The left child.
+		*right; //  The right child.
 } BinaryTree_Node_t;
 
+// A binary tree.
 typedef struct {
-	int size;
+	int size; // The total number of nodes inside this tree.
+
+	// A function used to free the data items stored inside this tree's nodes.
 	void (*freeData)(void *data);
-	BinaryTree_Node_t *root;
+	BinaryTree_Node_t *root; // The root node of the tree.
 } BinaryTree_Tree_t;
 
 /**
@@ -25,6 +33,9 @@ BinaryTree_Tree_t *BinaryTree_create(void (*freeData)(void *data));
 */
 void BinaryTree_insertRoot(BinaryTree_Tree_t *tree, void *data);
 
+/*
+ * @param tree The tree to deallocate (along with all its nodes).
+*/
 void BinaryTree_free(BinaryTree_Tree_t *tree);
 
 /**

@@ -49,6 +49,7 @@ static void test_create(void){
 
 	ok(tree->size == 0, "Tree size set to 0.");
 	ok(tree->root == NULL, "Tree root is null.");
+	BinaryTree_free(tree);
 }
 
 static void test_insertRoot(void){
@@ -60,6 +61,7 @@ static void test_insertRoot(void){
 	BinaryTree_insertRoot(tree, data);
 	ok(tree->size == 1, "Tree size is 1.");
 	is(tree->root->data, data, "Root node contains correct data.");
+	BinaryTree_free(tree);
 }
 
 static void test_insertLeft(void){
@@ -74,7 +76,8 @@ static void test_insertLeft(void){
 	BinaryTree_insertLeft(tree, tree->root, data[2]);
 	is(tree->root->left->data, data[2], "Non-leaf node inserted correctly.");
 	is(tree->root->left->left->data, data[1], "Existing nodes preserved.");
-	test_freeDataItems(data, 3);
+	BinaryTree_free(tree);
+	free(data);
 }
 
 static void test_removeNode(void){
@@ -87,6 +90,9 @@ static void test_removeNode(void){
 	BinaryTree_insertLeft(tree, tree->root->left, data[2]);
 	BinaryTree_insertRight(tree, tree->root->left, data[3]);
 	BinaryTree_removeNode(tree, tree->root);
+	tree->root = NULL;
+	BinaryTree_free(tree);
+	free(data);
 }
 
 int main(){

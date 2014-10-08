@@ -18,6 +18,11 @@ BinaryTree_Tree_t *BinaryTree_create(void (*freeData)(void *data)){
 	return tree;
 }
 
+void BinaryTree_free(BinaryTree_Tree_t *tree){
+	BinaryTree_removeNode(tree, tree->root);
+	free(tree);
+}
+
 void BinaryTree_insertRoot(BinaryTree_Tree_t *tree, void *data){
 	BinaryTree_Node_t *newNode = BinaryTree_createNode(data);
 	tree->root = newNode;
