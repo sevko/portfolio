@@ -42,8 +42,8 @@ void BinaryTree_insertRight(
 	BinaryTree_Tree_t *tree, BinaryTree_Node_t *node, void *data
 ){
 	BinaryTree_Node_t *newNode = BinaryTree_createNode(data);
-	newNode->left = node->left;
-	node->left = newNode;
+	newNode->right = node->right;
+	node->right = newNode;
 	tree->size++;
 }
 
@@ -62,6 +62,46 @@ void BinaryTree_removeNode(BinaryTree_Tree_t *tree, BinaryTree_Node_t *node){
 
 bool BinaryTree_isLeaf(const BinaryTree_Node_t *node){
 	return !node->left && !node->right;
+}
+
+void BinaryTree_preOrder(
+	const BinaryTree_Node_t *node, void action(void *data)
+){
+	if(node == NULL){
+		return;
+	}
+	else {
+		// printf("%c\n", ((char *)node->data)[0]);
+		action(node->data);
+		BinaryTree_preOrder(node->left, action);
+		BinaryTree_preOrder(node->right, action);
+	}
+}
+
+void BinaryTree_inOrder(
+	const BinaryTree_Node_t *node, void action(void *data)
+){
+	if(node == NULL){
+		return;
+	}
+	else {
+		BinaryTree_inOrder(node->left, action);
+		action(node->data);
+		BinaryTree_inOrder(node->right, action);
+	}
+}
+
+void BinaryTree_postOrder(
+	const BinaryTree_Node_t *node, void action(void *data)
+){
+	if(node == NULL){
+		return;
+	}
+	else {
+		BinaryTree_postOrder(node->left, action);
+		BinaryTree_postOrder(node->right, action);
+		action(node->data);
+	}
 }
 
 static BinaryTree_Node_t *BinaryTree_createNode(void *data){

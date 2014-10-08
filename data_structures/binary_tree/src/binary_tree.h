@@ -72,3 +72,36 @@ void BinaryTree_removeNode(BinaryTree_Tree_t *tree, BinaryTree_Node_t *node);
  * @return Whether or not `node` is a leaf (ie, has no children).
 */
 bool BinaryTree_isLeaf(const BinaryTree_Node_t *node);
+
+/*
+ * @brief Perform a pre-order traversal of a tree.
+ * @param node The node to begin traversing from.
+ * @param action The function to pass each traversed node's `data` item to,
+ *      before the traversal recurses down that node's `left` and `right`
+ *      children.
+*/
+void BinaryTree_preOrder(
+	const BinaryTree_Node_t *node, void action(void *data)
+);
+
+/*
+ * @brief Perform an in-order traversal of a tree.
+ * @param node The node to begin traversing from.
+ * @param action The function to pass each traversed node's `data` item to,
+ *      after the traversal recursed down that node's `left` child, but not its
+ *      right.
+*/
+void BinaryTree_inOrder(
+	const BinaryTree_Node_t *node, void action(void *data)
+);
+
+/*
+ * @brief Perform a post-order traversal of a tree.
+ * @param node The node to begin traversing from.
+ * @param action The function to pass each traversed node's `data` item to,
+ *      after the traversal recursed down that node's `left` and `right`
+ *      children.
+*/
+void BinaryTree_postOrder(
+	const BinaryTree_Node_t *node, void action(void *data)
+);
