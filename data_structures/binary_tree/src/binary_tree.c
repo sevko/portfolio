@@ -3,7 +3,7 @@
 
 #include "binary_tree.h"
 
-/*
+/**
  * @brief Allocate memory for a new node.
  * @param data The `data` member of the new node.
  * @return A pointer to the new node.
@@ -40,6 +40,20 @@ void BinaryTree_insertRight(
 	newNode->left = node->left;
 	node->left = newNode;
 	tree->size++;
+}
+
+void BinaryTree_removeNode(BinaryTree_Tree_t *tree, BinaryTree_Node_t *node){
+	if(node == NULL){
+		return;
+	}
+	else {
+		BinaryTree_removeNode(tree, node->left);
+		BinaryTree_removeNode(tree, node->right);
+		printf("%s\n", (char *)node->data);
+		tree->freeData(node->data);
+		free(node);
+		tree->size--;
+	}
 }
 
 static BinaryTree_Node_t *BinaryTree_createNode(void *data){

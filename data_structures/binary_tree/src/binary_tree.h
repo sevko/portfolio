@@ -18,7 +18,7 @@ typedef struct {
 */
 BinaryTree_Tree_t *BinaryTree_create(void (*freeData)(void *data));
 
-/*
+/**
  * @brief Create and insert a root node into an empty tree.
  * @param tree Must be a newly instantiatet tree, with a `size` of 0.
  * @param data The `data` member of the newly created root node.
@@ -45,10 +45,14 @@ void BinaryTree_insertLeft(
 void BinaryTree_insertRight(
 	BinaryTree_Tree_t *tree, BinaryTree_Node_t *node, void *data
 );
-void *BinaryTree_removeLeft(
-	BinaryTree_Tree_t *tree, BinaryTree_Tree_t *node
-);
-void *BinaryTree_removeRight(BinaryTree_Tree_t *tree, BinaryTree_Node_t *node);
+
+/**
+ * @brief Recursively remove a node.
+ * @param tree The tree containing `node`. Size is decremented accordingly.
+ * @param node The node to deallocate completely (including its `data`), along
+ *      with all of its children nodes.
+*/
+void BinaryTree_removeNode(BinaryTree_Tree_t *tree, BinaryTree_Node_t *node);
 void *BinaryTree_merge(
 	BinaryTree_Tree_t *leftTree, BinaryTree_Tree_t *rightTree
 );
