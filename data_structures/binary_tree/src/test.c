@@ -5,6 +5,10 @@
 
 #include "src/binary_tree.h"
 
+// Used by `test_traversals()`.
+char **g_traversalTest;
+int g_traversalTestInd;
+
 /**
  * @brief Passed to `BinaryTree_create()`.
  * @param data The data item (cast to a `char *`, which is the data type used
@@ -12,6 +16,14 @@
 */
 void freeData(void *data){
 	free((char *)data);
+}
+
+/*
+ * @brief Used by `test_traversals()`.
+ * @param data A data pointer to cast to `char *` and print.
+*/
+void test_traversalResult(void *data){
+	g_traversalTest[g_traversalTestInd++] = (char *)data;
 }
 
 /**
@@ -95,6 +107,56 @@ static void test_isLeaf(void){
 	free(data);
 }
 
+static void test_traversals(void){
+	int numData = 7;
+	g_traversalTest = malloc(numData * sizeof(char *));
+	char **data = test_createDataItems(numData);
+	BinaryTree_Tree_t *tree = BinaryTree_create(freeData);
+
+	BinaryTree_insertRoot(tree, data[0]);
+	BinaryTree_insertRight(tree, tree->root, data[1]);
+	BinaryTree_insertLeft(tree, tree->root->right, data[2]);
+
+	BinaryTree_insertLeft(tree, tree->root, data[3]);
+	BinaryTree_insertLeft(tree, tree->root->left, data[4]);
+	BinaryTree_insertRight(tree, tree->root->left, data[5]);
+	BinaryTree_insertLeft(tree, tree->root->left->right, data[6]);
+
+	note("Test BinaryTree_preOrder().");
+	BinaryTree_preOrder(tree->root, test_traversalResult);
+
+	char **expected = (char *[]){"a", "d", "e", "f", "g", "b", "c"};
+	for(int ind = 0; ind < g_traversalTestInd; ind++){
+		is(g_traversalTest[ind], expected[ind], "Data %d matches.", ind + 1);
+	}
+
+	note("Test BinaryTree_inOrder().");
+	g_traversalTestInd = 0;
+	BinaryTree_inOrder(tree->root, test_traversalResult);
+	expected = (char *[]){"e", "d", "g", "f", "a", "c", "b"};
+	for(int ind = 0; ind < g_traversalTestInd; ind++){
+		is(g_traversalTest[ind], expected[ind], "Data %d matches.", ind + 1);
+	}
+
+	note("Test BinaryTree_postOrder().");
+	g_traversalTestInd = 0;
+	BinaryTree_postOrder(tree->root, test_traversalResult);
+	expected = (char *[]){"e", "g", "f", "d", "c", "b", "a"};
+	for(int ind = 0; ind < g_traversalTestInd; ind++){
+		is(g_traversalTest[ind], expected[ind], "Data %d matches.", ind + 1);
+	}
+
+	BinaryTree_free(tree);
+	free(g_traversalTest);
+	free(data);
+}
+
+// note("Test BinaryTree_postOrder().");
+// BinaryTree_postOrder(tree->root, printData);
+
+// note("Test BinaryTree_inOrder().");
+// BinaryTree_inOrder(tree->root, printData);
+
 int main(){
 	note("Begin unit tests.");
 	test_create();
@@ -102,6 +164,7 @@ int main(){
 	test_insertLeft();
 	test_removeNode();
 	test_isLeaf();
+	test_traversals();
 	done_testing();
 	return EXIT_SUCCESS;
 }
