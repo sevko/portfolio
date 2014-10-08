@@ -54,11 +54,14 @@ void BinaryTree_removeNode(BinaryTree_Tree_t *tree, BinaryTree_Node_t *node){
 	else {
 		BinaryTree_removeNode(tree, node->left);
 		BinaryTree_removeNode(tree, node->right);
-		printf("%s\n", (char *)node->data);
 		tree->freeData(node->data);
 		free(node);
 		tree->size--;
 	}
+}
+
+bool BinaryTree_isLeaf(const BinaryTree_Node_t *node){
+	return !node->left && !node->right;
 }
 
 static BinaryTree_Node_t *BinaryTree_createNode(void *data){

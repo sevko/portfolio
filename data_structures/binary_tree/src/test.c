@@ -90,9 +90,21 @@ static void test_removeNode(void){
 	BinaryTree_insertLeft(tree, tree->root->left, data[2]);
 	BinaryTree_insertRight(tree, tree->root->left, data[3]);
 	BinaryTree_removeNode(tree, tree->root);
+	ok(tree->size == 0, "Tree size is 0.");
 	tree->root = NULL;
 	BinaryTree_free(tree);
 	free(data);
+}
+
+static void test_isLeaf(void){
+	note("Test BinaryTree_isLeaf().");
+	char **data = test_createDataItems(2);
+	BinaryTree_Tree_t *tree = BinaryTree_create(freeData);
+	BinaryTree_insertRoot(tree, data[0]);
+	BinaryTree_insertLeft(tree, tree->root, data[1]);
+	ok(!BinaryTree_isLeaf(tree->root), "Identifies non-leaves.");
+	ok(BinaryTree_isLeaf(tree->root->left), "Identifies leaves.");
+	BinaryTree_free(tree);
 }
 
 int main(){
@@ -101,6 +113,7 @@ int main(){
 	test_insertRoot();
 	test_insertLeft();
 	test_removeNode();
+	test_isLeaf();
 	done_testing();
 	return EXIT_SUCCESS;
 }

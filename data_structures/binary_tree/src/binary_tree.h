@@ -2,6 +2,8 @@
  * @brief An implementation of a binary tree.
 */
 
+#include <stdbool.h>
+
 // One node of the binary tree.
 typedef struct BinaryTree_Node {
 	void *data; // The data contained inside this node.
@@ -64,8 +66,9 @@ void BinaryTree_insertRight(
  *      with all of its children nodes.
 */
 void BinaryTree_removeNode(BinaryTree_Tree_t *tree, BinaryTree_Node_t *node);
-void *BinaryTree_merge(
-	BinaryTree_Tree_t *leftTree, BinaryTree_Tree_t *rightTree
-);
-void *BinaryTree_isBranch(const BinaryTree_Node_t *node);
-void *BinaryTree_isLeaf(const BinaryTree_Node_t *node);
+
+/*
+ * @param node A node.
+ * @return Whether or not `node` is a leaf (ie, has no children).
+*/
+bool BinaryTree_isLeaf(const BinaryTree_Node_t *node);
