@@ -105,3 +105,14 @@ void BinaryTree_inOrder(
 void BinaryTree_postOrder(
 	const BinaryTree_Node_t *node, void action(void *data)
 );
+
+/*
+ * @brief Perform a breadth-first traversal of a node and its children.
+ *
+ * @param node The node to begin recursively traversing from. All child nodes
+ *      will be visited level by "horizontal" level.
+ * @param action The function to execute for every visited node's `data`.
+*/
+void BinaryTree_travBreadth(
+	const BinaryTree_Node_t *node, void action(void *data)
+);

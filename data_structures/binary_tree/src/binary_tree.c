@@ -94,6 +94,38 @@ void BinaryTree_postOrder(
 	}
 }
 
+void BinaryTree_travBreadth(
+	const BinaryTree_Node_t *node, void action(void *data)
+){
+	// Traverses levels by keeping track of pointers to each node in the
+	// current level and the next.
+	const BinaryTree_Node_t **currLevel = malloc(sizeof(BinaryTree_Node_t *)),
+		**nextLevel;
+	currLevel[0] = node;
+	int currLevelLen = 1, nextLevelLen = 0;
+
+	// Iterate down the levels until the current level has no node pointers.
+	while(currLevelLen != 0){
+		nextLevel = malloc(currLevelLen * 2 * sizeof(BinaryTree_Node_t *));
+		for(int node = 0; node < currLevelLen; node++){
+			action(currLevel[node]->data);
+			if(currLevel[node]->left != NULL){
+				nextLevel[nextLevelLen++] = currLevel[node]->left;
+			}
+
+			if(currLevel[node]->right != NULL){
+				nextLevel[nextLevelLen++] = currLevel[node]->right;
+			}
+		}
+		currLevelLen = nextLevelLen;
+		nextLevelLen = 0;
+		free(currLevel);
+		currLevel = nextLevel;
+	}
+
+	free(currLevel);
+}
+
 static BinaryTree_Node_t *BinaryTree_createNode(void *data){
 	BinaryTree_Node_t *node = malloc(sizeof(BinaryTree_Node_t));
 	node->data = data;
