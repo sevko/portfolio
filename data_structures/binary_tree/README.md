@@ -14,6 +14,7 @@ point for the project's generated executable.
 An example of using some of the API defined by `binary_tree.c` in another C file:
 
 ```c
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "binary_tree.h"
@@ -22,15 +23,20 @@ static void freeData(void *data){
 	free((char *)data);
 }
 
+static void printData(void *data){
+	printf("%s\n", (char *)data);
+}
+
 int main(){
 	BinaryTree_Tree_t *tree = BinaryTree_create(freeData);
-	char *data1 = malloc(2),
-		*data2 = malloc(2);
+	char *data1 = malloc(7),
+		*data2 = malloc(7);
 	strcpy(data1, "0xdead");
 	strcpy(data2, "0xbeef");
 
 	BinaryTree_insertRoot(tree, data1);
 	BinaryTree_insertLeft(tree, tree->root, data2);
+	BinaryTree_travBreadth(tree->root, printData);
 	BinaryTree_free(tree);
 }
 ```
