@@ -4,6 +4,7 @@ FLAGS = -Wall -Wextra -std=c99 \
 	-I ../binary_tree/src/ \
 	-I ../singly_linked_list/src/ \
 	-I ../queue/src/
+LIBS = -ltap
 C_COMPILER = gcc $(FLAGS)
 CC = @echo "\tcc $@" && $(C_COMPILER)
 
@@ -23,7 +24,7 @@ run: all
 	./$(PROJECT_EXECUTABLE)
 
 $(PROJECT_EXECUTABLE): $(OBJ)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(LIBS)
 
 bin/%.o: src/%.c
 	$(CC) -o $@ -c $^
