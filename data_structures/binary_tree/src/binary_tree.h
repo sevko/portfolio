@@ -80,7 +80,7 @@ bool BinaryTree_isLeaf(const BinaryTree_Node_t *node);
  *      before the traversal recurses down that node's `left` and `right`
  *      children.
 */
-void BinaryTree_preOrder(
+void BinaryTree_travPreOrder(
 	const BinaryTree_Node_t *node, void action(void *data)
 );
 
@@ -91,7 +91,7 @@ void BinaryTree_preOrder(
  *      after the traversal recursed down that node's `left` child, but not its
  *      right.
 */
-void BinaryTree_inOrder(
+void BinaryTree_travInOrder(
 	const BinaryTree_Node_t *node, void action(void *data)
 );
 
@@ -102,7 +102,7 @@ void BinaryTree_inOrder(
  *      after the traversal recursed down that node's `left` and `right`
  *      children.
 */
-void BinaryTree_postOrder(
+void BinaryTree_travPostOrder(
 	const BinaryTree_Node_t *node, void action(void *data)
 );
 

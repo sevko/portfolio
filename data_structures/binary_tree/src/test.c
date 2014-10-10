@@ -122,25 +122,25 @@ static void test_traversals(void){
 	BinaryTree_insertRight(tree, tree->root->left, data[5]);
 	BinaryTree_insertLeft(tree, tree->root->left->right, data[6]);
 
-	note("Test BinaryTree_preOrder().");
-	BinaryTree_preOrder(tree->root, test_traversalResult);
+	note("Test BinaryTree_travPreOrder().");
+	BinaryTree_travPreOrder(tree->root, test_traversalResult);
 
 	char **expected = (char *[]){"a", "d", "e", "f", "g", "b", "c"};
 	for(int ind = 0; ind < g_traversalTestInd; ind++){
 		is(g_traversalTest[ind], expected[ind], "Data %d matches.", ind + 1);
 	}
 
-	note("Test BinaryTree_inOrder().");
+	note("Test BinaryTree_travInOrder().");
 	g_traversalTestInd = 0;
-	BinaryTree_inOrder(tree->root, test_traversalResult);
+	BinaryTree_travInOrder(tree->root, test_traversalResult);
 	expected = (char *[]){"e", "d", "g", "f", "a", "c", "b"};
 	for(int ind = 0; ind < g_traversalTestInd; ind++){
 		is(g_traversalTest[ind], expected[ind], "Data %d matches.", ind + 1);
 	}
 
-	note("Test BinaryTree_postOrder().");
+	note("Test BinaryTree_travPostOrder().");
 	g_traversalTestInd = 0;
-	BinaryTree_postOrder(tree->root, test_traversalResult);
+	BinaryTree_travPostOrder(tree->root, test_traversalResult);
 	expected = (char *[]){"e", "g", "f", "d", "c", "b", "a"};
 	for(int ind = 0; ind < g_traversalTestInd; ind++){
 		is(g_traversalTest[ind], expected[ind], "Data %d matches.", ind + 1);
@@ -151,7 +151,7 @@ static void test_traversals(void){
 	free(data);
 }
 
-static void test_breadthTraversal(void){
+static void test_travBreadth(void){
 	int numData = 7;
 	g_traversalTest = malloc(numData * sizeof(char *));
 	char **data = test_createDataItems(numData);
@@ -186,7 +186,7 @@ int main(){
 	test_removeNode();
 	test_isLeaf();
 	test_traversals();
-	test_breadthTraversal();
+	test_travBreadth();
 	done_testing();
 	return EXIT_SUCCESS;
 }

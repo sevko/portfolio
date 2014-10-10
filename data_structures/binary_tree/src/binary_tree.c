@@ -65,32 +65,32 @@ bool BinaryTree_isLeaf(const BinaryTree_Node_t *node){
 	return !node->left && !node->right;
 }
 
-void BinaryTree_preOrder(
+void BinaryTree_travPreOrder(
 	const BinaryTree_Node_t *node, void action(void *data)
 ){
 	if(node != NULL){
 		action(node->data);
-		BinaryTree_preOrder(node->left, action);
-		BinaryTree_preOrder(node->right, action);
+		BinaryTree_travPreOrder(node->left, action);
+		BinaryTree_travPreOrder(node->right, action);
 	}
 }
 
-void BinaryTree_inOrder(
+void BinaryTree_travInOrder(
 	const BinaryTree_Node_t *node, void action(void *data)
 ){
 	if(node != NULL){
-		BinaryTree_inOrder(node->left, action);
+		BinaryTree_travInOrder(node->left, action);
 		action(node->data);
-		BinaryTree_inOrder(node->right, action);
+		BinaryTree_travInOrder(node->right, action);
 	}
 }
 
-void BinaryTree_postOrder(
+void BinaryTree_travPostOrder(
 	const BinaryTree_Node_t *node, void action(void *data)
 ){
 	if(node != NULL){
-		BinaryTree_postOrder(node->left, action);
-		BinaryTree_postOrder(node->right, action);
+		BinaryTree_travPostOrder(node->left, action);
+		BinaryTree_travPostOrder(node->right, action);
 		action(node->data);
 	}
 }
