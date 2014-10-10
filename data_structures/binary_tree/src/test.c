@@ -151,11 +151,32 @@ static void test_traversals(void){
 	free(data);
 }
 
-// note("Test BinaryTree_postOrder().");
-// BinaryTree_postOrder(tree->root, printData);
+static void test_breadthTraversal(void){
+	int numData = 7;
+	g_traversalTest = malloc(numData * sizeof(char *));
+	char **data = test_createDataItems(numData);
+	BinaryTree_Tree_t *tree = BinaryTree_create(freeData);
 
-// note("Test BinaryTree_inOrder().");
-// BinaryTree_inOrder(tree->root, printData);
+	BinaryTree_insertRoot(tree, data[0]);
+	BinaryTree_insertRight(tree, tree->root, data[1]);
+	BinaryTree_insertLeft(tree, tree->root->right, data[2]);
+
+	BinaryTree_insertLeft(tree, tree->root, data[3]);
+	BinaryTree_insertLeft(tree, tree->root->left, data[4]);
+	BinaryTree_insertRight(tree, tree->root->left, data[5]);
+	BinaryTree_insertLeft(tree, tree->root->left->right, data[6]);
+
+	g_traversalTestInd = 0;
+	BinaryTree_travBreadth(tree->root, test_traversalResult);
+	char **expected = (char *[]){"a", "d", "b", "e", "f", "c", "g"};
+	for(int ind = 0; ind < g_traversalTestInd; ind++){
+		is(g_traversalTest[ind], expected[ind], "Data %d matches.", ind + 1);
+	}
+
+	BinaryTree_free(tree);
+	free(g_traversalTest);
+	free(data);
+}
 
 int main(){
 	note("Begin unit tests.");
@@ -165,6 +186,7 @@ int main(){
 	test_removeNode();
 	test_isLeaf();
 	test_traversals();
+	test_breadthTraversal();
 	done_testing();
 	return EXIT_SUCCESS;
 }
