@@ -17,13 +17,16 @@ typedef BinaryTree_Tree_t AVLTree_Tree_t;
 
 /*
  * @brief Create an AVL tree.
- * @param freeData A function to deallocate the data stored in this tree's
- *      nodes. Will be called by `AVLTree_free()` if the tree has any nodes
- *      remaining, so, if you're absolutely certain that it will be empty when
- *      you `AVLTree_free()` it, you can pass in a `NULL` pointer here.
+ * @param compareData A function used to compare any two of the tree's nodes'
+ *      data items. Should return a number less than 0 if `data1` is less than
+ *      `data2`, 0 if they're equal, and a number greater than 0 otherwise.
+ * @param create A function to deallocate the data stored in this tree's
  * @return A pointer to the newly allocated tree.
 */
-AVLTree_Tree_t *AVLTree_create(void (*freeData)(void *data));
+AVLTree_Tree_t *AVLTree_create(
+	void (*freeData)(void *data),
+	int (*compareData)(const void *data1, const void *data2)
+);
 
 /*
  * @brief Deallocate an AVL tree.
@@ -32,6 +35,6 @@ AVLTree_Tree_t *AVLTree_create(void (*freeData)(void *data));
  *      afterwards.
 */
 void AVLTree_free(AVLTree_Tree_t *tree);
-void AVLTree_insert(AVLTree_Tree_t *tree, void *data);
+void AVLTree_insert(AVLTree_Tree_t *tree, BinaryTree_Node_t *node, void *data);
 void *AVLTree_remove(AVLTree_Tree_t *tree, void *data);
 void *AVLTree_find(void *data);
