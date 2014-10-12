@@ -15,11 +15,11 @@ int g_testDataInd;
 
 /**
  * @brief Passed to `BinaryTree_create()`.
- * @param data The data item (cast to a `char *`, which is the data type used
- *      by these unit tests) to deallocate.
+ * @param data The data item, an `AVLTree_Node_t`, to deallocate.
 */
 static void _freeData(void *data){
-	free((char *)data);
+	free(((AVLTree_Node_t *)data)->data);
+	free(data);
 }
 
 /*
@@ -65,16 +65,16 @@ static void _test_create(void){
  * Temporary, for testing.
 */
 static void _printData(void *data){
-	printf("%s, ", (char *)data);
+	printf("%s, ", (char *)((AVLTree_Node_t *)data)->data);
 }
 
 /*
  * @brief Passed to various traversal methods to verify that data items are
  *      being accessed in the right order.
- * @param data Any one of a given tree's nodes' data. Assumed to `char *`.
+ * @param data Any one of a given tree's nodes' data (an `AVLTree_Node_t`).
 */
 static void _saveTraversedData(void *data){
-	g_testData[g_testDataInd++] = data;
+	g_testData[g_testDataInd++] = ((AVLTree_Node_t *)data)->data;
 }
 
 /*

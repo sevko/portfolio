@@ -12,10 +12,19 @@
  *      inserted into a position after taking into account all of the existing
  *      data members, and will allow the tree search mechanism to function as
  *      intended. Must not be null.
- * @param data The data item to insert. Must be usable by
+ * @param data The data item node to insert. Its `data` member be usable by
  *      `tree->compareData()`.
 */
-static void _insert(AVLTree_Tree_t *tree, BinaryTree_Node_t *node, void *data);
+static void _insert(
+	AVLTree_Tree_t *tree, BinaryTree_Node_t *node, AVLTree_Node_t *dataNode
+);
+
+/*
+ * @brief Allocate a node.
+ * @param data The `data` member of the new node.
+ * @return A pointer to the new node. Its `balanceFactor` will be 0.
+*/
+static AVLTree_Node_t *_createNode(void *data);
 
 AVLTree_Tree_t *AVLTree_create(
 	void (*freeData)(void *data),
@@ -27,6 +36,7 @@ AVLTree_Tree_t *AVLTree_create(
 }
 
 void AVLTree_insert(AVLTree_Tree_t *tree, void *data){
+	data = _createNode(data);
 	if(tree->size == 0){
 		BinaryTree_insertRoot(tree, data);
 	}
@@ -35,21 +45,30 @@ void AVLTree_insert(AVLTree_Tree_t *tree, void *data){
 	}
 }
 
-static void _insert(AVLTree_Tree_t *tree, BinaryTree_Node_t *node, void *data){
-	if(tree->compareData(node->data, data) < 0){
+static void _insert(
+	AVLTree_Tree_t *tree, BinaryTree_Node_t *node, AVLTree_Node_t *dataNode
+){
+	if(tree->compareData(node->data, dataNode->data) < 0){
 		if(node->right){
-			_insert(tree, node->right, data);
+			_insert(tree, node->right, dataNode);
 		}
 		else {
-			BinaryTree_insertRight(tree, node, data);
+			BinaryTree_insertRight(tree, node, dataNode);
 		}
 	}
 	else {
 		if(node->left){
-			_insert(tree, node->left, data);
+			_insert(tree, node->left, dataNode);
 		}
 		else {
-			BinaryTree_insertLeft(tree, node, data);
+			BinaryTree_insertLeft(tree, node, dataNode);
 		}
 	}
+}
+
+static AVLTree_Node_t *_createNode(void *data){
+	AVLTree_Node_t *node = malloc(sizeof(AVLTree_Node_t));
+	node->balanceFactor = 0;
+	node->data = data;
+	return node;
 }
