@@ -91,13 +91,13 @@ static void _test_insert(void){
 	char **testData = _test_createDataItems(numData);
 	char **expected = (char *[]){"d", "b", "f", "a", "c", "e", "g"};
 
-	BinaryTree_insertRoot(tree, testData[3]);
-	AVLTree_insert(tree, tree->root, testData[1]);
-	AVLTree_insert(tree, tree->root, testData[5]);
-	AVLTree_insert(tree, tree->root, testData[0]);
-	AVLTree_insert(tree, tree->root, testData[2]);
-	AVLTree_insert(tree, tree->root, testData[4]);
-	AVLTree_insert(tree, tree->root, testData[6]);
+	AVLTree_insert(tree, testData[3]);
+	AVLTree_insert(tree, testData[1]);
+	AVLTree_insert(tree, testData[5]);
+	AVLTree_insert(tree, testData[0]);
+	AVLTree_insert(tree, testData[2]);
+	AVLTree_insert(tree, testData[4]);
+	AVLTree_insert(tree, testData[6]);
 	BinaryTree_travBreadth(tree->root, _saveTraversedData);
 
 	for(int ind = 0; ind < numData; ind++){
