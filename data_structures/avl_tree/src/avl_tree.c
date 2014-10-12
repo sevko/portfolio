@@ -14,8 +14,12 @@
  *      intended. Must not be null.
  * @param data The data item node to insert. Its `data` member be usable by
  *      `tree->compareData()`.
+ *
+ * @return The change in the parent node's balance factor (either 1 or 0); the
+ *      former is multiplied by 1/-1 according to whether this `_insert()` call
+ *      operated on the right/left child of the parent node respectively.
 */
-static void _insert(
+static int _insert(
 	AVLTree_Tree_t *tree, BinaryTree_Node_t *node, AVLTree_Node_t *dataNode
 );
 
@@ -25,6 +29,12 @@ static void _insert(
  * @return A pointer to the new node. Its `balanceFactor` will be 0.
 */
 static AVLTree_Node_t *_createNode(void *data);
+
+/*
+ * @param num A number.
+ * @return The absolute value of `num`.
+*/
+static int _abs(int num);
 
 AVLTree_Tree_t *AVLTree_create(
 	void (*freeData)(void *data),
@@ -45,25 +55,34 @@ void AVLTree_insert(AVLTree_Tree_t *tree, void *data){
 	}
 }
 
-static void _insert(
+static int _insert(
 	AVLTree_Tree_t *tree, BinaryTree_Node_t *node, AVLTree_Node_t *dataNode
 ){
-	if(tree->compareData(node->data, dataNode->data) < 0){
+	void *currData = ((AVLTree_Node_t *)(node->data))->data;
+	int balanceFactorDelta;
+	if(tree->compareData(currData, dataNode->data) < 0){
 		if(node->right){
-			_insert(tree, node->right, dataNode);
+			balanceFactorDelta = _insert(tree, node->right, dataNode);
 		}
 		else {
 			BinaryTree_insertRight(tree, node, dataNode);
+			balanceFactorDelta = 1;
 		}
 	}
 	else {
 		if(node->left){
-			_insert(tree, node->left, dataNode);
+			balanceFactorDelta = -_insert(tree, node->left, dataNode);
 		}
 		else {
 			BinaryTree_insertLeft(tree, node, dataNode);
+			balanceFactorDelta = -1;
 		}
+
 	}
+	int *balanceFactor = &((AVLTree_Node_t *)(node->data))->balanceFactor;
+	int prevBalanceFactor = *balanceFactor;
+	*balanceFactor += balanceFactorDelta;
+	return (_abs(prevBalanceFactor) < _abs(*balanceFactor)) ? 1 : 0;
 }
 
 static AVLTree_Node_t *_createNode(void *data){
@@ -71,4 +90,8 @@ static AVLTree_Node_t *_createNode(void *data){
 	node->balanceFactor = 0;
 	node->data = data;
 	return node;
+}
+
+static int _abs(int num){
+	return (num < 0) ?  num * -1 : num;
 }
