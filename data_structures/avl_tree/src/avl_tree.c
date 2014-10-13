@@ -24,6 +24,18 @@ static int _insert(
 );
 
 /*
+ * @brief Perform a left rotation on a node (and its left subtree).
+ * @param parent The parent of the left subtree to undergo rotation.
+*/
+static void _rotateLeft(BinaryTree_Node_t **parent);
+
+/*
+ * @brief Perform a right rotation on a node (and its right subtree).
+ * @param parent The parent of the right subtree to undergo rotation.
+*/
+static void _rotateRight(BinaryTree_Node_t **parent);
+
+/*
  * @brief Allocate a node.
  * @param data The `data` member of the new node.
  * @return A pointer to the new node. Its `balanceFactor` will be 0.
@@ -83,6 +95,26 @@ static int _insert(
 	int prevBalanceFactor = *balanceFactor;
 	*balanceFactor += balanceFactorDelta;
 	return (_abs(prevBalanceFactor) < _abs(*balanceFactor)) ? 1 : 0;
+}
+
+static void _rotateLeft(BinaryTree_Node_t **parent){
+	BinaryTree_Node_t *child = (*parent)->left;
+	((AVLTree_Node_t *)((*parent)->data))->balanceFactor = 0;
+	((AVLTree_Node_t *)child->data)->balanceFactor = 0;
+
+	(*parent)->left = child->right;
+	child->right = *parent;
+	*parent = child;
+}
+
+static void _rotateRight(BinaryTree_Node_t **parent){
+	BinaryTree_Node_t *child = (*parent)->right;
+	((AVLTree_Node_t *)((*parent)->data))->balanceFactor = 0;
+	((AVLTree_Node_t *)child->data)->balanceFactor = 0;
+
+	(*parent)->right = child->left;
+	child->left = *parent;
+	*parent = child;
 }
 
 static AVLTree_Node_t *_createNode(void *data){
