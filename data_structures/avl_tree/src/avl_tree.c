@@ -89,26 +89,28 @@ static int _insert(
 			child = (AVLTree_Node_t *)((*node)->right->data);
 			if(child->balanceFactor == 1){
 				_rotateRight(node);
+				parent->balanceFactor = 0;
+				child->balanceFactor = 0;
 			}
 			else {
 				grandchild = (AVLTree_Node_t *)((*node)->right->left->data);
 				switch(grandchild->balanceFactor){
 					case 1:
-						parent->balanceFactor = 0;
-						child->balanceFactor = -1;
+						parent->balanceFactor = -1;
+						child->balanceFactor = 0;
 						break;
 					case 0:
 						parent->balanceFactor = 0;
 						child->balanceFactor = 0;
 						break;
 					case -1:
-						parent->balanceFactor = 1;
-						child->balanceFactor = 0;
+						parent->balanceFactor = 0;
+						child->balanceFactor = 1;
 						break;
 				}
 				grandchild->balanceFactor = 0;
 
-				_rotateLeft(node);
+				_rotateLeft(&(*node)->right);
 				_rotateRight(node);
 			}
 		}
@@ -127,21 +129,23 @@ static int _insert(
 			child = (AVLTree_Node_t *)(*node)->left->data;
 			if(child->balanceFactor == -1){
 				_rotateLeft(node);
+				parent->balanceFactor = 0;
+				child->balanceFactor = 0;
 			}
 			else {
 				grandchild = (AVLTree_Node_t *)((*node)->left->right->data);
 				switch(grandchild->balanceFactor){
 					case 1:
-						parent->balanceFactor = -1;
-						child->balanceFactor = 0;
+						parent->balanceFactor = 0;
+						child->balanceFactor = -1;
 						break;
 					case 0:
 						parent->balanceFactor = 0;
 						child->balanceFactor = 0;
 						break;
 					case -1:
-						parent->balanceFactor = 0;
-						child->balanceFactor = 1;
+						parent->balanceFactor = 1;
+						child->balanceFactor = 0;
 						break;
 				}
 				grandchild->balanceFactor = 0;
@@ -157,8 +161,6 @@ static int _insert(
 
 static void _rotateLeft(BinaryTree_Node_t **parent){
 	BinaryTree_Node_t *child = (*parent)->left;
-	((AVLTree_Node_t *)((*parent)->data))->balanceFactor = 0;
-	((AVLTree_Node_t *)child->data)->balanceFactor = 0;
 
 	(*parent)->left = child->right;
 	child->right = *parent;
@@ -167,8 +169,6 @@ static void _rotateLeft(BinaryTree_Node_t **parent){
 
 static void _rotateRight(BinaryTree_Node_t **parent){
 	BinaryTree_Node_t *child = (*parent)->right;
-	((AVLTree_Node_t *)((*parent)->data))->balanceFactor = 0;
-	((AVLTree_Node_t *)child->data)->balanceFactor = 0;
 
 	(*parent)->right = child->left;
 	child->left = *parent;
