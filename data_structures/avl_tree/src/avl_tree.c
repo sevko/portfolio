@@ -72,7 +72,6 @@ static int _insert(
 ){
 	AVLTree_Node_t *parent = (AVLTree_Node_t *)((*node)->data),
 		*child, *grandchild;
-	// int *balanceFactor = &(parent->balanceFactor);
 	int prevBalanceFactor = parent->balanceFactor;
 	int balanceFactorDelta;
 
@@ -84,29 +83,30 @@ static int _insert(
 			BinaryTree_insertRight(tree, *node, dataNode);
 			balanceFactorDelta = 1;
 		}
-		parent->balanceFactor += balanceFactorDelta;
 
+		parent->balanceFactor += balanceFactorDelta;
 		if(_abs(parent->balanceFactor) == 2){
 			child = (AVLTree_Node_t *)((*node)->right->data);
-			if(child->balanceFactor == -1){
+			if(child->balanceFactor == 1){
 				_rotateRight(node);
 			}
 			else {
 				grandchild = (AVLTree_Node_t *)((*node)->right->left->data);
 				switch(grandchild->balanceFactor){
 					case 1:
-						parent->balanceFactor = -1;
-						child->balanceFactor = 0;
+						parent->balanceFactor = 0;
+						child->balanceFactor = -1;
 						break;
 					case 0:
 						parent->balanceFactor = 0;
 						child->balanceFactor = 0;
 						break;
 					case -1:
-						parent->balanceFactor = 0;
-						child->balanceFactor = 1;
+						parent->balanceFactor = 1;
+						child->balanceFactor = 0;
 						break;
 				}
+				grandchild->balanceFactor = 0;
 
 				_rotateLeft(node);
 				_rotateRight(node);
@@ -144,6 +144,7 @@ static int _insert(
 						child->balanceFactor = 1;
 						break;
 				}
+				grandchild->balanceFactor = 0;
 
 				_rotateRight(&(*node)->left);
 				_rotateLeft(node);
