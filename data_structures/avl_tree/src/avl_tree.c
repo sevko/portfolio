@@ -20,7 +20,7 @@
  *      operated on the right/left child of the parent node respectively.
 */
 static int _insert(
-	AVLTree_Tree_t *tree, BinaryTree_Node_t *node, AVLTree_Node_t *dataNode
+	AVLTree_Tree_t *tree, BinaryTree_Node_t **node, AVLTree_Node_t *dataNode
 );
 
 /*
@@ -63,38 +63,95 @@ void AVLTree_insert(AVLTree_Tree_t *tree, void *data){
 		BinaryTree_insertRoot(tree, data);
 	}
 	else {
-		_insert(tree, tree->root, data);
+		_insert(tree, &tree->root, data);
 	}
 }
 
 static int _insert(
-	AVLTree_Tree_t *tree, BinaryTree_Node_t *node, AVLTree_Node_t *dataNode
+	AVLTree_Tree_t *tree, BinaryTree_Node_t **node, AVLTree_Node_t *dataNode
 ){
-	void *currData = ((AVLTree_Node_t *)(node->data))->data;
+	AVLTree_Node_t *parent = (AVLTree_Node_t *)((*node)->data),
+		*child, *grandchild;
+	// int *balanceFactor = &(parent->balanceFactor);
+	int prevBalanceFactor = parent->balanceFactor;
 	int balanceFactorDelta;
-	if(tree->compareData(currData, dataNode->data) < 0){
-		if(node->right){
-			balanceFactorDelta = _insert(tree, node->right, dataNode);
+
+	if(tree->compareData(parent->data, dataNode->data) < 0){
+		if((*node)->right){
+			balanceFactorDelta = _insert(tree, &((*node)->right), dataNode);
 		}
 		else {
-			BinaryTree_insertRight(tree, node, dataNode);
+			BinaryTree_insertRight(tree, *node, dataNode);
 			balanceFactorDelta = 1;
+		}
+		parent->balanceFactor += balanceFactorDelta;
+
+		if(_abs(parent->balanceFactor) == 2){
+			child = (AVLTree_Node_t *)((*node)->right->data);
+			if(child->balanceFactor == -1){
+				_rotateRight(node);
+			}
+			else {
+				grandchild = (AVLTree_Node_t *)((*node)->right->left->data);
+				switch(grandchild->balanceFactor){
+					case 1:
+						parent->balanceFactor = -1;
+						child->balanceFactor = 0;
+						break;
+					case 0:
+						parent->balanceFactor = 0;
+						child->balanceFactor = 0;
+						break;
+					case -1:
+						parent->balanceFactor = 0;
+						child->balanceFactor = 1;
+						break;
+				}
+
+				_rotateLeft(node);
+				_rotateRight(node);
+			}
 		}
 	}
 	else {
-		if(node->left){
-			balanceFactorDelta = -_insert(tree, node->left, dataNode);
+		if((*node)->left){
+			balanceFactorDelta = _insert(tree, &((*node)->left), dataNode);
 		}
 		else {
-			BinaryTree_insertLeft(tree, node, dataNode);
-			balanceFactorDelta = -1;
+			BinaryTree_insertLeft(tree, *node, dataNode);
+			balanceFactorDelta = 1;
 		}
 
+		parent->balanceFactor -= balanceFactorDelta;
+		if(_abs(parent->balanceFactor) == 2){
+			child = (AVLTree_Node_t *)(*node)->left->data;
+			if(child->balanceFactor == -1){
+				_rotateLeft(node);
+			}
+			else {
+				grandchild = (AVLTree_Node_t *)((*node)->left->right->data);
+				switch(grandchild->balanceFactor){
+					case 1:
+						parent->balanceFactor = -1;
+						child->balanceFactor = 0;
+						break;
+					case 0:
+						parent->balanceFactor = 0;
+						child->balanceFactor = 0;
+						break;
+					case -1:
+						parent->balanceFactor = 0;
+						child->balanceFactor = 1;
+						break;
+				}
+
+				_rotateRight(&(*node)->left);
+				_rotateLeft(node);
+			}
+		}
 	}
-	int *balanceFactor = &((AVLTree_Node_t *)(node->data))->balanceFactor;
-	int prevBalanceFactor = *balanceFactor;
-	*balanceFactor += balanceFactorDelta;
-	return (_abs(prevBalanceFactor) < _abs(*balanceFactor)) ? 1 : 0;
+
+	return (_abs(prevBalanceFactor) < _abs(parent->balanceFactor)) ? 1 : 0;
 }
 
 static void _rotateLeft(BinaryTree_Node_t **parent){
