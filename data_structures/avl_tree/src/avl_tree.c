@@ -88,11 +88,13 @@ static int _insert(
 		if(_abs(parent->balanceFactor) == 2){
 			child = (AVLTree_Node_t *)((*node)->right->data);
 			if(child->balanceFactor == 1){
+				// right-right
 				_rotateRight(node);
 				parent->balanceFactor = 0;
 				child->balanceFactor = 0;
 			}
 			else {
+				// right-left
 				grandchild = (AVLTree_Node_t *)((*node)->right->left->data);
 				switch(grandchild->balanceFactor){
 					case 1:
@@ -128,11 +130,13 @@ static int _insert(
 		if(_abs(parent->balanceFactor) == 2){
 			child = (AVLTree_Node_t *)(*node)->left->data;
 			if(child->balanceFactor == -1){
+				// left-left
 				_rotateLeft(node);
 				parent->balanceFactor = 0;
 				child->balanceFactor = 0;
 			}
 			else {
+				// left-right
 				grandchild = (AVLTree_Node_t *)((*node)->left->right->data);
 				switch(grandchild->balanceFactor){
 					case 1:

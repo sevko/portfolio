@@ -44,6 +44,3 @@ void AVLTree_free(AVLTree_Tree_t *tree);
  *      inserted in its `root`.
 */
 void AVLTree_insert(AVLTree_Tree_t *tree, void *data);
-
-void *AVLTree_remove(AVLTree_Tree_t *tree, void *data);
-void *AVLTree_find(void *data);
