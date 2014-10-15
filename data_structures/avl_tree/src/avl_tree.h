@@ -38,16 +38,12 @@ void AVLTree_free(AVLTree_Tree_t *tree);
 
 /*
  * @brief Insert a data item into a tree.
- * @param tree The tree to insert the item into.
- * @param node The node to begin searching for a candidate position from.
- *      Unless you know what you're doing, this should invariably be
- *      `tree->root`, or the top of the tree, because `data` will then be
- *      inserted into a position after taking into account all of the existing
- *      data members, and will allow the tree search mechanism to function as
- *      intended. Must not be null.
- * @param data The data item to insert. Must be usable by
- *      `tree->compareData()`.
+ * @param tree The tree to insert the item into; need not have any items.
+ * @param data The data item to insert; must be usable by
+ *      `tree->compareData()`. If `tree` has a `size` of 0, then `data` will be
+ *      inserted in its `root`.
 */
-void AVLTree_insert(AVLTree_Tree_t *tree, BinaryTree_Node_t *node, void *data);
+void AVLTree_insert(AVLTree_Tree_t *tree, void *data);
+
 void *AVLTree_remove(AVLTree_Tree_t *tree, void *data);
 void *AVLTree_find(void *data);

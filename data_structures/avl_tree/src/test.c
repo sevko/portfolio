@@ -15,11 +15,11 @@ int g_testDataInd;
 
 /**
  * @brief Passed to `BinaryTree_create()`.
- * @param data The data item (cast to a `char *`, which is the data type used
- *      by these unit tests) to deallocate.
+ * @param data The data item, an `AVLTree_Node_t`, to deallocate.
 */
 static void _freeData(void *data){
-	free((char *)data);
+	free(((AVLTree_Node_t *)data)->data);
+	free(data);
 }
 
 /*
@@ -62,19 +62,12 @@ static void _test_create(void){
 }
 
 /*
- * Temporary, for testing.
-*/
-static void _printData(void *data){
-	printf("%s, ", (char *)data);
-}
-
-/*
  * @brief Passed to various traversal methods to verify that data items are
  *      being accessed in the right order.
- * @param data Any one of a given tree's nodes' data. Assumed to `char *`.
+ * @param data Any one of a given tree's nodes' data (an `AVLTree_Node_t`).
 */
 static void _saveTraversedData(void *data){
-	g_testData[g_testDataInd++] = data;
+	g_testData[g_testDataInd++] = ((AVLTree_Node_t *)data)->data;
 }
 
 /*
@@ -91,13 +84,13 @@ static void _test_insert(void){
 	char **testData = _test_createDataItems(numData);
 	char **expected = (char *[]){"d", "b", "f", "a", "c", "e", "g"};
 
-	BinaryTree_insertRoot(tree, testData[3]);
-	AVLTree_insert(tree, tree->root, testData[1]);
-	AVLTree_insert(tree, tree->root, testData[5]);
-	AVLTree_insert(tree, tree->root, testData[0]);
-	AVLTree_insert(tree, tree->root, testData[2]);
-	AVLTree_insert(tree, tree->root, testData[4]);
-	AVLTree_insert(tree, tree->root, testData[6]);
+	AVLTree_insert(tree, testData[3]);
+	AVLTree_insert(tree, testData[1]);
+	AVLTree_insert(tree, testData[5]);
+	AVLTree_insert(tree, testData[0]);
+	AVLTree_insert(tree, testData[2]);
+	AVLTree_insert(tree, testData[4]);
+	AVLTree_insert(tree, testData[6]);
 	BinaryTree_travBreadth(tree->root, _saveTraversedData);
 
 	for(int ind = 0; ind < numData; ind++){
