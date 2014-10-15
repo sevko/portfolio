@@ -62,13 +62,6 @@ static void _test_create(void){
 }
 
 /*
- * Temporary, for testing.
-*/
-static void _printData(void *data){
-	printf("%s, ", (char *)((AVLTree_Node_t *)data)->data);
-}
-
-/*
  * @brief Passed to various traversal methods to verify that data items are
  *      being accessed in the right order.
  * @param data Any one of a given tree's nodes' data (an `AVLTree_Node_t`).
