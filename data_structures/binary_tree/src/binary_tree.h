@@ -17,6 +17,11 @@ typedef struct {
 
 	// A function used to free the data items stored inside this tree's nodes.
 	void (*freeData)(void *data);
+
+	// Used to support polymorphism/subclassing, if one wished to implement,
+	// say, a binary search tree using this library's implementation as a
+	// backbone.
+	int (*compareData)(const void *data1, const void *data2);
 	BinaryTree_Node_t *root; // The root node of the tree.
 } BinaryTree_Tree_t;
 
