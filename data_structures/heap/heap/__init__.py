@@ -1,3 +1,1 @@
-from . import heap
-
-Heap = heap.Heap
+from heap.data_structure import Heap
