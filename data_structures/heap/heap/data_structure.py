@@ -30,3 +30,17 @@ class Heap(object):
 
 	def __len__(self):
 		return len(self._items)
+
+	def __str__(self):
+		"""
+		Returns:
+			(str) `self` in a multi-line, pseudo-tree string format.
+		"""
+
+		rows = []
+		curr_ind = 0
+		while curr_ind < len(self):
+			next_ind = curr_ind * 2 + 1
+			rows.append(str(item) for item in self[curr_ind:next_ind])
+			curr_ind = next_ind
+		return "\n".join([", ".join(row) for row in rows])
