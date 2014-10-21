@@ -4,6 +4,15 @@ class Heap(object):
 		self._items = []
 
 	def insert(self, *items):
+		"""
+		Insert any number of items into this Heap.
+
+		Args:
+			*items (Objects): The objects to insert into this heap, one after
+				the other. Must be comparable (via `__lt__()`/`__gt()__`) to
+				one another.
+		"""
+
 		def get_parent_ind(ind):
 			return int((ind - 1) / 2)
 
@@ -20,6 +29,16 @@ class Heap(object):
 				parent_ind = get_parent_ind(child_ind)
 
 	def remove(self):
+		"""
+		Remove the top item from this heap.
+
+		Revises the internal structure of the heap so that it mantains heap
+		characteristics.
+
+		Returns:
+			The removed root of the tree.
+		"""
+
 		def get_child_inds(ind):
 			next_level = ind * 2
 			return next_level + 1, next_level + 2
@@ -79,3 +98,6 @@ class Heap(object):
 			rows.append(str(item) for item in self[curr_ind:next_ind])
 			curr_ind = next_ind
 		return "\n".join([", ".join(row) for row in rows])
+
+	def __eq__(self, other):
+		return self._items == other._items
