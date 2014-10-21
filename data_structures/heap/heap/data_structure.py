@@ -24,35 +24,36 @@ class Heap(object):
 			next_level = ind * 2
 			return next_level + 1, next_level + 2
 
-		root = self[0]
-		self[0] = self._items.pop()
+		if len(self) == 1:
+			root = self._items.pop()
+		else:
+			root = self[0]
+			self[0] = self._items.pop()
 
-		curr_ind = 0
-		while True:
-			child_inds = get_child_inds(curr_ind)
-			child_ind = -1
+			curr_ind = 0
+			while True:
+				child_inds = get_child_inds(curr_ind)
+				left_greater = child_inds[0] < len(self) and \
+					self[curr_ind] < self[child_inds[0]]
+				right_greater = child_inds[1] < len(self) and \
+					self[curr_ind] < self[child_inds[1]]
 
-			left_greater = child_inds[0] < len(self) and \
-				self[curr_ind] < self[child_inds[0]]
-			right_greater = child_inds[1] < len(self) and \
-				self[curr_ind] < self[child_inds[1]]
-
-			if right_greater and right_greater:
-				if self[child_inds[1]] > self[child_inds[0]]:
+				if right_greater and right_greater:
+					if self[child_inds[1]] > self[child_inds[0]]:
+						child_ind = child_inds[1]
+					else:
+						child_ind = child_inds[0]
+				elif left_greater:
+					child_ind = child_inds[0]
+				elif right_greater:
 					child_ind = child_inds[1]
 				else:
-					child_ind = child_inds[0]
-			elif left_greater:
-				child_ind = child_inds[0]
-			elif right_greater:
-				child_ind = child_inds[1]
-			else:
-				break
+					break
 
-			temp = self[child_ind]
-			self[child_ind] = self[curr_ind]
-			self[curr_ind] = temp
-			curr_ind = child_ind
+				temp = self[child_ind]
+				self[child_ind] = self[curr_ind]
+				self[curr_ind] = temp
+				curr_ind = child_ind
 
 		return root
 
