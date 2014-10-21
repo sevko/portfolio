@@ -1,4 +1,15 @@
+"""
+An implementation of a simple heap data structure.
+"""
+
 class Heap(object):
+	"""
+	A top-heavy Heap.
+
+	Attributes:
+		_items (list of Objects): The internal, flattened represenation of the
+			heap tree.
+	"""
 
 	def __init__(self):
 		self._items = []

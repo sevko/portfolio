@@ -40,6 +40,12 @@ class TestHeap(unittest.TestCase):
 			)
 
 	def test_remove(self):
+		"""Test `Heap.remove()`.
+
+		Check the composition of the heap's internal tree after the
+		sequential removal of all of its items.
+		"""
+
 		self.test_heap.insert(10, 3, 8, 1, 2, 4, 0)
 		states = [
 			(10, [8, 3, 4, 1, 2, 0]),
