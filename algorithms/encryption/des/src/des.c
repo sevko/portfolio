@@ -3,7 +3,7 @@
 
 #include "des.h"
 
-int main(){
-	puts("Hello world.");
-	return EXIT_SUCCESS;
+Byte_t *DES_encipher(const Byte_t *plaintext, Byte_t *key){
+	printf("Encrypted: %s\n", plaintext);
+	return plaintext;
 }
