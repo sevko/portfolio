@@ -4,6 +4,6 @@
 #include "src/des.h"
 
 int main(){
-	DES_encipher("Hello, world.", "super secret key");
+	DES_encipher((const Byte_t *)"Hello, world.", (Byte_t *)"super secret key");
 	return EXIT_SUCCESS;
 }
