@@ -4,6 +4,7 @@
 
 #pragma once
 
+// A "byte" type for convenience and readability.
 typedef unsigned char Byte_t;
 
 Byte_t *DES_encipher(const Byte_t *plaintext, Byte_t *key);
