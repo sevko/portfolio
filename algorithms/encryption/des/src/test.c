@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "bit_ops.h"
 #include "src/des.h"
 
 int main(){
