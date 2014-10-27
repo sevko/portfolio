@@ -42,6 +42,25 @@ DEF_UNIT_TEST(
 )
 
 /**
+ * Test `BitOps_setBit()`.
+ */
+DEF_UNIT_TEST(
+	BitOps_setBit,
+	Byte_t bytes[] = {0};
+	BitOps_setBit(bytes, 0);
+	BitOps_setBit(bytes, 2);
+	BitOps_setBit(bytes, 3);
+	BitOps_setBit(bytes, 7);
+	int expectedBits[] = {1, 0, 1, 1, 0, 0, 0, 1};
+	for(int bit = 0; bit < 8; bit++){
+		ok(
+			BitOps_getBit(bytes, bit) == expectedBits[bit],
+			"Bit %d matches.", bit
+		);
+	}
+)
+
+/**
  * Test `BitOps_getBitString()`.
  */
 DEF_UNIT_TEST(
@@ -56,6 +75,7 @@ DEF_UNIT_TEST(
 int main(){
 	note("Begin unit tests.");
 	EXEC_UNIT_TEST(BitOps_getBit);
+	EXEC_UNIT_TEST(BitOps_setBit);
 	EXEC_UNIT_TEST(BitOps_getBitString);
 	done_testing();
 	return EXIT_SUCCESS;

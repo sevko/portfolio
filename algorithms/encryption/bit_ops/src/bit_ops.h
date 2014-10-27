@@ -22,6 +22,18 @@ inline int BitOps_getBit(const Byte_t *bytes, int bitPos){
 }
 
 /**
+ * @brief Set the bit at a certain index of a byte array to 1.
+ * @param bytes An array of one or more bytes.
+ * @param bitPos The bit position (counting from left-to-right, starting at 0)
+ *      of the bit whose value will be set. Must be within the inclusive
+ *      range `[0, CHAR_BIT * len(bytes) - 1]`.
+ */
+inline void BitOps_setBit(Byte_t *bytes, int bitPos){
+	int shiftDist = CHAR_BIT - 1 - bitPos % CHAR_BIT;
+	bytes[bitPos / CHAR_BIT] |= 1 << shiftDist;
+}
+
+/**
  * @brief Returns a binary string representation of an array of bytes.
  * @param bytes An array of one or more bytes.
  * @param numBytes The number of bytes in `bytes`.
