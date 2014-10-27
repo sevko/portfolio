@@ -34,6 +34,13 @@ inline void BitOps_setBit(Byte_t *bytes, int bitPos){
 }
 
 /**
+ * @brief Left-rotate an array of bytes.
+ * @param bytes An array of one or more bytes.
+ * @param numBytes The number of bytes inside `numBytes`.
+ */
+void BitOps_rotLeft(Byte_t *bytes, int numBytes);
+
+/**
  * @brief Returns a binary string representation of an array of bytes.
  * @param bytes An array of one or more bytes.
  * @param numBytes The number of bytes in `bytes`.
