@@ -1,5 +1,6 @@
-#include <stdio.h>
 #include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "bit_ops.h"
 
@@ -7,9 +8,13 @@
 extern inline int BitOps_getBit(const Byte_t *bytes, int bitPos);
 // extern inline void BitOps_rotLeft(Byte_t *bytes, int numBits);
 
-void BitOps_printBits(Byte_t *bytes, int numBytes){
-	for(int bit = 0; bit < numBytes * CHAR_BIT; bit++){
-		printf("%d", BitOps_getBit(bytes, bit));
+char *BitOps_getBitString(Byte_t *bytes, int numBytes){
+	int numBits = numBytes * CHAR_BIT;
+	char *bitString = malloc(numBits + 1);
+	int bit;
+	for(bit = 0; bit < numBits; bit++){
+		bitString[bit] = '0' + BitOps_getBit(bytes, bit);
 	}
-	puts("");
+	bitString[bit] = 0;
+	return bitString;
 }

@@ -22,8 +22,10 @@ inline int BitOps_getBit(const Byte_t *bytes, int bitPos){
 }
 
 /**
- * @brief Print an array of bytes in binary format (ie, the value of each bit).
+ * @brief Returns a binary string representation of an array of bytes.
  * @param bytes An array of one or more bytes.
  * @param numBytes The number of bytes in `bytes`.
+ * @return A null-terminated string containing a 0/1 for every bit in `bytes`.
+ *      Must be deallocated by the caller.
  */
-void BitOps_printBits(Byte_t *bytes, int numBytes);
+char *BitOps_getBitString(Byte_t *bytes, int numBytes);
