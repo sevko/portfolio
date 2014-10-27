@@ -60,6 +60,29 @@ DEF_UNIT_TEST(
 	}
 )
 
+DEF_UNIT_TEST(
+	BitOps_rotLeft,
+	Byte_t bytes1[] = {178, 178};
+	int expectedBits1[] = {0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1};
+	BitOps_rotLeft(bytes1, 2);
+	for(int bit = 0; bit < 16; bit++){
+		ok(
+			BitOps_getBit(bytes1, bit) == expectedBits1[bit],
+			"Bit %d matches.", bit
+		);
+	}
+
+	Byte_t bytes2[] = {154};
+	int expectedBits2[] = {0, 0, 1, 1, 0, 1, 0, 1};
+	BitOps_rotLeft(bytes2, 1);
+	for(int bit = 0; bit < 8; bit++){
+		ok(
+			BitOps_getBit(bytes2, bit) == expectedBits2[bit],
+			"Bit %d matches.", bit
+		);
+	}
+)
+
 /**
  * Test `BitOps_getBitString()`.
  */
@@ -77,6 +100,7 @@ int main(){
 	EXEC_UNIT_TEST(BitOps_getBit);
 	EXEC_UNIT_TEST(BitOps_setBit);
 	EXEC_UNIT_TEST(BitOps_getBitString);
+	EXEC_UNIT_TEST(BitOps_rotLeft);
 	done_testing();
 	return EXIT_SUCCESS;
 }
