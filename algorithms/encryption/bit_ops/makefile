@@ -1,5 +1,6 @@
 PROJECT_EXECUTABLE = bin/bit_ops
 FLAGS = -Wall -Wextra -I ./ -std=c99
+LIBS = -ltap
 C_COMPILER = gcc $(FLAGS)
 CC = @echo "\tcc $@" && $(C_COMPILER)
 
@@ -18,7 +19,7 @@ run: all
 	./$(PROJECT_EXECUTABLE)
 
 $(PROJECT_EXECUTABLE): $(OBJ)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(LIBS)
 
 bin/%.o: src/%.c
 	$(CC) -o $@ -c $^
