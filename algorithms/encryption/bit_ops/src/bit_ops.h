@@ -47,4 +47,4 @@ void BitOps_rotLeft(Byte_t *bytes, int numBytes);
  * @return A null-terminated string containing a 0/1 for every bit in `bytes`.
  *      Must be deallocated by the caller.
  */
-char *BitOps_getBitString(Byte_t *bytes, int numBytes);
+char *BitOps_getBitString(const Byte_t *bytes, int numBytes);

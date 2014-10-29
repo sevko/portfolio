@@ -23,7 +23,7 @@ void BitOps_rotLeft(Byte_t *bytes, int numBytes){
 	}
 }
 
-char *BitOps_getBitString(Byte_t *bytes, int numBytes){
+char *BitOps_getBitString(const Byte_t *bytes, int numBytes){
 	int numBits = numBytes * CHAR_BIT;
 	char *bitString = malloc(numBits + 1);
 	int bit;
