@@ -13,7 +13,7 @@
  */
 static void _rotLeft(Byte_t *bytes, int rotDist);
 
-Byte_t *DES_encipher(const Byte_t *plaintext, Byte_t *key){
+Byte_t *DES_encipher(const Byte_t *plaintext, const Byte_t *key){
 	static const int permutedChoice1[] = {
 		57, 49, 41, 33, 25, 17, 9, 1, 58, 50, 42, 34, 26, 18,
 		10, 2, 59, 51, 43, 35, 27, 19, 11, 3, 60, 52, 44, 36,
@@ -61,8 +61,20 @@ Byte_t *DES_encipher(const Byte_t *plaintext, Byte_t *key){
 				BitOps_setBit(subkeys[subkey], bit);
 			}
 		}
+	}
 
-		puts(BitOps_getBitString(subkeys[subkey], 6));
+	int initialPermutation[] = {
+		58, 50, 42, 34, 26, 18, 10, 2, 60, 52, 44, 36, 28, 20, 12, 4,
+		62, 54, 46, 38, 30, 22, 14, 6, 64, 56, 48, 40, 32, 24, 16, 8,
+		57, 49, 41, 33, 25, 17, 9, 1, 59, 51, 43, 35, 27, 19, 11, 3,
+		61, 53, 45, 37, 29, 21, 13, 5, 63, 55, 47, 39, 31, 23, 15, 7
+	};
+
+	Byte_t permutedText[8] = {0};
+	for(int bit = 0; bit < 64; bit++){
+		if(BitOps_getBit(plaintext, initialPermutation[bit] - 1)){
+			BitOps_setBit(permutedText, bit);
+		}
 	}
 
 	return (Byte_t *)plaintext;
@@ -80,3 +92,4 @@ static void _rotLeft(Byte_t *bytes, int rotDist){
 	}
 	bytes[byte - 1] |= frontShiftedBits << 4;
 }
+
