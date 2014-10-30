@@ -5,6 +5,14 @@
 #include "des.h"
 
 /**
+ * @brief Generate the 16 DES subkeys from the master key.
+ * @param key The master encryption key.
+ * @param subkeys A `Byte_t [16][6]` subkeys array, initialized to 0, which
+ *      will be populated with the 16 4-byte keys.
+ */
+static void _generateSubkeys(const Byte_t *key, Byte_t **subkeys);
+
+/**
  * @brief Left-rotate the first 28 bits of 4 8-bit bytes. The last 4 bits are
  *      passed over when transferring bits shifted off the left end to the
  *      right end.
@@ -14,6 +22,27 @@
 static void _rotLeft(Byte_t *bytes, int rotDist);
 
 Byte_t *DES_encipher(const Byte_t *plaintext, const Byte_t *key){
+	Byte_t subkeys[16][6] = {{0}};
+	_generateSubkeys(key, (Byte_t **)subkeys);
+
+	int initialPermutation[] = {
+		58, 50, 42, 34, 26, 18, 10, 2, 60, 52, 44, 36, 28, 20, 12, 4,
+		62, 54, 46, 38, 30, 22, 14, 6, 64, 56, 48, 40, 32, 24, 16, 8,
+		57, 49, 41, 33, 25, 17, 9, 1, 59, 51, 43, 35, 27, 19, 11, 3,
+		61, 53, 45, 37, 29, 21, 13, 5, 63, 55, 47, 39, 31, 23, 15, 7
+	};
+
+	Byte_t permutedText[8] = {0};
+	for(int bit = 0; bit < 64; bit++){
+		if(BitOps_getBit(plaintext, initialPermutation[bit] - 1)){
+			BitOps_setBit(permutedText, bit);
+		}
+	}
+
+	return (Byte_t *)plaintext;
+}
+
+static void _generateSubkeys(const Byte_t *key, Byte_t **subkeys){
 	static const int permutedChoice1[] = {
 		57, 49, 41, 33, 25, 17, 9, 1, 58, 50, 42, 34, 26, 18,
 		10, 2, 59, 51, 43, 35, 27, 19, 11, 3, 60, 52, 44, 36,
@@ -50,7 +79,6 @@ Byte_t *DES_encipher(const Byte_t *plaintext, const Byte_t *key){
 		41, 52, 31, 37, 47, 55, 30, 40, 51, 45, 33, 48,
 		44, 49, 39, 56, 34, 53, 46, 42, 50, 36, 29, 32
 	};
-	Byte_t subkeys[16][6] = {{0}};
 	for(int subkey = 0; subkey < 16; subkey++){
 		for(bit = 0; bit < 48; bit++){
 			int bitPos = permutedChoice2[bit] - 1;
@@ -62,22 +90,6 @@ Byte_t *DES_encipher(const Byte_t *plaintext, const Byte_t *key){
 			}
 		}
 	}
-
-	int initialPermutation[] = {
-		58, 50, 42, 34, 26, 18, 10, 2, 60, 52, 44, 36, 28, 20, 12, 4,
-		62, 54, 46, 38, 30, 22, 14, 6, 64, 56, 48, 40, 32, 24, 16, 8,
-		57, 49, 41, 33, 25, 17, 9, 1, 59, 51, 43, 35, 27, 19, 11, 3,
-		61, 53, 45, 37, 29, 21, 13, 5, 63, 55, 47, 39, 31, 23, 15, 7
-	};
-
-	Byte_t permutedText[8] = {0};
-	for(int bit = 0; bit < 64; bit++){
-		if(BitOps_getBit(plaintext, initialPermutation[bit] - 1)){
-			BitOps_setBit(permutedText, bit);
-		}
-	}
-
-	return (Byte_t *)plaintext;
 }
 
 static void _rotLeft(Byte_t *bytes, int rotDist){
