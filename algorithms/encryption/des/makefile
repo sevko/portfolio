@@ -1,5 +1,6 @@
 PROJECT_EXECUTABLE = bin/des
 FLAGS = -Wall -Wextra -I ./ -std=c99 -I ../bit_ops/src/
+LIBS = -ltap
 C_COMPILER = gcc $(FLAGS)
 CC = @echo "\tcc $@" && $(C_COMPILER)
 
@@ -9,17 +10,17 @@ OBJ += bin/bit_ops.o
 
 .PHONY: all debug run clean
 
+test: FLAGS += -O0 -g3 -DDES_TEST
+test: bin $(PROJECT_EXECUTABLE)
+
 all: FLAGS += -Ofast
 all: bin $(PROJECT_EXECUTABLE)
 
-debug: FLAGS += -O0 -g3
-debug: bin $(PROJECT_EXECUTABLE)
-
-run: all
+run: test
 	./$(PROJECT_EXECUTABLE)
 
 $(PROJECT_EXECUTABLE): $(OBJ)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(LIBS)
 
 bin/%.o: src/%.c
 	$(CC) -o $@ -c $^
