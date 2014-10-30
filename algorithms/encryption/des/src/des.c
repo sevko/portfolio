@@ -10,7 +10,7 @@
  * @param subkeys A `Byte_t [16][6]` subkeys array, initialized to 0, which
  *      will be populated with the 16 4-byte keys.
  */
-static void _generateSubkeys(const Byte_t *key, Byte_t **subkeys);
+static void _generateSubkeys(const Byte_t *key, Byte_t subkeys[][6]);
 
 /**
  * @brief Left-rotate the first 28 bits of 4 8-bit bytes. The last 4 bits are
@@ -23,7 +23,7 @@ static void _rotLeft(Byte_t *bytes, int rotDist);
 
 Byte_t *DES_encipher(const Byte_t *plaintext, const Byte_t *key){
 	Byte_t subkeys[16][6] = {{0}};
-	_generateSubkeys(key, (Byte_t **)subkeys);
+	_generateSubkeys(key, subkeys);
 
 	int initialPermutation[] = {
 		58, 50, 42, 34, 26, 18, 10, 2, 60, 52, 44, 36, 28, 20, 12, 4,
@@ -42,7 +42,7 @@ Byte_t *DES_encipher(const Byte_t *plaintext, const Byte_t *key){
 	return (Byte_t *)plaintext;
 }
 
-static void _generateSubkeys(const Byte_t *key, Byte_t **subkeys){
+static void _generateSubkeys(const Byte_t *key, Byte_t subkeys[][6]){
 	static const int permutedChoice1[] = {
 		57, 49, 41, 33, 25, 17, 9, 1, 58, 50, 42, 34, 26, 18,
 		10, 2, 59, 51, 43, 35, 27, 19, 11, 3, 60, 52, 44, 36,
