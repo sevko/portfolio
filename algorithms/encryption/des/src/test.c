@@ -100,8 +100,11 @@ DEF_UNIT_TEST(
 
 int main(){
 	note("Begin unit tests.");
-	EXEC_UNIT_TEST(_generateSubkeys);
-	EXEC_UNIT_TEST(_rotLeft);
+	// EXEC_UNIT_TEST(_generateSubkeys);
+	// EXEC_UNIT_TEST(_rotLeft);
+	const Byte_t key[] = {0x13, 0x34, 0x57, 0x79, 0x9b, 0xbc, 0xdf, 0xf1};
+	const Byte_t plaintext[] = {0x1, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef};
+	DES_encipher(plaintext, key);
 	done_testing();
 	return EXIT_SUCCESS;
 }

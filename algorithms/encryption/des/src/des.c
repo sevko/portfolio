@@ -60,6 +60,27 @@ Byte_t *DES_encipher(const Byte_t *plaintext, const Byte_t *key){
 		);
 	}
 
+	static const int finalPermutation[] = {
+		40, 8, 48, 16, 56, 24, 64, 32, 39, 7, 47, 15, 55, 23, 63, 31,
+		38, 6, 46, 14, 54, 22, 62, 30, 37, 5, 45, 13, 53, 21, 61, 29,
+		36, 4, 44, 12, 52, 20, 60, 28, 35, 3, 43, 11, 51, 19, 59, 27,
+		34, 2, 42, 10, 50, 18, 58, 26, 33, 1, 41, 9, 49, 17, 57, 25
+	};
+
+	Byte_t finalBlocks[17][8] = {{0}};
+	for(int block = 0; block < 17; block++){
+		for(bit = 0; bit < 64; bit++){
+			int bitPos = finalPermutation[bit] - 1;
+			int bitVal = (bitPos < 32) ?
+				BitOps_getBit(blocks[block][1], bitPos) :
+				BitOps_getBit(blocks[block][0], bitPos - 32);
+
+			if(bitVal){
+				BitOps_setBit(finalBlocks[block], bit);
+			}
+		}
+	}
+
 	return (Byte_t *)plaintext;
 }
 
@@ -204,7 +225,7 @@ test_static void _expansionPermutation(
 		expandedBlock[byte] = (bit4Groups[groupOffset] << 4) |
 			(bit4Groups[groupOffset + 1]);
 	}
-	static const int finalPermutation[] = {
+	static const int permutation[] = {
 		16, 7, 20, 21, 29, 12, 28, 17,
 		1, 15, 23, 26, 5, 18, 31, 10,
 		2, 8, 24, 14, 32, 27, 3, 9,
@@ -213,7 +234,7 @@ test_static void _expansionPermutation(
 
 	Byte_t finalBlock[4] = {0};
 	for(int bit = 0; bit < 32; bit++){
-		if(BitOps_getBit(expandedBlock, finalPermutation[bit] - 1)){
+		if(BitOps_getBit(expandedBlock, permutation[bit] - 1)){
 			BitOps_setBit(finalBlock, bit);
 		}
 	}
