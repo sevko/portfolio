@@ -1,3 +1,8 @@
+/**
+ * Unit tests for the DES module. This file acts as the main entry point of a
+ * standalone executable for this project.
+ */
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,9 +66,42 @@ DEF_UNIT_TEST(
 	}
 )
 
+/**
+ * Test `_rotLeft()`.
+ */
+DEF_UNIT_TEST(
+	_rotLeft,
+	Byte_t bytes[] = {0xa2, 0x59, 0x8d, 0x50};
+	Byte_t expected1[] = {0x44, 0xb3, 0x1a, 0xb0};
+	_rotLeft(bytes, 1);
+
+	bool matchesExpected = true;
+	for(int byte = 0; byte < 4; byte++){
+		if(bytes[byte] != expected1[byte]){
+			matchesExpected = false;
+			break;
+		}
+	}
+
+	ok(matchesExpected, "Test case 1 matches expected.");
+
+	Byte_t expected2[] = {0x96, 0x63, 0x56, 0x80};
+	_rotLeft(bytes, 5);
+	matchesExpected = true;
+	for(int byte = 0; byte < 4; byte++){
+		if(bytes[byte] != expected2[byte]){
+			matchesExpected = false;
+			break;
+		}
+	}
+
+	ok(matchesExpected, "Test case 2 matches expected.");
+)
+
 int main(){
 	note("Begin unit tests.");
 	EXEC_UNIT_TEST(_generateSubkeys);
+	EXEC_UNIT_TEST(_rotLeft);
 	done_testing();
 	return EXIT_SUCCESS;
 }
