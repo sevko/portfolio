@@ -21,6 +21,8 @@ Byte_t *DES_decipher(const Byte_t *ciphertext, const Byte_t *key);
 #else
 #define test_static
 void _generateSubkeys(const Byte_t *key, Byte_t subkeys[][6]);
-void _expansionPermutation(Byte_t *block, const Byte_t *subkey);
+void _expansionPermutation(
+	Byte_t *target, const Byte_t *block, const Byte_t *subkey
+);
 void _rotLeft(Byte_t *bytes, int rotDist);
 #endif

@@ -12,7 +12,9 @@
  */
 test_static void _generateSubkeys(const Byte_t *key, Byte_t subkeys[][6]);
 
-test_static void _expansionPermutation(Byte_t *block, const Byte_t *subkey);
+test_static void _expansionPermutation(
+	Byte_t *target, const Byte_t *block, const Byte_t *subkey
+);
 
 /**
  * @brief Left-rotate the first 28 bits of 4 8-bit bytes. The last 4 bits are
@@ -53,7 +55,9 @@ Byte_t *DES_encipher(const Byte_t *plaintext, const Byte_t *key){
 			blocks[block][0][byte] = blocks[block - 1][1][byte];
 			blocks[block][1][byte] = blocks[block - 1][0][byte];
 		}
-		_expansionPermutation(blocks[block - 1][1], subkeys[block - 1]);
+		_expansionPermutation(
+			blocks[block][1], blocks[block - 1][1], subkeys[block - 1]
+		);
 	}
 
 	return (Byte_t *)plaintext;
@@ -109,7 +113,9 @@ test_static void _generateSubkeys(const Byte_t *key, Byte_t subkeys[][6]){
 	}
 }
 
-test_static void _expansionPermutation(Byte_t *block, const Byte_t *subkey){
+test_static void _expansionPermutation(
+	Byte_t *target, const Byte_t *block, const Byte_t *subkey
+){
 	Byte_t expandedBlock[6] = {0};
 	const int expansionTable[] = {
 		32, 1, 2, 3, 4, 5, 4, 5, 6, 7, 8, 9,
@@ -198,6 +204,21 @@ test_static void _expansionPermutation(Byte_t *block, const Byte_t *subkey){
 		expandedBlock[byte] = (bit4Groups[groupOffset] << 4) |
 			(bit4Groups[groupOffset + 1]);
 	}
+	static const int finalPermutation[] = {
+		16, 7, 20, 21, 29, 12, 28, 17,
+		1, 15, 23, 26, 5, 18, 31, 10,
+		2, 8, 24, 14, 32, 27, 3, 9,
+		19, 13, 30, 6, 22, 11, 4, 25
+	};
+
+	Byte_t finalBlock[4] = {0};
+	for(int bit = 0; bit < 32; bit++){
+		if(BitOps_getBit(expandedBlock, finalPermutation[bit] - 1)){
+			BitOps_setBit(finalBlock, bit);
+		}
+	}
+
+	BitOps_xor(target, finalBlock, 4);
 }
 
 test_static void _rotLeft(Byte_t *bytes, int rotDist){
