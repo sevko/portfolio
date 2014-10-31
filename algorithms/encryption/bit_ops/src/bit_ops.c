@@ -6,6 +6,9 @@
 
 extern inline void BitOps_setBit(Byte_t *bytes, int bitPos);
 extern inline int BitOps_getBit(const Byte_t *bytes, int bitPos);
+extern inline void BitOps_xor(
+	Byte_t *block1, const Byte_t *block2, int numBytes
+);
 
 void BitOps_rotLeft(Byte_t *bytes, int numBytes){
 	int firstBit = BitOps_getBit(bytes, 0);
