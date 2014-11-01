@@ -5,6 +5,21 @@
 #include "des.h"
 #include "des_tables.h"
 
+static const int g_DECIPHER = 0, g_ENCIPHER = 1;
+
+/**
+ * The DES algorithm, generalized for both encryption/decryption.
+ * @param buffer An 8-byte buffer.
+ * @param key An 8-byte encryption key.
+ * @param direction Either of g_DECIPHER (to decipher `buffer`), or
+ *      `g_ENCIPHER`, to encipher buffer.
+ * @return A pointer to an either enciphered or deciphered version of `buffer`;
+ *      `NULL` if memory could not be allocated.
+ */
+static Byte_t *_process(
+	const Byte_t *buffer, const Byte_t *key, int direction
+);
+
 /**
  * @brief Generate the 16 DES subkeys from the master key.
  * @param key The master 8-byte encryption key.
@@ -36,6 +51,16 @@ test_static void _expansionPermutation(
 test_static void _rotLeft(Byte_t *bytes, int rotDist);
 
 Byte_t *DES_encipher(const Byte_t *plaintext, const Byte_t *key){
+	return _process(plaintext, key, g_ENCIPHER);
+}
+
+Byte_t *DES_decipher(const Byte_t *ciphertext, const Byte_t *key){
+	return _process(ciphertext, key, g_DECIPHER);
+}
+
+static Byte_t *_process(
+	const Byte_t *buffer, const Byte_t *key, int direction
+){
 	Byte_t subkeys[16][6] = {{0}};
 	_generateSubkeys(key, subkeys);
 
@@ -49,13 +74,13 @@ Byte_t *DES_encipher(const Byte_t *plaintext, const Byte_t *key){
 	Byte_t blocks[17][2][4] = {{{0}}};
 	int bit;
 	for(bit = 0; bit < 32; bit++){
-		if(BitOps_getBit(plaintext, initialPermutation[bit] - 1)){
+		if(BitOps_getBit(buffer, initialPermutation[bit] - 1)){
 			BitOps_setBit(blocks[0][0], bit);
 		}
 	}
 
 	for(; bit < 64; bit++){
-		if(BitOps_getBit(plaintext, initialPermutation[bit] - 1)){
+		if(BitOps_getBit(buffer, initialPermutation[bit] - 1)){
 			BitOps_setBit(blocks[0][1], bit - 32);
 		}
 	}
@@ -65,8 +90,12 @@ Byte_t *DES_encipher(const Byte_t *plaintext, const Byte_t *key){
 			blocks[block][0][byte] = blocks[block - 1][1][byte];
 			blocks[block][1][byte] = blocks[block - 1][0][byte];
 		}
+
+		int subkeyInd = (direction == g_ENCIPHER) ?
+			block - 1 :
+			16 - block;
 		_expansionPermutation(
-			blocks[block][1], blocks[block - 1][1], subkeys[16 - block]
+			blocks[block][1], blocks[block - 1][1], subkeys[subkeyInd]
 		);
 	}
 
