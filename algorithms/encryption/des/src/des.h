@@ -6,6 +6,13 @@
 
 #include "bit_ops.h"
 
+/**
+ * @brief Encrypt a block of plaintext using DES.
+ * @param plaintext An 8-byte block.
+ * @param key An 8-block key.
+ * @return A pointer an encrypted version of `plaintext` (also 8 bytes). If
+ *      memory could not be allocated, return `NULL`.
+ */
 Byte_t *DES_encipher(const Byte_t *plaintext, const Byte_t *key);
 Byte_t *DES_decipher(const Byte_t *ciphertext, const Byte_t *key);
 

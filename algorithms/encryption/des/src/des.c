@@ -6,12 +6,21 @@
 
 /**
  * @brief Generate the 16 DES subkeys from the master key.
- * @param key The master encryption key.
+ * @param key The master 8-byte encryption key.
  * @param subkeys A `Byte_t [16][6]` subkeys array, initialized to 0, which
  *      will be populated with the 16 4-byte keys.
  */
 test_static void _generateSubkeys(const Byte_t *key, Byte_t subkeys[][6]);
 
+/**
+ * @brief Perform an expansion permutation and s-box substition on a block.
+ * @param target The 4-byte buffer to write the results of operations to.
+ *      In DES, this is the right half of an 8-byte block.
+ * @param block The 4-byte block used as a seed value; in DES, the right half
+ *      of the preceding 8-byte block.
+ * @param subkey The subkey corresponding to this block (first subkey for the
+ *      first permutation, second for second, etc.).
+ */
 test_static void _expansionPermutation(
 	Byte_t *target, const Byte_t *block, const Byte_t *subkey
 );
@@ -81,7 +90,13 @@ Byte_t *DES_encipher(const Byte_t *plaintext, const Byte_t *key){
 		}
 	}
 
-	return (Byte_t *)plaintext;
+	Byte_t *ciphertext;
+	if((ciphertext = malloc(8))){
+		for(int byte = 0; byte < 8; byte++){
+			ciphertext[byte] = finalBlocks[16][byte];
+		}
+	};
+	return ciphertext;
 }
 
 test_static void _generateSubkeys(const Byte_t *key, Byte_t subkeys[][6]){
