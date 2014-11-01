@@ -51,6 +51,28 @@ DEF_UNIT_TEST(
 )
 
 /**
+ * Test `DES_decipher()`.
+ */
+DEF_UNIT_TEST(
+	DES_decipher,
+	const Byte_t key[] = {0xa0, 0x84, 0xe4, 0xf8, 0x9a, 0xb9, 0xcd, 0x1e},
+		ciphertext[] = {0x87, 0x8C, 0x14, 0xCF, 0xCC, 0xD1, 0xFF, 0x8C},
+		expected[] = {0xb1, 0x43, 0x17, 0x68, 0x4f, 0xc5, 0x3b, 0xd0};
+	Byte_t *plaintext = DES_decipher(ciphertext, key);
+
+	bool matches = true;
+	for(int byte = 0; byte < 8; byte++){
+		if(plaintext[byte] != expected[byte]){
+			matches = false;
+			break;
+		}
+	}
+
+	free(plaintext);
+	ok(matches, "Plaintext matches expected.");
+)
+
+/**
  * Test `_generateSubkeys()`.
  */
 DEF_UNIT_TEST(
@@ -125,6 +147,7 @@ int main(){
 	EXEC_UNIT_TEST(_generateSubkeys);
 	EXEC_UNIT_TEST(_rotLeft);
 	EXEC_UNIT_TEST(DES_encipher);
+	EXEC_UNIT_TEST(DES_decipher);
 
 	// const Byte_t key[] = {0x13, 0x34, 0x57, 0x79, 0x9b, 0xbc, 0xdf, 0xf1};
 	// const Byte_t plaintext[] = {0x1, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef};
