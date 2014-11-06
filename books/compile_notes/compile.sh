@@ -1,3 +1,12 @@
+#! /bin/bash
+
+# Description:
+#   A tool to compile my kramdown markdown files into either HTML or LaTeX
+#   PDFs.
+#
+# Use:
+#   bash compile.sh help
+
 help_message=$(cat << EOF
 usage: bash compile.sh help|(html|latex INPUT_FILE)
 
@@ -8,6 +17,11 @@ EOF
 )
 
 handler_user_args(){
+	# Respond to command-line user arguments.
+	#
+	# Args:
+	#   $* : All command-line arguments.
+
 	misuse_exit(){
 		>&2 echo "$help_message"
 		exit 1
@@ -41,6 +55,11 @@ handler_user_args(){
 }
 
 compile_latex(){
+	# Compile the file to a LaTeX style PDF.
+	#
+	# Args:
+	#   $1: The markdown file path.
+
 	local filename=${1%.*}
 	pandoc $1 \
 		--include-in-header header.tex \
@@ -48,6 +67,11 @@ compile_latex(){
 }
 
 compile_html(){
+	# Compile the file to an HTML style PDF.
+	#
+	# Args:
+	#   $1: The markdown file path.
+
 	local filename=${1%.*}
 	local compiled_html="$filename.html"
 	pandoc --mathjax $1 \
