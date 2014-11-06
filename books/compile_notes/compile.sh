@@ -62,7 +62,7 @@ compile_latex(){
 
 	local filename=${1%.*}
 	pandoc $1 \
-		--include-in-header header.tex \
+		--include-in-header $EXEC_DIR/header.tex \
 		-o $filename.pdf
 }
 
@@ -75,12 +75,14 @@ compile_html(){
 	local filename=${1%.*}
 	local compiled_html="$filename.html"
 	pandoc --mathjax $1 \
-		--template template.html \
+		--template $EXEC_DIR/template.html \
 		--highlight-style pygments \
+		--variable exec_dir="$EXEC_DIR" \
 		-o $compiled_html
 	wkhtmltopdf --javascript-delay 2000 \
 		$compiled_html $filename.pdf
 	rm $compiled_html
 }
 
+EXEC_DIR="$(readlink -f ${0%/*})"
 handler_user_args "$@"
