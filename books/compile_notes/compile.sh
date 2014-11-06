@@ -7,7 +7,6 @@ usage: bash compile.sh help|(html|latex INPUT_FILE)
 EOF
 )
 
-
 handler_user_args(){
 	misuse_exit(){
 		>&2 echo "$help_message"
@@ -23,11 +22,11 @@ handler_user_args(){
 
 			case $1 in
 				html)
-					echo "Conv $2 to HTML PDF."
+					compile_html $2
 					;;
 
 				latex)
-					echo "Conv $2 to LaTeX PDF."
+					compile_latex $2
 					;;
 			esac
 			;;
@@ -41,7 +40,23 @@ handler_user_args(){
 	esac
 }
 
-handler_user_args "$@"
+compile_latex(){
+	local filename=${1%.*}
+	pandoc $1 \
+		--include-in-header header.tex \
+		-o $filename.pdf
+}
 
-# pandoc --mathjax 1_boolean_logic.md --template template.html --highlight-style pygments -o 1_boolean_logic.html
-# pandoc --mathjax 1_boolean_logic.md --highlight-style pygments --include-in-header before.tex -o out.pdf
+compile_html(){
+	local filename=${1%.*}
+	local compiled_html="$filename.html"
+	pandoc --mathjax $1 \
+		--template template.html \
+		--highlight-style pygments \
+		-o $compiled_html
+	wkhtmltopdf --javascript-delay 2000 \
+		$compiled_html $filename.pdf
+	rm $compiled_html
+}
+
+handler_user_args "$@"
