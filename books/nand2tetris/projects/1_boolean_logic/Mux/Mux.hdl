@@ -1,0 +1,17 @@
+/**
+ * Chip name: Mux
+ * Inputs: a, b, sel
+ * Outputs: out
+ * Function: If sel=0 then out=a else out=b.
+ */
+
+CHIP Mux {
+	IN a, b, sel;
+	OUT out;
+
+	PARTS:
+	Not(in=sel, out=notSel);
+	And(a=notSel, b=a, out=selA);
+	And(a=sel, b=b, out=selB);
+	Or(a=selA, b=selB, out=out);
+}
