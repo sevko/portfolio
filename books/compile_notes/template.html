@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<link rel="stylesheet" href="$exec_dir$/markdown.css">
+		<link rel="stylesheet" href="$exec_dir$/pygments.css">
+
+		<div style="width:600px;" class="markdown-body">
+		<script src="http://cdn.mathjax.org/mathjax/2.4-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML,local/local">
+		</script>
+		<script>
+			MathJax.Hub.Config({
+				tex2jax: {inlineMath: [["$$", "$$"], ["\\(", "\\)"]]},
+				jax: ["input/TeX", "output/HTML-CSS"],
+				"HTML-CSS": {
+					linebreaks: {automatic: true, width: "container"}
+				}
+			});
+		</script>
+
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="description" content="">
+		<meta name="viewport" content="initial-scale=1">
+	</head>
+	<body>
+		<div class="markdown-body">
+			$body$
+		</div>
+	</body>
+</html>
