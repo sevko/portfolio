@@ -1,0 +1,16 @@
+/**
+ * Chip name: Or
+ * Inputs: a, b
+ * Outputs: out
+ * Function: If a=b=0 then out=0 else out=1.
+ */
+
+CHIP Or {
+	IN a, b;
+	OUT out;
+
+	PARTS:
+	Not(in=a, out=notA);
+	Not(in=b, out=notB);
+	Nand(a=notA, b=notB, out=out);
+}
