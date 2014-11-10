@@ -1,0 +1,15 @@
+/**
+ * Chip name: Bit
+ * Inputs: in, load
+ * Outputs: out
+ * Function: If load(t - 1) then out(t) = in(t - 1) else out(t) = out(t - 1)
+ */
+
+CHIP Bit {
+	IN in, load;
+	OUT out;
+
+	PARTS:
+	Mux(a=prevOut, b=in, sel=load, out=currOut);
+	DFF(in=currOut, out=prevOut, out=out);
+}
