@@ -1,0 +1,31 @@
+CHIP Jump {
+	IN eq, lt, instruction[3];
+	OUT out;
+
+	PARTS:
+	Not(in=eq, out=ne);
+	Not(in=lt, out=nlt);
+	And(a=ne, b=nlt, out=gt);
+
+	Or(a=eq, b=lt, out=le);
+	Or(a=eq, b=gt, out=ge);
+
+	Mux8Way16(
+		a=false,
+		b[1..15]=false,
+		b[0]=gt,
+		c[1..15]=false,
+		c[0]=eq,
+		d[1..15]=false,
+		d[0]=ge,
+		e[1..15]=false,
+		e[0]=lt,
+		f[1..15]=false,
+		f[0]=ne,
+		g[1..15]=false,
+		g[0]=le,
+		h=true,
+		sel=instruction,
+		out[0]=out
+	);
+}
