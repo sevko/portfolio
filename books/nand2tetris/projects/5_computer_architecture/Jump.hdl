@@ -10,22 +10,16 @@ CHIP Jump {
 	Or(a=eq, b=lt, out=le);
 	Or(a=eq, b=gt, out=ge);
 
-	Mux8Way16(
+	Mux8Way(
 		a=false,
-		b[1..15]=false,
-		b[0]=gt,
-		c[1..15]=false,
-		c[0]=eq,
-		d[1..15]=false,
-		d[0]=ge,
-		e[1..15]=false,
-		e[0]=lt,
-		f[1..15]=false,
-		f[0]=ne,
-		g[1..15]=false,
-		g[0]=le,
+		b=gt,
+		c=eq,
+		d=ge,
+		e=lt,
+		f=ne,
+		g=le,
 		h=true,
 		sel=instruction,
-		out[0]=out
+		out=out
 	);
 }
