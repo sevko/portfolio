@@ -1,0 +1,24 @@
+/**
+ * Chip name: Mux8Way16
+ * Inputs: a, b, c, d, e, f, g, h, sel[3]
+ * Outputs: out
+ * Function: If sel=000 then out=a
+ *      if sel=001 then out=b
+ *      if sel=010 then out=c
+ *      if sel=011 then out=d
+ *      if sel=100 then out=e
+ *      if sel=101 then out=e
+ *      if sel=101 then out=f
+ *      if sel=110 then out=g
+ *      if sel=111 then out=h
+ */
+
+CHIP Mux8Way {
+	IN a, b, c, d, e, f, g, h, sel[3];
+	OUT out;
+
+	PARTS:
+	Mux4Way(a=a, b=b, c=c, d=d, sel=sel[0..1], out=abcd);
+	Mux4Way(a=e, b=f, c=g, d=h, sel=sel[0..1], out=efgh);
+	Mux(a=abcd, b=efgh, sel=sel[2], out=out);
+}
