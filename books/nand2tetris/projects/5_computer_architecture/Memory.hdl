@@ -1,0 +1,27 @@
+/**
+ * Chip name: Memory
+ * Inputs: in[16], load, address[15];
+ * Output: out[16]
+ * Function: 1. out(t) = Memory[address(t)](t)
+ *      2. If load(t - 1) then Memory[address(t - 1)](t) = in(t - 1)
+ *      (t is the current time unit, or cycle)
+ * Comment: Access to any address > 24576 (0x6000) is invalid. Access to any
+ *      address in the range 16384-24575 (0x4000-0x5FFF) results in accessing
+ *      the screen memory map. Access to address 0x6000 results in accessing
+ *      the keyboard memory map. The behavior in these addresses is described
+ *      in the Screen and Keyboard chip specifications given in the book.
+ */
+
+CHIP Memory {
+	IN in[16], load, address[15];
+	OUT out[16];
+
+	PARTS:
+	DMux(in=load, sel=address[14], a=loadRam, b=loadScreen);
+	RAM16K(in=in, load=loadRam, address=address[0..13], out=outRam);
+	Screen(in=in, load=loadScreen, address=address[0..12], out=outScreen);
+	Keyboard(out=outKeyboard);
+
+	Mux16(a=outScreen, b=outKeyboard, sel=address[13], out=outIO);
+	Mux16(a=outRam, b=outIO, sel=address[14], out=out);
+}
