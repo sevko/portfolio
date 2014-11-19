@@ -1,3 +1,25 @@
+/**
+ * Chip name: Jump
+ * Inputs: eq, lt, instruction[3]
+ * Outputs: out
+ * Function: ne = !eq
+ *      gt = !eq && !lt
+ *      le = eq || lt
+ *      ge = eq || gt
+ *
+ *      if instruction = 000 then out = 0
+ *      else if instruction = 001 then out = gt
+ *      else if instruction = 010 then out = eq
+ *      else if instruction = 011 then out = ge
+ *      else if instruction = 100 then out = lt
+ *      else if instruction = 101 then out = ne
+ *      else if instruction = 110 then out = le
+ *      else if instruction = 111 then out = 1
+ * Comment: Tests whether, given a Jump instruction and `eq`/`lt` (which
+ *      respectively indicate whether the Jump operand is equal to and less
+ *      than 0), a Jump should occur.
+ */
+
 CHIP Jump {
 	IN eq, lt, instruction[3];
 	OUT out;
