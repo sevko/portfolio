@@ -1,46 +1,42 @@
 /**
- * The Hack CPU (Central Processing unit), consisting of an ALU,
- * two registers named A and D, and a program counter named PC.
- * The CPU is designed to fetch and execute instructions written in
- * the Hack machine language. In particular, functions as follows:
- * Executes the inputted instruction according to the Hack machine
- * language specification. The D and A in the language specification
- * refer to CPU-resident registers, while M refers to the external
- * memory location addressed by A, i.e. to Memory[A]. The inM input
- * holds the value of this location. If the current instruction needs
- * to write a value to M, the value is placed in outM, the address
- * of the target location is placed in the addressM output, and the
- * writeM control bit is asserted. (When writeM==0, any value may
- * appear in outM). The outM and writeM outputs are combinational:
- * they are affected instantaneously by the execution of the current
- * instruction. The addressM and pc outputs are clocked: although they
- * are affected by the execution of the current instruction, they commit
- * to their new values only in the next time step. If reset==1 then the
- * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather
- * than to the address resulting from executing the current instruction.
+ * Chip name: CPU
+ * Inputs: inM[16]: the input M value.
+ *      instructions[16]: the Hack instruction to execute.
+ *      reset: whether to reset the internal PC.
+ * Outputs: outM[16]: a candidate value for M
+ *      writeM: whether to write `outM` to M
+ *      addressM[15]: the Memory address of M
+ *      pc[15]: the next instruction's address, as emitted by the internal PC.
+ *
+ * Comment: Executes the Hack instruction `instruction`, modifying the D and A
+ *      registers and updating the PC accordingly.
  */
 
 CHIP CPU {
-	IN inM[16],         // M value input  (M = contents of RAM[A])
-		instruction[16], // Instruction for execution
-		reset;           // Signals whether to re-start the current
-						 // program (reset==1) or continue executing
-						 // the current program (reset==0).
+	IN inM[16],
+		instruction[16],
+		reset;
 
-	OUT outM[16],        // M value output
-		writeM,          // Write to M?
-		addressM[15],    // Address in data memory (of M)
-		pc[15];          // address of next instruction
+	OUT outM[16],
+		writeM,
+		addressM[15],
+		pc[15];
 
 	PARTS:
+	// Update the D register, if appropriate.
 	And(a=instruction[15], b=instruction[4], out=regDLoad);
 	DRegister(in=aluOut, load=regDLoad, out=regD);
 
+	// Update the A register, if appropriate.
 	Not(in=instruction[15], out=aInstruction);
-	Mux16(a=aluOut, b[15]=false, b[0..14]=instruction[0..14], sel=aInstruction, out=regACandidate);
+	Mux16(
+		a=aluOut, b[15]=false, b[0..14]=instruction[0..14], sel=aInstruction,
+		out=regACandidate
+	);
 	Or(a=aInstruction, b=instruction[5], out=regALoad);
 	ARegister(in=regACandidate, load=regALoad, out=regA, out[0..14]=addressM);
 
+	// Perform the ALU operation specified by `instruction`.
 	Mux16(a=regA, b=inM, sel=instruction[12], out=aluOp2);
 	ALU(
 		x=regD, y=aluOp2,
@@ -50,6 +46,9 @@ CHIP CPU {
 		out=outM,
 		zr=zr, ng=ng
 	);
+
+	// Increment the PC, taking into account whether a jump/reset should occur
+	// instead.
 	Jump(eq=zr, lt=ng, instruction=instruction[0..2], out=jump);
 	And(a=jump, b=instruction[15], out=pcJump);
 	Not(in=pcJump, out=pcInc);
