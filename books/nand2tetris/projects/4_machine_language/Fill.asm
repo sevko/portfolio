@@ -11,8 +11,6 @@
 	// no key pressed
 	@CLEAR_SCREEN
 	M=0
-
-	@FILL_SCREEN
 	0;JMP
 
 // Set the color for a black fill, and fill the screen.
@@ -22,11 +20,10 @@
 	@FILL_SCREEN
 	0;JMP
 
-
 // Set the color for a clear fill, and fill the screen.
 (CLEAR_SCREEN)
 	@color
-	M=-1
+	M=0
 	@FILL_SCREEN
 	0;JMP
 
