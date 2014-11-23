@@ -21,7 +21,7 @@ class AInstr(object):
 			self.value = symbol_table.add_variable(self.symbol)
 
 	def to_binary(self):
-		return "A instruction: {0}".format(self.value)
+		return bin(self.value)[2:].zfill(16)
 
 	@classmethod
 	def from_string(cls, string):
@@ -48,17 +48,19 @@ class CInstr(object):
 		self.jump = jump
 
 	def to_binary(self):
-		return "C instruction ({0}): {1}, {2}, {3}.".format(
+
+		return "C ({0}): {1}, {2}, {3}.".format(
 			"JMP" if self.jump is not None else "INS",
 			self.dest, self.comp, self.jump
 		)
 
 	@classmethod
 	def from_string(cls, string):
-		if string.find("=") > -1:
-			dest, comp = string.split("=")
-			return CInstr(comp, dest=dest)
+		has_dest = string.find("=") > -1
+		has_jump = string.find(";") > -1
 
-		elif string.find(";") > -1:
-			comp, jump = string.split(";")
-			return CInstr(comp, jump=jump)
+		if has_dest or has_jump:
+			dest, string = string.split("=") if has_dest else None, string
+			comp, jump = string.split(";") if has_jump else string, None
+
+			return cls(comp, dest=dest, jump=jump)
