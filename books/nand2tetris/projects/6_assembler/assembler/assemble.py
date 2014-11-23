@@ -15,15 +15,14 @@ def assemble_code(code):
 
 		label = parser.parse_label(clean_line)
 		if label:
-			symbols.add_label(label, len(instructions) + 1)
+			symbols.add_label(label, len(instructions))
 			continue
 
 		instr = instruction.parse_instruction(clean_line)
 		if instr:
 			instructions.append(instr)
 		else:
-			# raise Exception("Parse error: `{0}`".format(clean_line))
-			pass
+			raise Exception("Parse error: `{0}`".format(clean_line))
 
 	for instr in instructions:
 		if type(instr) is instruction.AInstr:
