@@ -19,7 +19,7 @@ def handle_user_args(argv):
 			identical basename.
 	"""
 
-	file_path = argv[1]
+	file_path = argv[0]
 	with open(file_path) as code_file:
 		code = code_file.read()
 

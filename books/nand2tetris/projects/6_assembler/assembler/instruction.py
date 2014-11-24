@@ -77,7 +77,9 @@ class AInstr(object):
 
 		Returns:
 			If an AInstr could be decoded, an `AInstr` instance; otherwise,
-			`None`.
+			`None`. Note that, if the string contained an A instruction with a
+			symbolic (and not numeric) reference, it'll have to be resolved
+			against a symbol table with `.resolve()`.
 		"""
 
 		if string[0] == "@":
@@ -92,8 +94,27 @@ class AInstr(object):
 				return cls(symbol=match.group())
 
 class CInstr(object):
+	"""
+	A C instruction.
+
+	Attributes:
+		comp (string or None): The operation to perform.
+		dest (string or None): The destination to store the results of `comp`
+			in.
+		jump (string or None): The jump instruction to execute alongside
+			`comp`.
+	"""
 
 	def __init__(self, comp, dest=None, jump=None):
+		"""
+		Args:
+			See `CInstr` docstring for all identically named attributes.
+
+		Raises:
+			AssemblerError: If both `dest` and `jump` are `None`, wnich renders
+				an invalid C instruction.
+		"""
+
 		if dest is None and jump is None:
 			raise parser.AssemblerError(
 				"C instruction without either a `dest` or `jump`."
@@ -104,6 +125,15 @@ class CInstr(object):
 		self.jump = jump
 
 	def to_binary(self):
+		"""
+		Returns:
+			(string) A binary-string, machine code representation of this
+				`CInstr`.
+		"""
+
+		# The `c` bits for most of a C instruction's `comp` operations. The `a`
+		# bits are added in automatically in a follow-up loop, which also adds
+		# the `A` register equivalents of each `M` register operation.
 		comp_binary = {
 			"0": "101010",
 			"1": "111111",
@@ -125,6 +155,10 @@ class CInstr(object):
 			"D|M": "010101"
 		}
 
+		# Add `a` bits to all values in `comp_binary`, and add the `A` register
+		# equivalent of all `M` register operations. Also, add duplicate values
+		# for all operations where the operands can be reversed (for instance,
+		# `D+M` -> `D+M`, `M+D`).
 		for comp, code in comp_binary.items():
 			if comp.find("M") > -1:
 				a_comp = comp.replace("M", "A")
@@ -134,7 +168,7 @@ class CInstr(object):
 				comp_binary[a_comp] = a_code
 				comp_binary[comp] = code
 
-				if comp.find("+") > -1:
+				if re.search("[+|&]", comp):
 					for alt_comp, alt_code in (comp, code), (a_comp, a_code):
 						comp_binary[alt_comp[::-1]] = alt_code
 			else:
@@ -169,6 +203,14 @@ class CInstr(object):
 
 	@classmethod
 	def from_string(cls, string):
+		"""
+		Args:
+			string (string): The string to parse a `CInstr` from.
+
+		Returns:
+			A `CInstr`, if one could be decoded; otherwise, `None`.
+		"""
+
 		has_dest = string.find("=") > -1
 		has_jump = string.find(";") > -1
 
