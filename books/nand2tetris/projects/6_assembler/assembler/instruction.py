@@ -1,3 +1,7 @@
+"""
+Classes representing assembly instructions and helper functions.
+"""
+
 import re
 
 from assembler import parser
@@ -6,8 +10,33 @@ def parse_instruction(string):
 	return CInstr.from_string(string) or AInstr.from_string(string)
 
 class AInstr(object):
+	"""
+	An A instruction.
+
+	Attributes:
+		symbol (string): The symbol the A instruction references; needs to be
+			resolved to a numeric value with `AInstr.resolve()`. See
+			`AInstr.__init__` for more details on why it's necessary.
+		value (int): The memory address the A instruction references. Either
+			needs to be specified on instantiation, or added with
+			`AInstr.resolve()`.
+	"""
 
 	def __init__(self, symbol=None, value=None):
+		"""
+		Args:
+			symbol (string, co-optional): The symbol (either an assembly label
+				or variable) the A instruction references; only needs to be
+				specified if no numeric `value` (see next) can be inferenced.
+			value (number, co-optional): The numeric address the instructions
+				references. If `None` (the default), it must be resolved later
+				with `AInstr.resolve()`, because compiled instructions need
+				concrete numeric addresses.
+
+		Raises:
+			AssemblerError: If both `symbol` and `value` are `None`.
+		"""
+
 		if symbol is None and value is None:
 			raise parser.AssemblerError(
 				"TODO: better message. Either a symbol or value needed."
@@ -17,14 +46,40 @@ class AInstr(object):
 		self.value = value
 
 	def resolve(self, symbol_table):
+		"""
+		Must be called if this `AInstr` was
+		created without a `value` (thus, only with a `symbol`) before
+		`AInstr.binary()` is called.
+
+		Args:
+			symbol_table (SymbolTable): The symbol table to resolve
+				`self.symbol` against, to pair it with a numeric memory
+				address.
+		"""
+
 		if self.value is None:
 			self.value = symbol_table.add_variable(self.symbol)
 
 	def to_binary(self):
+		"""
+		Returns:
+			(string) A binary-string, machine code representation of the
+			`AInstr`.
+		"""
+
 		return bin(self.value)[2:].zfill(16)
 
 	@classmethod
 	def from_string(cls, string):
+		"""
+		Args:
+			string (string): The string to decode an `AInstr` from.
+
+		Returns:
+			If an AInstr could be decoded, an `AInstr` instance; otherwise,
+			`None`.
+		"""
+
 		if string[0] == "@":
 			string = string.lstrip("@")
 
