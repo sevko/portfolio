@@ -9,7 +9,7 @@ class AInstr(object):
 
 	def __init__(self, symbol=None, value=None):
 		if symbol is None and value is None:
-			raise Exception(
+			raise parser.AssemblerError(
 				"TODO: better message. Either a symbol or value needed."
 			)
 
@@ -40,54 +40,60 @@ class CInstr(object):
 
 	def __init__(self, comp, dest=None, jump=None):
 		if dest is None and jump is None:
-			raise Exception(
-				"TODO: better message. Either a dest or jump needed."
+			raise parser.AssemblerError(
+				"C instruction without either a `dest` or `jump`."
 			)
+
 		self.dest = dest
 		self.comp = comp
 		self.jump = jump
 
 	def to_binary(self):
 		comp_binary = {
-			"0": "0101010",
-			"1": "0111111",
-			"-1": "0111010",
-			"D": "0001100",
-			"A": "0110000",
-			"!D": "0001101",
-			"!A": "0110001",
-			"-D": "0001111",
-			"-A": "0110011",
-			"D+1": "0011111",
-			"A+1": "0110111",
-			"D-1": "0001110",
-			"A-1": "0110010",
-			"D+A": "0000010",
-			"D-A": "0010011",
-			"A-D": "0000111",
-			"D&A": "0000000",
-			"D|A": "0010101",
-			"M": "1110000",
-			"!M": "1110001",
-			"-M": "1110011",
-			"M+1": "1110111",
-			"M-1": "1110010",
-			"D+M": "1000010",
-			"D-M": "1010011",
-			"M-D": "1000111",
-			"D&M": "1000000",
-			"D|M": "1010101"
+			"0": "101010",
+			"1": "111111",
+			"-1": "111010",
+			"D": "001100",
+			"!D": "001101",
+			"-D": "001111",
+			"D+1": "011111",
+			"D-1": "001110",
+			"M": "110000",
+			"!M": "110001",
+			"-M": "110011",
+			"M+1": "110111",
+			"M-1": "110010",
+			"D+M": "000010",
+			"D-M": "010011",
+			"M-D": "000111",
+			"D&M": "000000",
+			"D|M": "010101"
 		}
+
+		for comp, code in comp_binary.items():
+			if comp.find("M") > -1:
+				a_comp = comp.replace("M", "A")
+				a_code = "0" + code
+
+				code = "1" + code
+				comp_binary[a_comp] = a_code
+				comp_binary[comp] = code
+
+				if comp.find("+") > -1:
+					for alt_comp, alt_code in (comp, code), (a_comp, a_code):
+						comp_binary[alt_comp[::-1]] = alt_code
+			else:
+				comp_binary[comp] = "0" + code
 
 		dest_binary = {
 			None: "000",
-			"M":    "001",
-			"D":    "010",
-			"MD":   "011",
-			"A":    "100",
-			"AM":   "101",
-			"AD":   "110",
-			"AMD":  "111"
+			"M": "001",
+			"D": "010",
+			"MD": "011",
+			"A": "100",
+			"AM": "101",
+			"AD": "110",
+			"AMD": "111"
 		}
 
 		jump_binary = {

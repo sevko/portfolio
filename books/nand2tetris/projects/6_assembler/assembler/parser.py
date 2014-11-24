@@ -2,6 +2,9 @@ import re
 
 SYMBOL_REGEX = "[{0}][{0}0-9]*".format("a-zA-Z_.$:")
 
+class AssemblerError(Exception):
+	pass
+
 def clean(string):
 	remove_regex = ["[ \t]", "//.*$"]
 	for regex in remove_regex:
