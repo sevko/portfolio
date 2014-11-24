@@ -39,7 +39,7 @@ class AInstr(object):
 
 		if symbol is None and value is None:
 			raise parser.AssemblerError(
-				"TODO: better message. Either a symbol or value needed."
+				"A instruction requires either a symbol or value."
 			)
 
 		self.symbol = symbol

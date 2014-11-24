@@ -1,1 +1,1 @@
-from assemble import assemble_code
+from assembler.assemble import assemble_code

@@ -33,6 +33,6 @@ def parse_label(string):
 		The contents of the label, if one was found; otherwise, `None`.
 	"""
 
-	match = re.search("^\({0}\)$".format(SYMBOL_REGEX), string)
+	match = re.search(r"^\({0}\)$".format(SYMBOL_REGEX), string)
 	if match:
 		return match.group().strip("()")
