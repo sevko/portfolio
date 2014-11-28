@@ -37,7 +37,7 @@ class BinaryOp(Operation):
 		"add": "+",
 		"sub": "-",
 		"and": "&",
-		"or": "|",
+		"or": "|"
 	}
 
 	def __init__(self, operation):
@@ -52,3 +52,78 @@ class BinaryOp(Operation):
 			M = D {0} M"""
 
 		return asm.format(self.operation)
+
+class UnaryOp(Operation):
+	"""
+	A unary arithmetic/logic operation.
+
+	Attributes:
+		operation (string): Any one of:
+
+			* "-": Negation.
+			* "Not": a bitwise Not (`!`)
+	"""
+
+	OPERATION_STRING = {
+		"Not": "!",
+		"-": "-"
+	}
+
+	def __init__(self, operation):
+		self.operation = operation
+
+	def to_assembly(self):
+		asm = """@SP
+			A = M
+			M = {0} M"""
+
+		return asm.format(self.operation)
+
+class LogicOp(BinaryOp):
+	"""
+	A logic (inherently binary) operation.
+
+	Attributes:
+		operation (string): Any one of:
+
+			"eq": Whether operand 1 equals operand 2 (`=`).
+			"gt": Whether operand 1 is greater than operand 2 (`>`).
+			"lt": Whether operand 1 is less than operand 2 (`<`).
+
+		uid (string): The unique id of this logic operation relative to all
+			other logical (`LogicOp`) operations in the generated assembly
+			program. Since the `LogicOp` assembly representation relies on
+			labels, a uid is necessary to ensure they don't conflict with one
+			another.
+	"""
+
+	def __init__(self, operation, uid):
+		self.operation = operation
+		self.uid = uid
+
+	def to_assembly(self):
+		asm = """@SP
+			A = M
+			D = M
+
+			@diff
+			M = D
+
+			@SP
+			AM = M - 1
+			D = M
+
+			@diff
+			M = M - D
+
+			D = M; {0}
+			D = 0
+
+			(TRUE {1})
+			D = 1
+
+			(END {1})
+			@SP
+			M = D"""
+
+		return asm.format(self.operation, self.uid)
