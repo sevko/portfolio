@@ -23,14 +23,6 @@ class Operation(metaclass=abc.ABCMeta):
 class BinaryOp(Operation):
 	"""
 	A binary arithmetic/bitwise operation.
-
-	Attributes:
-		operation (string): The VM language operation string. Any one of:
-
-			* "add": addition
-			* "sub": subtraction
-			* "and": a bitwise And (`&`)
-			* "or": a bitwise Or (`|`)
 	"""
 
 	OPERATION_STRING = {
@@ -41,7 +33,17 @@ class BinaryOp(Operation):
 	}
 
 	def __init__(self, operation):
-		self.operation = self.OPERATION_STRING[operation]
+		"""
+		Args:
+			operation (string): The VM language operation. Any one of:
+
+				* "add": addition
+				* "sub": subtraction
+				* "and": a bitwise And (`&`)
+				* "or": a bitwise Or (`|`)
+		"""
+
+		self._operation = self.OPERATION_STRING[operation]
 
 	def to_assembly(self):
 		asm = """@SP
@@ -51,54 +53,64 @@ class BinaryOp(Operation):
 			M = M - 1
 			M = D {0} M"""
 
-		return asm.format(self.operation)
+		return asm.format(self._operation)
 
 class UnaryOp(Operation):
 	"""
 	A unary arithmetic/logic operation.
-
-	Attributes:
-		operation (string): Any one of:
-
-			* "-": Negation.
-			* "Not": a bitwise Not (`!`)
 	"""
 
 	OPERATION_STRING = {
-		"Not": "!",
-		"-": "-"
+		"not": "!",
+		"neg": "-"
 	}
 
 	def __init__(self, operation):
-		self.operation = operation
+		"""
+		Args:
+			operation (string): The VM language operation. Any one of:
+
+				* "-": Negation.
+				* "Not": a bitwise Not (`!`)
+		"""
+
+		self._operation = self.OPERATION_STRING[operation]
 
 	def to_assembly(self):
 		asm = """@SP
 			A = M
 			M = {0} M"""
 
-		return asm.format(self.operation)
+		return asm.format(self._operation)
 
 class LogicOp(BinaryOp):
 	"""
 	A logic (inherently binary) operation.
-
-	Attributes:
-		operation (string): Any one of:
-
-			"eq": Whether operand 1 equals operand 2 (`=`).
-			"gt": Whether operand 1 is greater than operand 2 (`>`).
-			"lt": Whether operand 1 is less than operand 2 (`<`).
-
-		uid (string): The unique id of this logic operation relative to all
-			other logical (`LogicOp`) operations in the generated assembly
-			program. Since the `LogicOp` assembly representation relies on
-			labels, a uid is necessary to ensure they don't conflict with one
-			another.
 	"""
 
+	OPERATION_STRING = {
+		"eq": "JEQ",
+		"gt": "JGT",
+		"lt": "JLT"
+	}
+
 	def __init__(self, operation, uid):
-		self.operation = operation
+		"""
+		Args:
+			operation (string): VM language operation. Any one of:
+
+				"eq": Whether operand 1 equals operand 2 (`=`).
+				"gt": Whether operand 1 is greater than operand 2 (`>`).
+				"lt": Whether operand 1 is less than operand 2 (`<`).
+
+			uid (string): The unique id of this logic operation relative to all
+				other logical (`LogicOp`) operations in the generated assembly
+				program. Since the `LogicOp` assembly representation relies on
+				labels, a uid is necessary to ensure they don't conflict with
+				one another.
+		"""
+
+		self._operation = self.OPERATION_STRING[operation]
 		self.uid = uid
 
 	def to_assembly(self):
@@ -126,4 +138,20 @@ class LogicOp(BinaryOp):
 			@SP
 			M = D"""
 
-		return asm.format(self.operation, self.uid)
+		return asm.format(self._operation, self.uid)
+
+class MemoryOp(Operation):
+
+	SEGMENTS = {
+		"argument": "ARG",
+		"local": "LCL",
+		"static": "",
+		"constant": 0,
+		"this": "THIS",
+		"that": "THAT",
+		"pointer": "THIS",
+		"temp": 5
+	}
+
+	def __init__(self, segment, index):
+		pass
