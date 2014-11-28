@@ -3,24 +3,23 @@ Classes representing the Hack Virtual Machine's arithmetic/logic binary/unary
 operations.
 """
 
-import abc
+from vmtranslator.operations import operation
 
-class Operation(metaclass=abc.ABCMeta):
+class ALOperation(operation.Operation):
 	"""
-	The ABC for all Hack Virtual Machine arithmetic/logic operations.
+	An arithmetic and logic operation.
 	"""
 
-	@abc.abstractmethod
-	def to_assembly(self):
-		"""
-		Returns:
-			(string) The Hack assembly instructions representing this binary
-			operation.
-		"""
+	def __init__(self, operation):
+		self._operation = self.OPERATION_STRING[operation]
 
-		pass
+	@classmethod
+	def from_string(cls, string):
+		for op in cls.OPERATION_STRING:
+			if string == op:
+				return cls(string)
 
-class BinaryOp(Operation):
+class BinaryOp(ALOperation):
 	"""
 	A binary arithmetic/bitwise operation.
 	"""
@@ -33,17 +32,8 @@ class BinaryOp(Operation):
 	}
 
 	def __init__(self, operation):
-		"""
-		Args:
-			operation (string): The VM language operation. Any one of:
-
-				* "add": addition
-				* "sub": subtraction
-				* "and": a bitwise And (`&`)
-				* "or": a bitwise Or (`|`)
-		"""
-
 		self._operation = self.OPERATION_STRING[operation]
+		# super().__init__(self, operation)
 
 	def to_assembly(self):
 		asm = """@SP
@@ -55,7 +45,7 @@ class BinaryOp(Operation):
 
 		return asm.format(self._operation)
 
-class UnaryOp(Operation):
+class UnaryOp(ALOperation):
 	"""
 	A unary arithmetic/logic operation.
 	"""
@@ -66,15 +56,7 @@ class UnaryOp(Operation):
 	}
 
 	def __init__(self, operation):
-		"""
-		Args:
-			operation (string): The VM language operation. Any one of:
-
-				* "-": Negation.
-				* "Not": a bitwise Not (`!`)
-		"""
-
-		self._operation = self.OPERATION_STRING[operation]
+		super().__init__(self, operation)
 
 	def to_assembly(self):
 		asm = """@SP
@@ -111,7 +93,7 @@ class LogicOp(BinaryOp):
 		"""
 
 		self._operation = self.OPERATION_STRING[operation]
-		self.uid = uid
+		self._uid = uid
 
 	def to_assembly(self):
 		asm = """@SP
@@ -138,20 +120,6 @@ class LogicOp(BinaryOp):
 			@SP
 			M = D"""
 
-		return asm.format(self._operation, self.uid)
+		return asm.format(self._operation, self._uid)
 
-class MemoryOp(Operation):
-
-	SEGMENTS = {
-		"argument": "ARG",
-		"local": "LCL",
-		"static": "",
-		"constant": 0,
-		"this": "THIS",
-		"that": "THAT",
-		"pointer": "THIS",
-		"temp": 5
-	}
-
-	def __init__(self, segment, index):
-		pass
+ops = [BinaryOp, UnaryOp, LogicOp]
