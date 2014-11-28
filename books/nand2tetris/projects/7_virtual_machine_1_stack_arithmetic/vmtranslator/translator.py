@@ -3,7 +3,7 @@ The core of the vmtranslator package. Aggregates all sub-modules and performs
 the actual compilation of VM code to assembly.
 """
 
-import parser
+from vmtranslator import parser
 
 def translate(code):
 	"""
@@ -18,5 +18,7 @@ def translate(code):
 	"""
 
 	clean_code = parser.clean_code(code)
-	instructions = map(parser.parse_line, clean_code.split("\n"))
-	return "\n".join([instr.to_assembly() for instr in instructions])
+	instructions = [parser.parse_line(line) for line in clean_code.split("\n")]
+	return "\n".join([
+		instr.to_assembly() for instr in instructions if instr is not None
+	])
