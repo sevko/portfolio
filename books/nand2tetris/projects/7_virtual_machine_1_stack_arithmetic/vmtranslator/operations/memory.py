@@ -100,4 +100,48 @@ class PushOp(MemoryOp):
 				{1}
 				""".format(self._get_static_address(), asm)
 
+class PopOp(MemoryOp):
+	"""
+	Pop a value from the stack and into a part of memory.
+	"""
+
+	OP_STRING = "pop"
+
+	def __init__(self, segment, index):
+		super().__init__(segment, index)
+
+	def to_assembly(self):
+		asm = """
+			@SP
+			A = M
+			D = M
+			@SP
+			M = M - 1
+			@{0}
+			A = M
+			M = D
+			"""
+
+		if self._segment in self.DYNAMIC_SEGMENTS:
+			base_address_asm = """@{0}
+				D = A
+				@pop_address
+				M = D
+				@{1}
+				D = A
+				@pop_address
+				M = M + D
+				"""
+
+			return (base_address_asm + asm).format(
+				self.DYNAMIC_SEGMENTS[self._segment], self._index
+			)
+
+		elif self._segment in self.STATIC_SEGMENTS:
+			if self._segment == "constant":
+				return
+
+			base_address = self._get_static_address()
+			return asm.format(base_address)
+
 ops = [PushOp, PopOp]
