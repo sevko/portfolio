@@ -43,7 +43,7 @@ class BinaryOp(ALOperation):
 			@SP
 			M = M - 1
 			A = M - 1
-			M = D {0} M"""
+			M = M {0} D"""
 
 		return asm.format(self._operation)
 
@@ -62,7 +62,7 @@ class UnaryOp(ALOperation):
 
 	def to_assembly(self):
 		asm = """@SP
-			A = M
+			A = M - 1
 			M = {0} M"""
 
 		return asm.format(self._operation)
@@ -99,27 +99,33 @@ class LogicOp(BinaryOp):
 
 	def to_assembly(self):
 		asm = """@SP
-			A = M
+			A = M - 1
 			D = M
 
 			@diff
 			M = D
 
 			@SP
-			AM = M - 1
+			M = M - 1
+			A = M - 1
 			D = M
 
 			@diff
-			M = M - D
+			D = D - M
 
-			D = M; {0}
+			@TRUE_{1}
+			D; {0}
 			D = 0
 
+			@END_{1}
+			0;JMP
+
 			(TRUE_{1})
-			D = 1
+			D = -1
 
 			(END_{1})
 			@SP
+			A = M - 1
 			M = D"""
 
 		return asm.format(self._operation, self._uid)

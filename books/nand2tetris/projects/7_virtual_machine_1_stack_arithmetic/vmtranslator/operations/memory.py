@@ -113,7 +113,7 @@ class PopOp(MemoryOp):
 	def to_assembly(self):
 		asm = """
 			@SP
-			A = M
+			A = M - 1
 			D = M
 			@SP
 			M = M - 1
