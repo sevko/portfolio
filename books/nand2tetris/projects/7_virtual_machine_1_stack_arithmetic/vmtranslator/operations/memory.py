@@ -118,24 +118,23 @@ class PopOp(MemoryOp):
 			@SP
 			M = M - 1
 			@{0}
-			A = M
 			M = D
 			"""
 
 		if self._segment in self.DYNAMIC_SEGMENTS:
 			base_address_asm = """@{0}
-				D = A
+				D = M
 				@pop_address
 				M = D
 				@{1}
 				D = A
 				@pop_address
 				M = M + D
-				"""
+				""".format(
+					self.DYNAMIC_SEGMENTS[self._segment], self._index
+				)
 
-			return (base_address_asm + asm).format(
-				self.DYNAMIC_SEGMENTS[self._segment], self._index
-			)
+			return base_address_asm + asm.format("pop_address\nA = M")
 
 		elif self._segment in self.STATIC_SEGMENTS:
 			if self._segment == "constant":
