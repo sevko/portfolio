@@ -5,8 +5,6 @@ operations.
 
 from vmtranslator.operations import operation
 
-logic_op_uid = 0
-
 class ALOperation(operation.Operation):
 	"""
 	An arithmetic and logic operation.
@@ -16,7 +14,7 @@ class ALOperation(operation.Operation):
 		self._operation = self.OPERATION_STRING[operation]
 
 	@classmethod
-	def from_string(cls, string):
+	def from_string(cls, string, state):
 		for op in cls.OPERATION_STRING:
 			if string == op:
 				return cls(string)
@@ -125,11 +123,10 @@ class LogicOp(BinaryOp):
 		return asm.format(self._operation, self._uid)
 
 	@classmethod
-	def from_string(cls, string):
+	def from_string(cls, string, state):
 		for op in cls.OPERATION_STRING:
 			if string == op:
-				global logic_op_uid
-				logic_op_uid += 1
-				return cls(string, logic_op_uid)
+				state["num logic ops"] += 1
+				return cls(string, state["num logic ops"])
 
 ops = [BinaryOp, UnaryOp, LogicOp]

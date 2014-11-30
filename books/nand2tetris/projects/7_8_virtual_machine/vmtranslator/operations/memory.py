@@ -52,7 +52,7 @@ class MemoryOp(operation.Operation):
 		return self.STATIC_SEGMENTS[self._segment] + self._index
 
 	@classmethod
-	def from_string(cls, string):
+	def from_string(cls, string, state):
 		parts = string.split(" ")
 		if len(parts) == 3:
 			op, segment, index = parts

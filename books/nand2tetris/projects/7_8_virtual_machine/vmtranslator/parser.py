@@ -24,10 +24,12 @@ def clean_code(code):
 	no_comments = re.sub("//.*", "", no_whitespace)
 	return no_comments
 
-def parse_line(line):
+def parse_line(line, state):
 	"""
 	Args:
 		line (string): A line of Virtual Machine code.
+		state (dictionary): The state of the parser; modified and used by some
+			`Operation.from_string()` implementations.
 
 	Returns:
 		(None or Operation) If an operation was successfully parsed out using
@@ -36,6 +38,6 @@ def parse_line(line):
 	"""
 
 	for op_class in operations.operation_classes:
-		op = op_class.from_string(line)
+		op = op_class.from_string(line, state)
 		if op is not None:
 			return op
