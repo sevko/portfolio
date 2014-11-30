@@ -23,6 +23,8 @@ class MemoryOp(operation.Operation):
 			this operation (eg, "push", "pop").
 	"""
 
+	OP_STRING = ""
+
 	DYNAMIC_SEGMENTS = {
 		"argument": "ARG",
 		"local": "LCL",
@@ -55,8 +57,8 @@ class MemoryOp(operation.Operation):
 	def from_string(cls, string, state):
 		parts = string.split(" ")
 		if len(parts) == 3:
-			op, segment, index = parts
-			if op == cls.OP_STRING and \
+			oper, segment, index = parts
+			if oper == cls.OP_STRING and \
 				(segment in cls.STATIC_SEGMENTS or \
 				segment in cls.DYNAMIC_SEGMENTS):
 				return cls(segment, int(index))
@@ -137,4 +139,4 @@ class PopOp(MemoryOp):
 			base_address = self._get_static_address()
 			return asm.format(base_address)
 
-ops = [PushOp, PopOp]
+OPS = [PushOp, PopOp]

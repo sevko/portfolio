@@ -19,6 +19,7 @@ class ProgramFlowOp(operation.Operation):
 	"""
 
 	LABEL_REGEX = "[{0}][{0}0-9]*".format("a-zA-Z_.:")
+	OP_STRING = ""
 
 	def __init__(self, function_name, label):
 		"""
@@ -75,4 +76,4 @@ class LabelOp(ProgramFlowOp):
 	def to_assembly(self):
 		return "({0})\n".format(self._label)
 
-ops = [GotoOp, IfGotoOp, LabelOp]
+OPS = [GotoOp, IfGotoOp, LabelOp]

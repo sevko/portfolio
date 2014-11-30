@@ -37,7 +37,7 @@ def parse_line(line, state):
 			`operations` sub-package, return it; otherwise, None.
 	"""
 
-	for op_class in operations.operation_classes:
-		op = op_class.from_string(line, state)
-		if op is not None:
-			return op
+	for op_class in operations.OPERATION_CLASSES:
+		oper = op_class.from_string(line, state)
+		if oper is not None:
+			return oper

@@ -4,19 +4,22 @@ operations.
 """
 
 from vmtranslator.operations import operation
+import abc
 
-class ALOperation(operation.Operation):
+class ALOperation(operation.Operation, metaclass=abc.ABCMeta):
 	"""
 	An arithmetic and logic operation.
 	"""
 
-	def __init__(self, operation):
-		self._operation = self.OPERATION_STRING[operation]
+	OPERATION_STRING = {}
+
+	def __init__(self, op_string):
+		self._operation = self.OPERATION_STRING[op_string]
 
 	@classmethod
 	def from_string(cls, string, state):
-		for op in cls.OPERATION_STRING:
-			if string == op:
+		for oper in cls.OPERATION_STRING:
+			if string == oper:
 				return cls(string)
 
 class BinaryOp(ALOperation):
@@ -70,7 +73,7 @@ class LogicOp(BinaryOp):
 		"lt": "JLT"
 	}
 
-	def __init__(self, operation, uid):
+	def __init__(self, op_string, uid):
 		"""
 		Args:
 			operation (string): VM language operation. Any one of:
@@ -86,7 +89,7 @@ class LogicOp(BinaryOp):
 				one another.
 		"""
 
-		self._operation = self.OPERATION_STRING[operation]
+		super().__init__(op_string)
 		self._uid = uid
 
 	def to_assembly(self):
@@ -124,9 +127,9 @@ class LogicOp(BinaryOp):
 
 	@classmethod
 	def from_string(cls, string, state):
-		for op in cls.OPERATION_STRING:
-			if string == op:
+		for oper in cls.OPERATION_STRING:
+			if string == oper:
 				state["num logic ops"] += 1
 				return cls(string, state["num logic ops"])
 
-ops = [BinaryOp, UnaryOp, LogicOp]
+OPS = [BinaryOp, UnaryOp, LogicOp]
