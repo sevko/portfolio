@@ -68,9 +68,6 @@ class PushOp(MemoryOp):
 
 	OP_STRING = "push"
 
-	def __init__(self, segment, index):
-		super().__init__(segment, index)
-
 	def to_assembly(self):
 		asm = """@SP
 			A = M
@@ -106,9 +103,6 @@ class PopOp(MemoryOp):
 	"""
 
 	OP_STRING = "pop"
-
-	def __init__(self, segment, index):
-		super().__init__(segment, index)
 
 	def to_assembly(self):
 		asm = """

@@ -33,9 +33,6 @@ class BinaryOp(ALOperation):
 		"or": "|"
 	}
 
-	def __init__(self, operation):
-		super().__init__(operation)
-
 	def to_assembly(self):
 		asm = """@SP
 			A = M - 1
@@ -56,9 +53,6 @@ class UnaryOp(ALOperation):
 		"not": "!",
 		"neg": "-"
 	}
-
-	def __init__(self, operation):
-		super().__init__(operation)
 
 	def to_assembly(self):
 		asm = """@SP
