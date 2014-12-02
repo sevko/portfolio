@@ -21,16 +21,21 @@ def translate_path(path):
 			`.asm` extension.
 	"""
 
-	def translate_vm_file(vm_path):
-		"""Read and translate a VM file to an assembly string."""
+	def translate_vm_file(vm_path, state):
+		"""
+		Read and translate a VM file to an assembly string.
+		"""
 
 		with open(vm_path) as vm_file:
-			return translator.translate(vm_file.read())
+			return translator.translate(vm_file.read(), state)
 
 	def write_asm_file(asm_path, asm):
-		"""Write a string to a file."""
+		"""
+		Write a string to a file, and inject assembly bootstrap code before it.
+		"""
 
 		with open(asm_path, "w") as asm_file:
+			asm_file.write(translator.create_bootstrap_assembly())
 			asm_file.write(asm)
 
 	if os.path.isfile(path):
@@ -44,7 +49,15 @@ def translate_path(path):
 			full_fpath = os.path.join(path, fpath)
 			if os.path.isfile(full_fpath):
 				vm_paths.append(full_fpath)
-		raw_asm_blobs = [translate_vm_file(vm_path) for vm_path in vm_paths]
+
+		state = {
+			"num logic ops": 0,
+			"function name": None,
+			"function call uid": {}
+		}
+		raw_asm_blobs = [
+			translate_vm_file(vm_path, state) for vm_path in vm_paths
+		]
 		asm_path = os.path.basename(path.rstrip(os.sep)) + ".asm"
 		write_asm_file(asm_path, "\n".join(raw_asm_blobs))
 
