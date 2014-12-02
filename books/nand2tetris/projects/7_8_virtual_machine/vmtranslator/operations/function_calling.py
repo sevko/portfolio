@@ -1,7 +1,6 @@
 import re
 
 from vmtranslator.operations import operation
-from vmtranslator.operations import memory_operation
 
 FUNC_NAME_REGEX = "[{0}][{0}0-9]*".format("a-zA-Z_.:")
 
@@ -9,7 +8,8 @@ def _parse_string(string, op_string):
 	regex = "{0} ({1}) (\d+)".format(op_string, FUNC_NAME_REGEX)
 	match = re.match(regex, string)
 	if match:
-		return match.groups()
+		name, num = match.groups()
+		return name, int(num)
 
 class DeclareFuncOp(operation.Operation):
 
@@ -20,9 +20,16 @@ class DeclareFuncOp(operation.Operation):
 		self._num_vars = num_vars
 
 	def to_assembly(self):
+		push_0 = """@SP
+			D = M
+			M = M + 1
+			A = D
+			M = 0
+			"""
+
 		return """({0})
 			{1}
-			""".format(self._name, "push 0\n" * self._num_vars)
+			""".format(self._name, push_0 * self._num_vars)
 
 	@classmethod
 	def from_string(cls, string, state):
@@ -54,6 +61,7 @@ class CallFuncOp(operation.Operation):
 
 		unique_label = "{0}$call${1}".format(self._name, self._uid)
 		asm = """
+			// Push return value
 			@{0}
 			D = A
 			@SP
@@ -61,17 +69,22 @@ class CallFuncOp(operation.Operation):
 			A = M - 1
 			M = D
 
+			// LCL
 			{1}
+
+			// ARG
 			{2}
+
+			// THIS
 			{3}
+
+			// THAT
 			{4}
 
 			@SP
 			D = M
 			@LCL
 			M = D
-			@5
-			D = D - A
 			@{5}
 			D = D - A
 			@ARG
@@ -85,7 +98,7 @@ class CallFuncOp(operation.Operation):
 
 		return asm.format(
 			unique_label, push_reg_value("LCL"), push_reg_value("ARG"),
-			push_reg_value("THIS"), push_reg_value("THAT"), self._num_args,
+			push_reg_value("THIS"), push_reg_value("THAT"), 5 + self._num_args,
 			self._name
 		)
 
@@ -95,7 +108,7 @@ class CallFuncOp(operation.Operation):
 		if components is not None:
 			name, num_args = components
 			if name not in state["function call uid"]:
-				state["function call uid"] = 0
+				state["function call uid"][name] = 0
 			state["function call uid"][name] += 1
 			return cls(name, num_args, state["function call uid"][name])
 
@@ -113,10 +126,19 @@ class ReturnOp(operation.Operation):
 				M = D
 				""".format(dest_reg_name)
 
-		asm = """FRAME = LCL
+		asm = """
+			//FRAME = LCL
 			@LCL
 			D = M
 			@frame
+			M = D
+
+			// ret = *(frame - 5)
+			@5
+			D = D - A
+			A = D
+			D = M
+			@return_address
 			M = D
 
 			@SP
@@ -124,35 +146,45 @@ class ReturnOp(operation.Operation):
 			A = M
 			D = M
 			@ARG
+			A = M
 			M = D
 			// *ARG = pop()
 
+			@ARG
+			D = M
 			@SP
 			M = D + 1
 			// SP = ARG + 1
 
 			// THAT = *(FRAME - 1)
-			// THIS = *(FRAME - 2)
-			// ARG = *(FRAME - 3)
-			// LCL = *(FRAME - 4)
-			// RET = *(FRAME - 5)
 			{0}
-			{1}
-			{2}
-			{3}
-			{4}
 
-			A = D
-			0;JMP
+			// THIS = *(FRAME - 2)
+			{1}
+
+			// ARG = *(FRAME - 3)
+			{2}
+
+			// LCL = *(FRAME - 4)
+			{3}
+
 			// goto RET
+			@return_address
+			A = M
+			0;JMP
 			"""
 
 		return asm.format(
 			pop_pointer_value("THAT"),
 			pop_pointer_value("THIS"),
 			pop_pointer_value("ARG"),
-			pop_pointer_value("LCL"),
-			pop_pointer_value("RET")
+			pop_pointer_value("LCL")
 		)
+
+	@classmethod
+	def from_string(cls, line, state):
+		if line == "return":
+			state["function name"] = None
+			return cls()
 
 OPS = [DeclareFuncOp, CallFuncOp, ReturnOp]
