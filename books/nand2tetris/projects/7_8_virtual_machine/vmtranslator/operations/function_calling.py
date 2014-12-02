@@ -184,7 +184,6 @@ class ReturnOp(operation.Operation):
 	@classmethod
 	def from_string(cls, line, state):
 		if line == "return":
-			state["function name"] = None
 			return cls()
 
 OPS = [DeclareFuncOp, CallFuncOp, ReturnOp]
