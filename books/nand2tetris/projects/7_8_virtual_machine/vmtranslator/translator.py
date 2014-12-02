@@ -17,15 +17,14 @@ def translate(code):
 		(string) The entire assembly program compiled from `code`.
 	"""
 
-	clean_code = parser.clean_code(code)
-
 	instructions = []
 	state = {
 		"num logic ops": 0,
 		"function name": "Sys.init",
+		"function call uid": {}
 	} # Updated by `parser.parse_line().`
 
-	for line in clean_code.split("\n"):
+	for line in parser.get_lines(code):
 		parsed = parser.parse_line(line, state)
 		if parsed is not None:
 			instructions.append(parsed)

@@ -6,7 +6,7 @@ import re
 
 from vmtranslator import operations
 
-def clean_code(code):
+def get_lines(code):
 	"""
 	Normalizes repeated whitespace and removes comments using regular
 	expressions.
@@ -15,14 +15,17 @@ def clean_code(code):
 		code (string): Raw, stringified Virtual Machine code.
 
 	Returns:
-		(string) `code`, with any repeated same whitespace characters (eg two
-			tabs in a row) reduced to one such characters, and `//` comments
-			removed. Also strips leading and trailing whitespace.
+		(generator of string) Each non-empty line of `code`, with any repeated
+			same whitespace characters (eg two tabs in a row) reduced to one
+			such character, and `//` comments removed. Also strips leading and
+			trailing whitespace.
 	"""
 
-	no_whitespace = re.sub(r"(\s)\1+", r"\1", code.strip("\n\r \t"))
-	no_comments = re.sub("//.*", "", no_whitespace)
-	return no_comments
+	for line in code.split("\n"):
+		no_comments = re.sub("//.*", "", line)
+		no_whitespace = re.sub(r"(\s)\1+", r"\1", no_comments.strip("\n\r \t"))
+		if no_whitespace:
+			yield no_whitespace
 
 def parse_line(line, state):
 	"""
