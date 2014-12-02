@@ -15,7 +15,6 @@ class Operation(metaclass=abc.ABCMeta):
 
 		pass
 
-	@classmethod
 	@abc.abstractmethod
 	def from_string(cls, string, state):
 		"""

@@ -63,7 +63,7 @@ class IfGotoOp(ProgramFlowOp):
 			A = M
 			D = M
 			@{0}
-			!D; JEQ
+			D; JNE
 			""".format(self._label)
 
 class LabelOp(ProgramFlowOp):
