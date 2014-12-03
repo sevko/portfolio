@@ -12,6 +12,9 @@ class MemoryOp(operation.Operation):
 	Attributes:
 		_segment (string): The segment name, as parsed from a VM operation.
 		_index (number): The segment index, as parsed from a VM operation.
+		_module (string): The name of the module (file) that the operation was
+			found in, for use in creating unique labels for `push` and `pop`
+			operations on the `static` memory segment.
 		STATIC_SEGMENTS (dictionary): Maps "static" segment names (see
 			`_segment`) to their exact addresses in memory, which allows
 			precomputing addresses via `_get_static_address()`.
@@ -49,12 +52,21 @@ class MemoryOp(operation.Operation):
 		Should only be called if `self._segment` is in `self.STATIC_SEGMENTS`.
 
 		Returns:
-			The target address of this memory operation.
+			(int) The target address of this memory operation.
 		"""
 
 		return self.STATIC_SEGMENTS[self._segment] + self._index
 
 	def _get_static_label(self):
+		"""
+		Should only be called if `self._segment` is '"static"'.
+
+		Returns:
+			(string) The unique label for this operation on an index of the
+				`static` memory segment; uses the current module as a label
+				prefix.
+		"""
+
 		return "{0}.{1}".format(self._module, self._index)
 
 	@classmethod
