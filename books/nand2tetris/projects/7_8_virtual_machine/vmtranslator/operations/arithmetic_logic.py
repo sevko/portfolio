@@ -4,21 +4,22 @@ operations.
 """
 
 from vmtranslator.operations import operation
+import abc
 
-logic_op_uid = 0
-
-class ALOperation(operation.Operation):
+class ALOperation(operation.Operation, metaclass=abc.ABCMeta):
 	"""
 	An arithmetic and logic operation.
 	"""
 
-	def __init__(self, operation):
-		self._operation = self.OPERATION_STRING[operation]
+	OPERATION_STRING = {}
+
+	def __init__(self, op_string):
+		self._operation = self.OPERATION_STRING[op_string]
 
 	@classmethod
-	def from_string(cls, string):
-		for op in cls.OPERATION_STRING:
-			if string == op:
+	def from_string(cls, string, state):
+		for oper in cls.OPERATION_STRING:
+			if string == oper:
 				return cls(string)
 
 class BinaryOp(ALOperation):
@@ -32,9 +33,6 @@ class BinaryOp(ALOperation):
 		"and": "&",
 		"or": "|"
 	}
-
-	def __init__(self, operation):
-		super().__init__(operation)
 
 	def to_assembly(self):
 		asm = """@SP
@@ -57,9 +55,6 @@ class UnaryOp(ALOperation):
 		"neg": "-"
 	}
 
-	def __init__(self, operation):
-		super().__init__(operation)
-
 	def to_assembly(self):
 		asm = """@SP
 			A = M - 1
@@ -78,7 +73,7 @@ class LogicOp(BinaryOp):
 		"lt": "JLT"
 	}
 
-	def __init__(self, operation, uid):
+	def __init__(self, op_string, uid):
 		"""
 		Args:
 			operation (string): VM language operation. Any one of:
@@ -94,7 +89,7 @@ class LogicOp(BinaryOp):
 				one another.
 		"""
 
-		self._operation = self.OPERATION_STRING[operation]
+		super().__init__(op_string)
 		self._uid = uid
 
 	def to_assembly(self):
@@ -131,11 +126,10 @@ class LogicOp(BinaryOp):
 		return asm.format(self._operation, self._uid)
 
 	@classmethod
-	def from_string(cls, string):
-		for op in cls.OPERATION_STRING:
-			if string == op:
-				global logic_op_uid
-				logic_op_uid += 1
-				return cls(string, logic_op_uid)
+	def from_string(cls, string, state):
+		for oper in cls.OPERATION_STRING:
+			if string == oper:
+				state["num logic ops"] += 1
+				return cls(string, state["num logic ops"])
 
-ops = [BinaryOp, UnaryOp, LogicOp]
+OPS = [BinaryOp, UnaryOp, LogicOp]

@@ -12,6 +12,9 @@ class MemoryOp(operation.Operation):
 	Attributes:
 		_segment (string): The segment name, as parsed from a VM operation.
 		_index (number): The segment index, as parsed from a VM operation.
+		_module (string): The name of the module (file) that the operation was
+			found in, for use in creating unique labels for `push` and `pop`
+			operations on the `static` memory segment.
 		STATIC_SEGMENTS (dictionary): Maps "static" segment names (see
 			`_segment`) to their exact addresses in memory, which allows
 			precomputing addresses via `_get_static_address()`.
@@ -22,6 +25,8 @@ class MemoryOp(operation.Operation):
 		OP_STRING (string): Defined by subclasses; the string representation of
 			this operation (eg, "push", "pop").
 	"""
+
+	OP_STRING = ""
 
 	DYNAMIC_SEGMENTS = {
 		"argument": "ARG",
@@ -37,29 +42,42 @@ class MemoryOp(operation.Operation):
 		"static": 16
 	}
 
-	def __init__(self, segment, index):
+	def __init__(self, segment, index, module):
 		self._segment = segment
 		self._index = index
+		self._module = module
 
 	def _get_static_address(self):
 		"""
 		Should only be called if `self._segment` is in `self.STATIC_SEGMENTS`.
 
 		Returns:
-			The target address of this memory operation.
+			(int) The target address of this memory operation.
 		"""
 
 		return self.STATIC_SEGMENTS[self._segment] + self._index
 
+	def _get_static_label(self):
+		"""
+		Should only be called if `self._segment` is '"static"'.
+
+		Returns:
+			(string) The unique label for this operation on an index of the
+				`static` memory segment; uses the current module as a label
+				prefix.
+		"""
+
+		return "{0}.{1}".format(self._module, self._index)
+
 	@classmethod
-	def from_string(cls, string):
+	def from_string(cls, string, state):
 		parts = string.split(" ")
 		if len(parts) == 3:
-			op, segment, index = parts
-			if op == cls.OP_STRING and \
+			oper, segment, index = parts
+			if oper == cls.OP_STRING and \
 				(segment in cls.STATIC_SEGMENTS or \
 				segment in cls.DYNAMIC_SEGMENTS):
-				return cls(segment, int(index))
+				return cls(segment, int(index), state["module"])
 
 class PushOp(MemoryOp):
 	"""
@@ -67,9 +85,6 @@ class PushOp(MemoryOp):
 	"""
 
 	OP_STRING = "push"
-
-	def __init__(self, segment, index):
-		super().__init__(segment, index)
 
 	def to_assembly(self):
 		asm = """@SP
@@ -95,10 +110,11 @@ class PushOp(MemoryOp):
 					D = A
 					{1}""".format(self._index, asm)
 
-			return """@{0}
-				D = M
-				{1}
-				""".format(self._get_static_address(), asm)
+			elif self._segment == "static":
+				return """@{0}
+					D = M
+					{1}
+					""".format(self._get_static_label(), asm)
 
 class PopOp(MemoryOp):
 	"""
@@ -106,9 +122,6 @@ class PopOp(MemoryOp):
 	"""
 
 	OP_STRING = "pop"
-
-	def __init__(self, segment, index):
-		super().__init__(segment, index)
 
 	def to_assembly(self):
 		asm = """
@@ -140,7 +153,10 @@ class PopOp(MemoryOp):
 			if self._segment == "constant":
 				return
 
+			elif self._segment == "static":
+				return asm.format(self._get_static_label())
+
 			base_address = self._get_static_address()
 			return asm.format(base_address)
 
-ops = [PushOp, PopOp]
+OPS = [PushOp, PopOp]

@@ -1,9 +1,5 @@
 import abc
 
-def operation_from_string(string):
-	if string == "":
-		pass
-
 class Operation(metaclass=abc.ABCMeta):
 	"""
 	The ABC for all Hack Virtual Machine arithmetic/logic operations.
@@ -20,13 +16,15 @@ class Operation(metaclass=abc.ABCMeta):
 		pass
 
 	@abc.abstractmethod
-	def from_string(cls, string):
+	def from_string(cls, string, state):
 		"""
 		Try to parse out an operation from a string.
 
 		Args:
 			string (string): A string that may contain a textual representation
 				of this VM operation.
+			state (dictionary): The state of the parser; modified and used by
+				some overriding `from_string()` implementations.
 
 		Returns:
 			(Operation) A subclass of Operation, if one could be parsed from
