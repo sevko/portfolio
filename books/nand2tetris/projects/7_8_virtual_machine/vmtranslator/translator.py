@@ -38,6 +38,7 @@ def translate(code, state=None):
 		state = {
 			"num logic ops": 0,
 			"function name": None,
+			"module": None,
 			"function call uid": {}
 		} # Updated by `parser.parse_line().`
 

@@ -21,7 +21,7 @@ def translate_path(path):
 			`.asm` extension.
 	"""
 
-	def translate_vm_file(vm_path, state):
+	def translate_vm_file(vm_path, state=None):
 		"""
 		Read and translate a VM file to an assembly string.
 		"""
@@ -53,11 +53,16 @@ def translate_path(path):
 		state = {
 			"num logic ops": 0,
 			"function name": None,
+			"module": None,
 			"function call uid": {}
 		}
-		raw_asm_blobs = [
-			translate_vm_file(vm_path, state) for vm_path in vm_paths
-		]
+
+		raw_asm_blobs = []
+		for vm_path in vm_paths:
+			# print(os.path.splitext(os.path.basename(vm_path))[0])
+			state["module"] = os.path.splitext(os.path.basename(vm_path))[0]
+			raw_asm_blobs.append(translate_vm_file(vm_path, state))
+
 		asm_path = os.path.basename(path.rstrip(os.sep)) + ".asm"
 		write_asm_file(asm_path, "\n".join(raw_asm_blobs))
 

@@ -39,9 +39,10 @@ class MemoryOp(operation.Operation):
 		"static": 16
 	}
 
-	def __init__(self, segment, index):
+	def __init__(self, segment, index, module):
 		self._segment = segment
 		self._index = index
+		self._module = module
 
 	def _get_static_address(self):
 		"""
@@ -53,6 +54,9 @@ class MemoryOp(operation.Operation):
 
 		return self.STATIC_SEGMENTS[self._segment] + self._index
 
+	def _get_static_label(self):
+		return "{0}.{1}".format(self._module, self._index)
+
 	@classmethod
 	def from_string(cls, string, state):
 		parts = string.split(" ")
@@ -61,7 +65,7 @@ class MemoryOp(operation.Operation):
 			if oper == cls.OP_STRING and \
 				(segment in cls.STATIC_SEGMENTS or \
 				segment in cls.DYNAMIC_SEGMENTS):
-				return cls(segment, int(index))
+				return cls(segment, int(index), state["module"])
 
 class PushOp(MemoryOp):
 	"""
@@ -94,10 +98,11 @@ class PushOp(MemoryOp):
 					D = A
 					{1}""".format(self._index, asm)
 
-			return """@{0}
-				D = M
-				{1}
-				""".format(self._get_static_address(), asm)
+			elif self._segment == "static":
+				return """@{0}
+					D = M
+					{1}
+					""".format(self._get_static_label(), asm)
 
 class PopOp(MemoryOp):
 	"""
@@ -135,6 +140,9 @@ class PopOp(MemoryOp):
 		elif self._segment in self.STATIC_SEGMENTS:
 			if self._segment == "constant":
 				return
+
+			elif self._segment == "static":
+				return asm.format(self._get_static_label())
 
 			base_address = self._get_static_address()
 			return asm.format(base_address)
