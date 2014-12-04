@@ -1,0 +1,26 @@
+class Square {
+	field Array _coordinates;
+
+	constructor Square new(int x, int y, int width, int height){
+		let _coordinates = Array.new(4);
+		let _coordinates[0] = Point.new(x, y);
+		let _coordinates[1] = Point.new(x, y + height);
+		let _coordinates[2] = Point.new(x + width, y + height);
+		let _coordinates[3] = Point.new(x + width, y);
+
+		return this;
+	}
+
+	method void render(){
+		var Point topLeft, bottomRight;
+
+		let topLeft = _coordinates[0];
+		let bottomRight = _coordinates[2];
+
+		do Screen.drawRectangle(
+			topLeft.getX(), topLeft.getY(),
+			bottomRight.getX(), bottomRight.getY()
+		);
+		return;
+	}
+}

@@ -1,0 +1,65 @@
+class Simulation {
+	field Array _particles, _squares;
+	field int _numParticles, _numSquares;
+
+	static int _tickSleepMS;
+
+	constructor Simulation new(int numParticles, int numSquares){
+		var int particleInd, squareInd;
+
+		let _tickSleepMS = 1000 / 30;
+		let _numParticles = numParticles;
+		let _numSquares = numSquares;
+		let _particles = Array.new(_numParticles);
+		let _squares = Array.new(_numSquares);
+
+		let particleInd = 0;
+		while(particleInd < _numParticles){
+			let _particles[particleInd] = Particle.new(
+				20 + (particleInd * 4), 20 + (particleInd * 2),
+				-4 + particleInd, -4 + particleInd
+			);
+			let particleInd = particleInd + 1;
+		}
+
+		let squareInd = 0;
+		while(squareInd < numSquares){
+			let _squares[squareInd] = Square.new(
+				20 + (squareInd * 4), 20 + (squareInd * 2),
+				squareInd * 2, squareInd * 2
+			);
+			let squareInd = squareInd + 1;
+		}
+
+		return this;
+	}
+
+	method void run(){
+		var Particle currParticle;
+		var Square currSquare;
+		var int particleInd, squareInd;
+
+		while(true){
+			let particleInd = 0;
+			let squareInd = 0;
+
+			do Screen.clearScreen();
+			while(particleInd < _numParticles){
+				let currParticle = _particles[particleInd];
+				do currParticle.render();
+				do currParticle.move();
+				let particleInd = particleInd + 1;
+			}
+
+			while(squareInd < _numSquares){
+				let currSquare = _squares[squareInd];
+				do currSquare.render();
+				let squareInd = squareInd + 1;
+			}
+
+			do Sys.wait(500);
+		}
+
+		return;
+	}
+}

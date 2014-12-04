@@ -1,0 +1,22 @@
+class Particle {
+	field int _x, _y, _dx, _dy;
+
+	constructor Particle new(int x, int y, int dx, int dy){
+		let _x = x;
+		let _y = y;
+		let _dx = dx;
+		let _dy = dy;
+		return this;
+	}
+
+	method void move(){
+		let _x = _x + _dx;
+		let _y = _y + _dy;
+		return;
+	}
+
+	method void render(){
+		do Screen.drawPixel(_x, _y);
+		return;
+	}
+}

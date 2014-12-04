@@ -1,0 +1,17 @@
+class Point {
+	field int _x, _y;
+
+	constructor Point new(int x, int y){
+		let _x = x;
+		let _y = y;
+		return this;
+	}
+
+	method int getX(){
+		return _x;
+	}
+
+	method int getY(){
+		return _y;
+	}
+}
