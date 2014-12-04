@@ -1,3 +1,7 @@
+/**
+ * The main entry point of the simulation.
+ */
+
 class Main {
 	function void main(){
 		var Simulation sim;

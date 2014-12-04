@@ -1,3 +1,7 @@
+/**
+ * A class that provides functions to initialize and run a simulation.
+ */
+
 class Simulation {
 	field Array _particles, _squares;
 	field int _numParticles, _numSquares;

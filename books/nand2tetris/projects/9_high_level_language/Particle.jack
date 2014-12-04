@@ -1,3 +1,7 @@
+/**
+ * A 2D moving particle.
+ */
+
 class Particle {
 	field int _x, _y, _dx, _dy;
 

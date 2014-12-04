@@ -1,3 +1,7 @@
+/**
+ * A 2D point.
+ */
+
 class Point {
 	field int _x, _y;
 

@@ -1,3 +1,7 @@
+/**
+ * A geometric square.
+ */
+
 class Square {
 	field Array _coordinates;
 
