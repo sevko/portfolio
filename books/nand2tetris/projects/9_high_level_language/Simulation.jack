@@ -48,6 +48,17 @@ class Simulation {
 				let currParticle = _particles[particleInd];
 				do currParticle.render();
 				do currParticle.move();
+
+				if((currParticle.getX() < 10) | (currParticle.getX() > 500)){
+					do currParticle.setX(0);
+					do currParticle.setDx(0);
+				}
+
+				if((currParticle.getY() < 10) | (currParticle.getY() > 240)){
+					do currParticle.setY(0);
+					do currParticle.setDy(0);
+				}
+
 				let particleInd = particleInd + 1;
 			}
 

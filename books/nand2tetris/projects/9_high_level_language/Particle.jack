@@ -19,4 +19,32 @@ class Particle {
 		do Screen.drawPixel(_x, _y);
 		return;
 	}
+
+	method int getX(){
+		return _x;
+	}
+
+	method int getY(){
+		return _y;
+	}
+
+	method void setX(int x){
+		let _x = x;
+		return;
+	}
+
+	method void setY(int y){
+		let _y = y;
+		return;
+	}
+
+	method void setDx(int dx){
+		let _dx = dx;
+		return;
+	}
+
+	method void setDy(int dy){
+		let _dy = dy;
+		return;
+	}
 }
