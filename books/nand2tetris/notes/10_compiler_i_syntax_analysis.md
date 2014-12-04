@@ -22,6 +22,10 @@ Parsing, then, is the process of both **validating** and **decomposing** user in
 parsing text is top-down *recursive descent*, which basically instructs that you keep `parse()`ing **non-terminals**
 until you recurse all the way down to **terminals** alone.
 
+Here's an example of an *abstract syntax tree* recursively generated for an example language:
+
+![Abstract syntax tree generated from some sample code.](img/abstract_syntax_tree.png)
+
 **LL(1)** grammars describe languages that can be parsed with a maximum of 1 token per look-ahead; in other words, a
 single token is sufficient to deduce what logical collection the next tokens will compose. In *Jack*, language
 constructs are uniquely identified by tokens like `let`, `function`, `var`, `method`, etc., meaning that it's almost
