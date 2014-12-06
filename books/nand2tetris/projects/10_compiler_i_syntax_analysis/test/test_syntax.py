@@ -66,6 +66,55 @@ class TestTokenizer(unittest.TestCase):
 		non_matches = ["_", "_ "]
 		self._tokenize_test_cases(matches, non_matches, "WHITESPACE")
 
+	def test_tokenize(self):
+		"""Test whether `tokenize()` properly tokenizes a valid source string
+		and raises a TokenizerException for an invalid one.
+		"""
+
+		src_string = """
+			/**
+			 Multiline comment.
+			 */
+			class Number {
+				field int _value; // inline comment
+
+				constructor Number new(int value){
+					let _value = value;
+				}
+			}
+			"""
+
+		tokens = [
+			("KEYWORD", "class"),
+			("IDENTIFIER", "Number"),
+			("SYMBOL", "{"),
+			("KEYWORD", "field"),
+			("KEYWORD", "int"),
+			("IDENTIFIER", "_value"),
+			("SYMBOL", ";"),
+			("KEYWORD", "constructor"),
+			("IDENTIFIER", "Number"),
+			("IDENTIFIER", "new"),
+			("SYMBOL", "("),
+			("KEYWORD", "int"),
+			("IDENTIFIER", "value"),
+			("SYMBOL", ")"),
+			("SYMBOL", "{"),
+			("KEYWORD", "let"),
+			("IDENTIFIER", "_value"),
+			("SYMBOL", "="),
+			("IDENTIFIER", "value"),
+			("SYMBOL", ";"),
+			("SYMBOL", "}"),
+			("SYMBOL", "}")
+		]
+
+		self.assertEqual(tokenizer.tokenize(src_string), tokens)
+
+		self.assertRaises(
+			tokenizer.TokenizerException, tokenizer.tokenize, "0invalid"
+		)
+
 	def _tokenize_test_cases(self, matches, non_matches, token_type):
 		"""
 		Test matches/non-matches against a specified token-type.
