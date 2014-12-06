@@ -42,16 +42,34 @@ def tokenize(code_string):
 
 	tokens = []
 	while code_string:
-		for tok_type, regex in TOKENS:
-			match = regex.match(code_string)
-			if match:
-				code_string = code_string[match.end():]
-				if tok_type not in ("WHITESPACE", "COMMENT"):
-					tokens.append((tok_type, match.group(0)))
-				break
+		token = get_token(code_string)
+		if token is not None:
+			tok_type, token_str = token
+			if tok_type not in ("WHITESPACE", "COMMENT"):
+				tokens.append(token)
+			code_string = code_string[len(token_str):]
 		else:
 			err_msg = "No token match for these characters: `{0}`".format(
 				re.match("[^\n]*", code_string).group(0)
 			)
 			raise TokenizerException(err_msg)
 	return tokens
+
+def get_token(code_string):
+	"""
+	Attempt to extract a token from the beginning of a raw source string.
+
+	Args:
+		code_string (code_string): Raw Jack source code.
+
+	Returns:
+		(string, string or None) If a match was found, return
+		(token_type, token_string), where `token_type` is the name of a token
+		type (see `Tokens`) and `token_string` is the content of the token. If
+		none were, return None.
+	"""
+
+	for tok_type, regex in TOKENS:
+		match = regex.match(code_string)
+		if match:
+			return tok_type, match.group(0)
