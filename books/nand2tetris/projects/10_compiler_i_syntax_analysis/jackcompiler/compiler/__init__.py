@@ -1,2 +1,2 @@
-def compile(ast):
-	print(ast)
+def compile_ast(ast):
+	return ast
