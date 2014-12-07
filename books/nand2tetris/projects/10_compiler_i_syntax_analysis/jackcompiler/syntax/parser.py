@@ -2,6 +2,10 @@
 Functions for parsing token streams according to the Jack grammar.
 """
 
+import collections
+
+ParseTreeNode = collections.namedtuple("ParseTreeNode", ["name", "children"])
+
 class ParserException(Exception):
 	pass
 
@@ -51,7 +55,7 @@ class GrammarRule(object):
 	def token(self, token):
 		def get_token():
 			if self._tokens[0] == token:
-				return [self._tokens.pop(0)]
+				return ParseTreeNode(*self._tokens.pop(0))
 			elif not self._optional:
 				except_msg = "Expecting token {0} but got {1}.".format(
 					token, self._tokens.pop(0)
@@ -64,7 +68,7 @@ class GrammarRule(object):
 	def token_type(self, token_type):
 		def get_token_type():
 			if self._tokens[0].type_ == token_type:
-				return [self._tokens.pop(0)]
+				return ParseTreeNode(*self._tokens.pop(0))
 			elif not self._optional:
 				except_msg = "Expecting token type {0} but got {1}.".format(
 					token_type, self._tokens.pop(0)
@@ -93,7 +97,7 @@ class GrammarRule(object):
 			matches = []
 			match = rule(self._tokens, optional=True)
 			while match:
-				matches.extend(match)
+				matches.append(match)
 				match = rule(self._tokens, optional=True)
 			return matches
 
@@ -134,11 +138,15 @@ class GrammarRule(object):
 		for rule in self._rules:
 			sub_matches = rule()
 			if sub_matches:
-				matches.extend(sub_matches)
+				if isinstance(sub_matches, list):
+					matches.extend(sub_matches)
+				else:
+					matches.append(sub_matches)
 			else:
-				break
+				return
 
-		return matches
+		return ParseTreeNode(self.name, matches) if len(matches) > 1 \
+			else matches[0]
 
 	def __str__(self):
 		return self.name
@@ -174,16 +182,16 @@ GRAMMAR = {
 }
 
 def parse(tokens):
+	return to_string(GRAMMAR["class"](tokens))
 	return GRAMMAR["class"](tokens)
 
 def to_string(tree):
-	if isinstance(tree[1], str):
-		body = "\t" + tree[1]
+	if isinstance(tree.children, str):
+		body = "\t" + tree.children
 	else:
-		body = [to_string(item) for item in tree[1]]
 		body = "\n".join([
 			"\t" + row
-			for item in tree[1]
+			for item in tree.children
 			for row in to_string(item).split("\n")
 		])
-	return "<{0}>\n{1}\n</{0}>".format(tree[0], body)
+	return "<{0}>\n{1}\n</{0}>".format(tree.name, body)
