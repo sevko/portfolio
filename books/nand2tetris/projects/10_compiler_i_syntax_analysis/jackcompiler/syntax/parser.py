@@ -1,7 +1,18 @@
+"""
+Functions for parsing token streams according to the Jack grammar.
+"""
+
 class ParserException(Exception):
 	pass
 
-def add_rule(function):
+def _add_rule(function):
+	"""
+	Decorator for use in defining `GrammarRule` methods. Appends the functions
+	that they return to the instance's `self._rules` array (see
+	`GrammarRule._rules`), and returns `self` to the caller to allow chained
+	calls.
+	"""
+
 	def rule(*args):
 		args[0]._rules.append(function(*args))
 		return args[0]
@@ -9,11 +20,34 @@ def add_rule(function):
 	return rule
 
 class GrammarRule(object):
+	"""
+	A representation of a grammatical rule, which supports:
+
+		- matching exact tokens
+		- matching token types
+		- repeating rules
+		- optional rules
+		- etc. See method docstrings for more.
+
+	Attributes:
+		name (string): The name assigned to this rule; lends itself to more
+			useful ParserException messages in stack traces.
+		_rules (list of functions): The list of functions queued up in this
+			grammar rule, to be executed by `self.parse()`. Added automatically
+			by the `_add_rule()` decorator.
+		_tokens (list of tokens): The list of tokens this grammar rule is
+			assigned to operate on. Only needs to be specified when
+			`self.parse()` is called.
+		_optional (bool): Whether or not this rule is optional. Indicates
+			whether or not `ParserException` should be thrown on incompatible
+			tokens in `self._tokens`.
+	"""
+
 	def __init__(self, name):
 		self.name = name
 		self._rules = []
 
-	@add_rule
+	@_add_rule
 	def token(self, token):
 		def get_token():
 			if self._tokens[0] == token:
@@ -26,7 +60,7 @@ class GrammarRule(object):
 
 		return get_token
 
-	@add_rule
+	@_add_rule
 	def token_type(self, token_type):
 		def get_token_type():
 			if self._tokens[0][0] == token_type:
@@ -39,7 +73,7 @@ class GrammarRule(object):
 
 		return get_token_type
 
-	@add_rule
+	@_add_rule
 	def once(self, rule):
 		def get_once():
 			match = GRAMMAR[rule].parse(self._tokens, optional=self._optional)
@@ -53,7 +87,7 @@ class GrammarRule(object):
 
 		return get_once
 
-	@add_rule
+	@_add_rule
 	def repeat(self, rule):
 		def get_repeat():
 			matches = []
@@ -65,7 +99,7 @@ class GrammarRule(object):
 
 		return get_repeat
 
-	@add_rule
+	@_add_rule
 	def either(self, rules):
 		def get_either():
 			for rule in rules:
@@ -83,7 +117,7 @@ class GrammarRule(object):
 
 		return get_either
 
-	@add_rule
+	@_add_rule
 	def optional(self, rule):
 		def get_optional():
 			match = rule.parse(self._tokens, optional=True)
