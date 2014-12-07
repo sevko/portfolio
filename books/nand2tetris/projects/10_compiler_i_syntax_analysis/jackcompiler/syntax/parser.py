@@ -1,144 +1,146 @@
-GRAMMAR = {
-	"class": (
-		("token", ("KEYWORD", "class")),
-		("once", "class name"),
-		("token", ("SYMBOL", "{")),
-		("repeat", ("once", "class var dec")),
-		# ("repeat", ("once", "subroutine dec")),
-		("token", ("SYMBOL", "}"))
-	),
-	"class name": (("token type", "IDENTIFIER"),),
-	"class var dec": (
-		("either", [
-			("token", ("KEYWORD", "static")),
-			("token", ("KEYWORD", "field"))
-		]),
-		("once", "type"),
-		("once", "var name"),
-		# ("repeat", ("once", "var names")),
-		("token", ("SYMBOL", ";"))
-	),
-	"type": (("either", [
-		("token", ("KEYWORD", "int")),
-		("token", ("KEYWORD", "char")),
-		("token", ("KEYWORD", "boolean")),
-		("token type", ("IDENTIFIER",))
-	]),),
-	"var name": (("token type", "IDENTIFIER"),),
-	"var names": (
-		("token", ("SYMBOL", ",")),
-		("once", "var name")
-	)
-}
-
-def parse(tokens):
-	out = parse_rule(GRAMMAR["class"], tokens)
-	# print(to_string(out))
-	return out
-
 class ParserException(Exception):
 	pass
 
-import sys
-def parse_rule(grammar_rule, tokens, optional=False):
-	grammar_object = []
+def add_rule(function):
+	def rule(*args):
+		args[0]._rules.append(function(*args))
+		return args[0]
 
-	for component in grammar_rule:
-		print(str(tokens[0]).ljust(30), component)
-		if component[0] == "token":
-			if tokens[0] == component[1]:
-				grammar_object.append(tokens.pop(0))
-			elif not optional:
-				except_msg = "Expecting token `{0}` but got `{1}`.".format(
-					component[1], tokens.pop(0)
+	return rule
+
+class GrammarRule(object):
+	def __init__(self, name):
+		self.name = name
+		self._rules = []
+
+	@add_rule
+	def token(self, token):
+		def get_token():
+			if self._tokens[0] == token:
+				return [self._tokens.pop(0)]
+			elif not self._optional:
+				except_msg = "Expecting token {0} but got {1}.".format(
+					token, self._tokens.pop(0)
 				)
 				raise ParserException(except_msg)
-			else:
-				break
 
-		elif component[0] == "token type":
-			if tokens[0][0] == component[1]:
-				grammar_object.append(tokens.pop(0))
-			elif not optional:
-				except_msg = "Expecting token type `{0}` but got `{1}`".format(
-					component[1], tokens.pop(0)
+		return get_token
+
+	@add_rule
+	def token_type(self, token_type):
+		def get_token_type():
+			if self._tokens[0][0] == token_type:
+				return [self._tokens.pop(0)]
+			elif not self._optional:
+				except_msg = "Expecting token type {0} but got {1}.".format(
+					token_type, self._tokens.pop(0)
 				)
 				raise ParserException(except_msg)
-			else:
-				break
 
-		elif component[0] == "token type":
-			if tokens[0][0] == component[1]:
-				grammar_object.append(tokens.pop(0))
-			elif not optional:
-				except_msg = "Expecting token type `{0}` but got `{1}`".format(
-					component[1], tokens.pop(0)
-				)
-				raise ParserException(except_msg)
-			else:
-				break
+		return get_token_type
 
-		elif component[0] == "token type":
-			if tokens[0][0] == component[1]:
-				grammar_object.append(tokens.pop(0))
-			elif not optional:
-				except_msg = "Expecting token type `{0}` but got `{1}`".format(
-					component[1], tokens.pop(0)
-				)
-				raise ParserException(except_msg)
-			else:
-				break
-
-		elif component[0] == "once":
-			match = parse_rule(GRAMMAR[component[1]], tokens, optional=optional)
+	@add_rule
+	def once(self, rule):
+		def get_once():
+			match = GRAMMAR[rule].parse(self._tokens, optional=self._optional)
 			if match:
-				grammar_object.extend(match)
-			elif not optional:
-				except_msg = "Expecting `{0}` but got `{1}`.".format(
-					GRAMMAR[component[1]], tokens[0]
+				return match
+			elif not self._optional:
+				except_msg = "Expecting rule {0} but got {1}.".format(
+					rule, self._tokens.pop(0)
 				)
 				raise ParserException(except_msg)
-			else:
-				break
 
-		elif component[0] == "token type":
-			if tokens[0][0] == component[1]:
-				grammar_object.append(tokens.pop(0))
-			elif not optional:
-				except_msg = "Expecting token type `{0}` but got `{1}`".format(
-					component[1], tokens.pop(0)
-				)
-				raise ParserException(except_msg)
-			else:
-				break
+		return get_once
 
-		elif component[0] == "repeat":
-			match = parse_rule([component[1]], tokens, optional=True)
+	@add_rule
+	def repeat(self, rule):
+		def get_repeat():
+			matches = []
+			match = rule.parse(self._tokens, optional=True)
 			while match:
-				grammar_object.extend(match)
-				match = parse_rule([component[1]], tokens, optional=True)
+				matches.extend(match)
+				match = rule.parse(self._tokens, optional=True)
+			return matches
 
-		elif component[0] == "either":
-			for rule in component[1]:
-				match = parse_rule([rule], tokens, optional=True)
+		return get_repeat
+
+	@add_rule
+	def either(self, rules):
+		def get_either():
+			for rule in rules:
+				match = rule.parse(self._tokens, optional=True)
 				if match:
-					grammar_object.extend(match)
-					break
+					return match
 			else:
-				if not optional:
-					except_msg = "Expecting any of `{0}` but got `{1}`.".format(
-						component[1], tokens[0]
-					)
+				if not self._optional:
+					except_msg = \
+						"Expecting any of:\n\n{0}\n\nbut got {1}.".format(
+							"\n".join(["\t" + str(rule) for rule in rules]),
+							self._tokens.pop(0)
+						)
 					raise ParserException(except_msg)
-				else:
-					break
 
-		elif component[0] == "optional":
-			match = parse_rule([component[1]], tokens, optional=True)
+		return get_either
+
+	@add_rule
+	def optional(self, rule):
+		def get_optional():
+			match = rule.parse(self._tokens, optional=True)
 			if match:
-				grammar_object.extend(match)
+				return match
 
-	return grammar_object
+		return get_optional
+
+	def parse(self, tokens, optional=False):
+		self._tokens = tokens
+		self._optional = optional
+
+		matches = []
+		for rule in self._rules:
+			sub_matches = rule()
+			if sub_matches:
+				matches.extend(sub_matches)
+			else:
+				break
+
+		return matches
+
+	def __str__(self):
+		return self.name
+
+GRAMMAR = {
+	"class": GrammarRule("class")
+		.token(("KEYWORD", "class"))
+		.once("class name")
+		.token(("SYMBOL", "{"))
+		.repeat(GrammarRule("class var dec").once("class var dec"))
+		.token(("SYMBOL", "}")),
+
+	"class name": GrammarRule("class name").token_type("IDENTIFIER"),
+	"class var dec": GrammarRule("class var dec")
+		.either([
+			GrammarRule("static").token(("KEYWORD", "static")),
+			GrammarRule("field").token(("KEYWORD", "field"))
+		])
+		.once("type")
+		.once("var name")
+		.token(("SYMBOL", ";")),
+	"type": GrammarRule("type")
+		.either([
+			GrammarRule("int").token(("KEYWORD", "int")),
+			GrammarRule("char").token(("KEYWORD", "char")),
+			GrammarRule("boolean").token(("KEYWORD", "boolean")),
+			GrammarRule("IDENTIFIER").token_type("IDENTIFIER")
+		]),
+	"var name": GrammarRule("var name").token_type("IDENTIFIER"),
+	"var names": GrammarRule("var names")
+		.token(("SYMBOL", ","))
+		.once("var name")
+}
+
+def parse(tokens):
+	return GRAMMAR["class"].parse(tokens)
 
 def to_string(tree):
 	if isinstance(tree[1], str):
