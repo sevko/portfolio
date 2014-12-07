@@ -60,7 +60,12 @@ class GrammarRule(object):
 
 	Attributes:
 		name (string): The name assigned to this rule; lends itself to more
-			useful ParserException messages in stack traces.
+			useful ParserException messages in stack traces, and is updated ON
+			THE FLY based on the name of the calling `GrammarRule` and this
+			rule's `self.original_name` (see next).
+		original_name (string): The original name assigned to this rule on
+			`__init__()`. Used to reinitialize `self.name` after it was
+			modified by a specific caller.
 		_rules (list of functions): The list of functions queued up in this
 			grammar rule, to be executed by `self()`. Added automatically
 			by the `_add_rule()` decorator.
@@ -72,7 +77,8 @@ class GrammarRule(object):
 			tokens in `self._tokens`.
 	"""
 
-	def __init__(self, name):
+	def __init__(self, name=""):
+		self.original_name = name
 		self.name = name
 		self._rules = []
 
@@ -82,10 +88,10 @@ class GrammarRule(object):
 			if self._tokens[0].content == token_content:
 				return self._tokens.pop(0)
 			elif not self._optional:
-				except_msg = "Expecting token {0} but got {1}.".format(
-					token, self._tokens.pop(0)
+				self.error(
+					"Expecting token `{0}` but got `{1}`.",
+					token_content, self._tokens.pop(0)
 				)
-				raise ParserException(except_msg)
 
 		return get_token
 
@@ -95,24 +101,26 @@ class GrammarRule(object):
 			if self._tokens[0].type_ == token_type:
 				return self._tokens.pop(0)
 			elif not self._optional:
-				except_msg = "Expecting token type {0} but got {1}.".format(
+				self.error(
+					"Expecting token type `{0}` but got `{1}`.",
 					token_type, self._tokens.pop(0)
 				)
-				raise ParserException(except_msg)
 
 		return get_token_type
 
 	@_add_rule
-	def once(self, rule):
+	def once(self, rule_name):
 		def get_once():
-			match = GRAMMAR[rule](self._tokens, optional=self._optional)
+			rule = GRAMMAR[rule_name]
+			rule.name = self.name + "." + rule.original_name
+			match = rule(self._tokens, optional=self._optional)
 			if match:
 				return match
 			elif not self._optional:
-				except_msg = "Expecting rule {0} but got {1}.".format(
+				self.error(
+					"Expecting rule {0} but got {1}.",
 					rule, self._tokens.pop(0)
 				)
-				raise ParserException(except_msg)
 
 		return get_once
 
@@ -120,6 +128,7 @@ class GrammarRule(object):
 	def repeat(self, rule):
 		def get_repeat():
 			matches = []
+			rule.name = self.name + "." + rule.name
 			match = rule(self._tokens, optional=True)
 			while match:
 				matches.append(match)
@@ -132,28 +141,38 @@ class GrammarRule(object):
 	def either(self, rules):
 		def get_either():
 			for rule in rules:
+				rule.name = self.name + "." + rule.name
 				match = rule(self._tokens, optional=True)
 				if match:
 					return match
 			else:
 				if not self._optional:
-					except_msg = \
-						"Expecting any of:\n\n{0}\n\nbut got {1}.".format(
-							"\n".join(["\t" + str(rule) for rule in rules]),
-							self._tokens.pop(0)
-						)
-					raise ParserException(except_msg)
+					self.error(
+						"Expecting any of:\n{0}\nbut got {1}.",
+						"\n".join(["\t" + str(rule) for rule in rules]),
+						self._tokens.pop(0)
+					)
 
 		return get_either
 
 	@_add_rule
 	def optional(self, rule):
 		def get_optional():
+			rule.name = self.name + "." + rule.name
 			match = rule(self._tokens, optional=True)
 			if match:
 				return match
 
 		return get_optional
+
+	def error(self, msg, *format_args):
+		except_msg = "\nRule `{0}`. Error: {1}\n\nToken context:\n\t`{2}`"
+		except_msg = except_msg.format(
+			self.name,
+			(msg.format(*format_args) if format_args else msg),
+			", ".join([str(tok) for tok in self._tokens[:4]])
+		)
+		raise ParserException(except_msg)
 
 	def __call__(self, tokens, optional=False):
 		self._tokens = tokens
@@ -167,7 +186,8 @@ class GrammarRule(object):
 					matches.extend(sub_matches)
 				else:
 					matches.append(sub_matches)
-			else:
+				self._optional = False
+			elif self._optional:
 				return
 
 		is_terminal = len(matches) == 1 and isinstance(
@@ -183,7 +203,7 @@ GRAMMAR = {
 		.token("class")
 		.once("class name")
 		.token("{")
-		.repeat(GrammarRule("class var dec").once("class var dec"))
+		.repeat(GrammarRule().once("class var dec"))
 		.token("}"),
 
 	"class name": GrammarRule("class name").token_type("IDENTIFIER"),
@@ -194,6 +214,7 @@ GRAMMAR = {
 		])
 		.once("type")
 		.once("var name")
+		.repeat(GrammarRule("args").token(",").once("var name"))
 		.token(";"),
 	"type": GrammarRule("type")
 		.either([
@@ -202,10 +223,7 @@ GRAMMAR = {
 			GrammarRule("boolean").token("boolean"),
 			GrammarRule("IDENTIFIER").token_type("IDENTIFIER")
 		]),
-	"var name": GrammarRule("var name").token_type("IDENTIFIER"),
-	"var names": GrammarRule("var names")
-		.token(",")
-		.once("var name")
+	"var name": GrammarRule("var name").token_type("IDENTIFIER")
 }
 
 def parse(tokens):
