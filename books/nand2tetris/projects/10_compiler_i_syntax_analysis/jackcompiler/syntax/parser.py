@@ -3,6 +3,7 @@ Functions for parsing token streams according to the Jack grammar.
 """
 
 import collections
+from jackcompiler.syntax import tokenizer
 
 ParseTreeNode = collections.namedtuple("ParseTreeNode", ["name", "children"])
 
@@ -55,7 +56,7 @@ class GrammarRule(object):
 	def token(self, token):
 		def get_token():
 			if self._tokens[0] == token:
-				return ParseTreeNode(*self._tokens.pop(0))
+				return self._tokens.pop(0)
 			elif not self._optional:
 				except_msg = "Expecting token {0} but got {1}.".format(
 					token, self._tokens.pop(0)
@@ -68,7 +69,7 @@ class GrammarRule(object):
 	def token_type(self, token_type):
 		def get_token_type():
 			if self._tokens[0].type_ == token_type:
-				return ParseTreeNode(*self._tokens.pop(0))
+				return self._tokens.pop(0)
 			elif not self._optional:
 				except_msg = "Expecting token type {0} but got {1}.".format(
 					token_type, self._tokens.pop(0)
@@ -145,8 +146,10 @@ class GrammarRule(object):
 			else:
 				return
 
-		return ParseTreeNode(self.name, matches) if len(matches) > 1 \
-			else matches[0]
+		is_terminal = len(matches) == 1 and isinstance(
+			matches[0], tokenizer.Token
+		)
+		return matches[0] if is_terminal else ParseTreeNode(self.name, matches)
 
 	def __str__(self):
 		return self.name
@@ -182,16 +185,18 @@ GRAMMAR = {
 }
 
 def parse(tokens):
-	return to_string(GRAMMAR["class"](tokens))
+	return to_xml(GRAMMAR["class"](tokens))
 	return GRAMMAR["class"](tokens)
 
-def to_string(tree):
-	if isinstance(tree.children, str):
-		body = "\t" + tree.children
+def to_xml(node):
+	if isinstance(node, tokenizer.Token):
+		name = node.type_
+		body = "\t" + node.content
 	else:
+		name = node.name
 		body = "\n".join([
 			"\t" + row
-			for item in tree.children
-			for row in to_string(item).split("\n")
+			for item in node.children
+			for row in to_xml(item).split("\n")
 		])
-	return "<{0}>\n{1}\n</{0}>".format(tree.name, body)
+	return "<{0}>\n{1}\n</{0}>".format(name, body)
