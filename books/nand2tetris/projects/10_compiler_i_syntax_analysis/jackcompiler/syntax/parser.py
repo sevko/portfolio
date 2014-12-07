@@ -23,11 +23,17 @@ class ParseTreeNode(object):
 		self.name = name
 		self.children = children
 
-	def __str__(self):
+	def to_xml(self):
+		"""
+		Returns:
+			A recursive XML representation of this ParseTreeNode, with tab
+			indentation.
+		"""
+
 		body = "\n".join([
 			"\t" + row
 			for item in self.children
-			for row in str(item).split("\n")
+			for row in item.to_xml().split("\n")
 		])
 		return "<{0}>\n{1}\n</{0}>".format(self.name, body)
 
@@ -227,5 +233,4 @@ GRAMMAR = {
 }
 
 def parse(tokens):
-	return str(GRAMMAR["class"](tokens))
-	return GRAMMAR["class"](tokens)
+	return GRAMMAR["class"](tokens).to_xml()

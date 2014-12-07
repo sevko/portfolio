@@ -35,8 +35,16 @@ class Token(object):
 		self.type_ = type_
 		self.content = content
 
-	def __str__(self):
+	def to_xml(self):
+		"""
+		Returns:
+			An XML representation of this Token.
+		"""
+
 		return "<{0}>{1}</{0}>".format(self.type_, self.content)
+
+	def __str__(self):
+		return "({0}, `{1}`)".format(self.type_, self.content)
 
 class TokenizerException(Exception):
 	pass
