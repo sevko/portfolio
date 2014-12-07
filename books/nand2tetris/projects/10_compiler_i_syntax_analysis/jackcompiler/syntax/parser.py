@@ -33,11 +33,11 @@ class GrammarRule(object):
 		name (string): The name assigned to this rule; lends itself to more
 			useful ParserException messages in stack traces.
 		_rules (list of functions): The list of functions queued up in this
-			grammar rule, to be executed by `self.parse()`. Added automatically
+			grammar rule, to be executed by `self()`. Added automatically
 			by the `_add_rule()` decorator.
 		_tokens (list of tokens): The list of tokens this grammar rule is
 			assigned to operate on. Only needs to be specified when
-			`self.parse()` is called.
+			`self()` is called.
 		_optional (bool): Whether or not this rule is optional. Indicates
 			whether or not `ParserException` should be thrown on incompatible
 			tokens in `self._tokens`.
@@ -76,7 +76,7 @@ class GrammarRule(object):
 	@_add_rule
 	def once(self, rule):
 		def get_once():
-			match = GRAMMAR[rule].parse(self._tokens, optional=self._optional)
+			match = GRAMMAR[rule](self._tokens, optional=self._optional)
 			if match:
 				return match
 			elif not self._optional:
@@ -91,10 +91,10 @@ class GrammarRule(object):
 	def repeat(self, rule):
 		def get_repeat():
 			matches = []
-			match = rule.parse(self._tokens, optional=True)
+			match = rule(self._tokens, optional=True)
 			while match:
 				matches.extend(match)
-				match = rule.parse(self._tokens, optional=True)
+				match = rule(self._tokens, optional=True)
 			return matches
 
 		return get_repeat
@@ -103,7 +103,7 @@ class GrammarRule(object):
 	def either(self, rules):
 		def get_either():
 			for rule in rules:
-				match = rule.parse(self._tokens, optional=True)
+				match = rule(self._tokens, optional=True)
 				if match:
 					return match
 			else:
@@ -120,13 +120,13 @@ class GrammarRule(object):
 	@_add_rule
 	def optional(self, rule):
 		def get_optional():
-			match = rule.parse(self._tokens, optional=True)
+			match = rule(self._tokens, optional=True)
 			if match:
 				return match
 
 		return get_optional
 
-	def parse(self, tokens, optional=False):
+	def __call__(self, tokens, optional=False):
 		self._tokens = tokens
 		self._optional = optional
 
@@ -174,7 +174,7 @@ GRAMMAR = {
 }
 
 def parse(tokens):
-	return GRAMMAR["class"].parse(tokens)
+	return GRAMMAR["class"](tokens)
 
 def to_string(tree):
 	if isinstance(tree[1], str):
