@@ -53,9 +53,9 @@ class GrammarRule(object):
 		self._rules = []
 
 	@_add_rule
-	def token(self, token):
+	def token(self, token_content):
 		def get_token():
-			if self._tokens[0] == token:
+			if self._tokens[0].content == token_content:
 				return self._tokens.pop(0)
 			elif not self._optional:
 				except_msg = "Expecting token {0} but got {1}.".format(
@@ -156,31 +156,31 @@ class GrammarRule(object):
 
 GRAMMAR = {
 	"class": GrammarRule("class")
-		.token(("KEYWORD", "class"))
+		.token("class")
 		.once("class name")
-		.token(("SYMBOL", "{"))
+		.token("{")
 		.repeat(GrammarRule("class var dec").once("class var dec"))
-		.token(("SYMBOL", "}")),
+		.token("}"),
 
 	"class name": GrammarRule("class name").token_type("IDENTIFIER"),
 	"class var dec": GrammarRule("class var dec")
 		.either([
-			GrammarRule("static").token(("KEYWORD", "static")),
-			GrammarRule("field").token(("KEYWORD", "field"))
+			GrammarRule("static").token("static"),
+			GrammarRule("field").token("field")
 		])
 		.once("type")
 		.once("var name")
-		.token(("SYMBOL", ";")),
+		.token(";"),
 	"type": GrammarRule("type")
 		.either([
-			GrammarRule("int").token(("KEYWORD", "int")),
-			GrammarRule("char").token(("KEYWORD", "char")),
-			GrammarRule("boolean").token(("KEYWORD", "boolean")),
+			GrammarRule("int").token("int"),
+			GrammarRule("char").token("char"),
+			GrammarRule("boolean").token("boolean"),
 			GrammarRule("IDENTIFIER").token_type("IDENTIFIER")
 		]),
 	"var name": GrammarRule("var name").token_type("IDENTIFIER"),
 	"var names": GrammarRule("var names")
-		.token(("SYMBOL", ","))
+		.token(",")
 		.once("var name")
 }
 
