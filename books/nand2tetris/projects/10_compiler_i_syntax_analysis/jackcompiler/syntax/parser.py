@@ -5,7 +5,31 @@ Functions for parsing token streams according to the Jack grammar.
 import collections
 from jackcompiler.syntax import tokenizer
 
-ParseTreeNode = collections.namedtuple("ParseTreeNode", ["name", "children"])
+class ParseTreeNode(object):
+	"""
+	A represenation of nodes in the parse tree assembled by the `GrammarRule`s
+	in `GRAMMAR`.
+
+	Attributes:
+		name (string): The name assigned to this node, which collectively
+			describes all of its children nodes. For instance, "arguments",
+			"parameters", etc.
+		children (list of (ParseTreeNode or tokenizer.Token)): A list of the
+			`ParseTreeNode`s that belong to the grammar rule that assembled
+			this `ParseTreeNode`.
+	"""
+
+	def __init__(self, name, children):
+		self.name = name
+		self.children = children
+
+	def __str__(self):
+		body = "\n".join([
+			"\t" + row
+			for item in self.children
+			for row in str(item).split("\n")
+		])
+		return "<{0}>\n{1}\n</{0}>".format(self.name, body)
 
 class ParserException(Exception):
 	pass
@@ -185,18 +209,5 @@ GRAMMAR = {
 }
 
 def parse(tokens):
-	return to_xml(GRAMMAR["class"](tokens))
+	return str(GRAMMAR["class"](tokens))
 	return GRAMMAR["class"](tokens)
-
-def to_xml(node):
-	if isinstance(node, tokenizer.Token):
-		name = node.type_
-		body = "\t" + node.content
-	else:
-		name = node.name
-		body = "\n".join([
-			"\t" + row
-			for item in node.children
-			for row in to_xml(item).split("\n")
-		])
-	return "<{0}>\n{1}\n</{0}>".format(name, body)

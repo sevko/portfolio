@@ -20,7 +20,23 @@ TOKENS = [
 	("WHITESPACE", re.compile(r"\s+"))
 ]
 
-Token = collections.namedtuple("Token", ["type_", "content"])
+class Token(object):
+	"""
+	Represents a textual token, or atomic unit of parsing, as assembled using
+	the regular expressions in `TOKENS`.
+
+	Attributes:
+		type_ (string): The name of the token type; see `TOKENS`.
+		content (string): The contents of the token, as matched by the regular
+			expressions in `TOKENS`.
+	"""
+
+	def __init__(self, type_, content):
+		self.type_ = type_
+		self.content = content
+
+	def __str__(self):
+		return "<{0}>{1}</{0}>".format(self.type_, self.content)
 
 class TokenizerException(Exception):
 	pass
