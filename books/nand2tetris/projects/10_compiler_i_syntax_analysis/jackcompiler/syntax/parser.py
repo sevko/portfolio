@@ -63,7 +63,7 @@ class GrammarRule(object):
 	@_add_rule
 	def token_type(self, token_type):
 		def get_token_type():
-			if self._tokens[0][0] == token_type:
+			if self._tokens[0].type_ == token_type:
 				return [self._tokens.pop(0)]
 			elif not self._optional:
 				except_msg = "Expecting token type {0} but got {1}.".format(

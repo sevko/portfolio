@@ -2,6 +2,7 @@
 Contains functions that tokenize raw Jack code.
 """
 
+import collections
 import re
 
 # Maps token names to regular expression, for use by `tokenize()`.
@@ -18,6 +19,8 @@ TOKENS = [
 	("IDENTIFIER", re.compile(r"[a-zA-Z_]\w*")),
 	("WHITESPACE", re.compile(r"\s+"))
 ]
+
+Token = collections.namedtuple("Token", ["type_", "content"])
 
 class TokenizerException(Exception):
 	pass
@@ -44,10 +47,9 @@ def tokenize(code_string):
 	while code_string:
 		token = get_token(code_string)
 		if token is not None:
-			tok_type, token_str = token
-			if tok_type not in ("WHITESPACE", "COMMENT"):
+			if token.type_ not in ("WHITESPACE", "COMMENT"):
 				tokens.append(token)
-			code_string = code_string[len(token_str):]
+			code_string = code_string[len(token.content):]
 		else:
 			err_msg = "No token match for these characters: `{0}`".format(
 				re.match("[^\n]*", code_string).group(0)
@@ -72,4 +74,4 @@ def get_token(code_string):
 	for tok_type, regex in TOKENS:
 		match = regex.match(code_string)
 		if match:
-			return tok_type, match.group(0)
+			return Token(tok_type, match.group(0))
