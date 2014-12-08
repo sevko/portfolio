@@ -207,20 +207,19 @@ class GrammarRule(object):
 GRAMMAR = {
 	"class": GrammarRule("class")
 		.token("class")
-		.once("class name")
+		.once("className")
 		.token("{")
-		.repeat(GrammarRule().once("class var dec"))
+		.repeat(GrammarRule().once("classVarDec"))
+		.repeat(GrammarRule().once("subroutineDec"))
 		.token("}"),
-
-	"class name": GrammarRule("class name").token_type("IDENTIFIER"),
-	"class var dec": GrammarRule("class var dec")
+	"classVarDec": GrammarRule("classVarDec")
 		.either([
 			GrammarRule("static").token("static"),
 			GrammarRule("field").token("field")
 		])
 		.once("type")
-		.once("var name")
-		.repeat(GrammarRule("args").token(",").once("var name"))
+		.once("varName")
+		.repeat(GrammarRule("args").token(",").once("varName"))
 		.token(";"),
 	"type": GrammarRule("type")
 		.either([
@@ -229,7 +228,164 @@ GRAMMAR = {
 			GrammarRule("boolean").token("boolean"),
 			GrammarRule("IDENTIFIER").token_type("IDENTIFIER")
 		]),
-	"var name": GrammarRule("var name").token_type("IDENTIFIER")
+	"subroutineDec": GrammarRule("subroutineDec")
+		.either([
+			GrammarRule("type").token("constructor"),
+			GrammarRule("type").token("function"),
+			GrammarRule("type").token("method")
+		])
+		.either([
+			GrammarRule("returnType").token("void"),
+			GrammarRule("returnType").once("type"),
+		])
+		.token_type("IDENTIFIER")
+		.token("(")
+		.optional(GrammarRule().once("parameterList"))
+		.token(")")
+		.once("subroutineBody"),
+	"subroutineBody": GrammarRule("subroutineBody")
+		.token("{")
+		.repeat(GrammarRule().once("varDec"))
+		.once("statements")
+		.token("}"),
+	"varDec": GrammarRule("varDec")
+		.token("var")
+		.once("type")
+		.once("varName")
+		.repeat(GrammarRule().token(",").once("varName"))
+		.token(";"),
+	"statements": GrammarRule("statements")
+		.repeat(GrammarRule().once("statement")),
+	"statement": GrammarRule("statement").either([
+		GrammarRule().once("letStatement"),
+		GrammarRule().once("ifStatement"),
+		GrammarRule().once("whileStatement"),
+		GrammarRule().once("doStatement"),
+		GrammarRule().once("returnStatement")
+	]),
+	"letStatement": GrammarRule("letStatement")
+		.token("let")
+		.token_type("IDENTIFIER")
+		.optional(
+			GrammarRule("index").token("[").once("expression").token("]")
+		)
+		.token("=")
+		.once("expression")
+		.token(";"),
+	"ifStatement": GrammarRule("ifStatement")
+		.token("if")
+		.token("(")
+		.once("expression")
+		.token(")")
+		.token("{")
+		.once("statements")
+		.token("}")
+		.optional(
+			GrammarRule("elseBody")
+				.token("else")
+				.token("{")
+				.once("statements")
+				.token("}")
+		),
+	"whileStatement": GrammarRule("whileStatement")
+		.token("while")
+		.token("(")
+		.once("expression")
+		.token(")")
+		.token("{")
+		.once("statements")
+		.token("}"),
+	"doStatement": GrammarRule("doStatement")
+		.token("do")
+		.once("subroutineCall")
+		.token(";"),
+	"returnStatement": GrammarRule("returnStatement")
+		.token("return")
+		.optional(GrammarRule("returnValue").once("expression"))
+		.token(";"),
+	"expression": GrammarRule("expression")
+		.once("term")
+		.repeat(
+			GrammarRule("terms")
+				.once("op")
+				.once("term")
+		),
+	"term": GrammarRule("term")
+		.either([
+			GrammarRule().token_type("INTEGER"),
+			GrammarRule().token_type("STRING"),
+			GrammarRule().once("keywordConstant"),
+			GrammarRule().once("varName"),
+			GrammarRule()
+				.once("varName")
+				.token("[")
+				.once("expression")
+				.token("]"),
+			GrammarRule().once("subroutineCall"),
+			GrammarRule().token("(").once("expression").token(")"),
+			GrammarRule().once("unaryOp").once("term")
+		]),
+	"subroutineCall": GrammarRule("subroutineCall")
+		.either([
+			GrammarRule()
+				.once("subroutineName")
+				.token("(")
+				.once("expressionList")
+				.token(")"),
+			GrammarRule()
+				.either([
+					GrammarRule().once("className"),
+					GrammarRule().once("className")
+				])
+				.token(".")
+				.once("subroutineName")
+				.token("(")
+				.once("expressionList")
+				.token(")")
+		]),
+	"expressionList": GrammarRule("expressionList")
+		.optional(
+			GrammarRule("firstExpression")
+				.once("expression")
+				.repeat(GrammarRule("moreExpressions")
+					.token(",")
+					.once("expression")
+				)
+		),
+	"op": GrammarRule("op")
+		.either([
+			GrammarRule().token("+"),
+			GrammarRule().token("-"),
+			GrammarRule().token("*"),
+			GrammarRule().token("/"),
+			GrammarRule().token("&"),
+			GrammarRule().token("|"),
+			GrammarRule().token("<"),
+			GrammarRule().token(">"),
+			GrammarRule().token("=")
+		]),
+	"unaryOp": GrammarRule("op")
+		.either([
+			GrammarRule().token("-"),
+			GrammarRule().token("~")
+		]),
+	"keywordConstant": GrammarRule("keywordConstant")
+		.either([
+			GrammarRule().token("true"),
+			GrammarRule().token("false"),
+			GrammarRule().token("null"),
+			GrammarRule().token("this"),
+		]),
+	"parameterList": GrammarRule("parameterList")
+		.once("type")
+		.token_type("IDENTIFIER")
+		.repeat(
+			GrammarRule("moreParameters")
+				.token(",")
+				.token_type("IDENTIFIER")
+		),
+	"className": GrammarRule("className").token_type("IDENTIFIER"),
+	"varName": GrammarRule("varName").token_type("IDENTIFIER")
 }
 
 def parse(tokens):
