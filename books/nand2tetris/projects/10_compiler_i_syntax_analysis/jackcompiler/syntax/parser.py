@@ -83,16 +83,17 @@ class GrammarRule(object):
 			tokens in `self._tokens`.
 	"""
 
-	def __init__(self, name=""):
+	def __init__(self, name="", look_ahead=None):
 		self.original_name = name
 		self.name = name
 		self._rules = []
+		self._look_ahead = look_ahead
 
 	@_add_rule
 	def token(self, token_content):
 		def get_token():
 			if self._tokens[0].content == token_content:
-				return self._tokens.pop(0)
+				return self._is_look_ahead or self._tokens.pop(0)
 			elif not self._optional:
 				self.error(
 					"Expecting token `{0}` but got `{1}`.",
@@ -105,7 +106,7 @@ class GrammarRule(object):
 	def token_type(self, token_type):
 		def get_token_type():
 			if self._tokens[0].type_ == token_type:
-				return self._tokens.pop(0)
+				return self._is_look_ahead or self._tokens.pop(0)
 			elif not self._optional:
 				self.error(
 					"Expecting token type `{0}` but got `{1}`.",
@@ -118,7 +119,6 @@ class GrammarRule(object):
 	def once(self, rule_name):
 		def get_once():
 			rule = GRAMMAR[rule_name]
-			rule.name = self.name + "." + rule.original_name
 			match = rule(self._tokens, optional=self._optional)
 			if match:
 				return match
@@ -180,9 +180,19 @@ class GrammarRule(object):
 		)
 		raise ParserException(except_msg)
 
-	def __call__(self, tokens, optional=False):
+	def __call__(self, tokens, optional=False, look_ahead=False):
 		self._tokens = tokens
-		self._optional = optional
+		self._optional = optional or look_ahead
+		self._is_look_ahead = look_ahead
+
+		if self._look_ahead is not None:
+			# next_tokens = (tokens[ind + 1] for ind in range(len(tokens) - 1))
+			# if self._look_ahead(next_tokens, look_ahead=True):
+				# return
+
+			# pass
+			if not self._look_ahead([tokens[1]], look_ahead=True):
+				return
 
 		matches = []
 		for rule in self._rules:
@@ -193,13 +203,16 @@ class GrammarRule(object):
 				else:
 					matches.append(sub_matches)
 				self._optional = False
+			elif self._is_look_ahead:
+				return False
 			elif self._optional:
 				return
 
 		is_terminal = len(matches) == 1 and isinstance(
 			matches[0], tokenizer.Token
 		)
-		return matches[0] if is_terminal else ParseTreeNode(self.name, matches)
+		return matches[0] if is_terminal else \
+			ParseTreeNode(self.original_name, matches)
 
 	def __str__(self):
 		return self.name
@@ -312,22 +325,27 @@ GRAMMAR = {
 		),
 	"term": GrammarRule("term")
 		.either([
+			GrammarRule().token("(").once("expression").token(")"),
 			GrammarRule().token_type("INTEGER"),
 			GrammarRule().token_type("STRING"),
 			GrammarRule().once("keywordConstant"),
-			GrammarRule().once("varName"),
-			GrammarRule()
+			GrammarRule().once("unaryOp").once("term"),
+			GrammarRule(look_ahead=GrammarRule().token("["))
 				.once("varName")
 				.token("[")
 				.once("expression")
 				.token("]"),
-			GrammarRule().once("subroutineCall"),
-			GrammarRule().token("(").once("expression").token(")"),
-			GrammarRule().once("unaryOp").once("term")
+			GrammarRule(
+				look_ahead=GrammarRule().either([
+					GrammarRule().token("("),
+					GrammarRule().token(".")
+				])
+			).once("subroutineCall"),
+			GrammarRule().once("varName")
 		]),
 	"subroutineCall": GrammarRule("subroutineCall")
 		.either([
-			GrammarRule()
+			GrammarRule(look_ahead=GrammarRule().token("("))
 				.once("subroutineName")
 				.token("(")
 				.once("expressionList")
@@ -335,7 +353,7 @@ GRAMMAR = {
 			GrammarRule()
 				.either([
 					GrammarRule().once("className"),
-					GrammarRule().once("className")
+					GrammarRule().once("varName")
 				])
 				.token(".")
 				.once("subroutineName")
@@ -382,8 +400,10 @@ GRAMMAR = {
 		.repeat(
 			GrammarRule("moreParameters")
 				.token(",")
+				.once("type")
 				.token_type("IDENTIFIER")
 		),
+	"subroutineName": GrammarRule("subroutineName").token_type("IDENTIFIER"),
 	"className": GrammarRule("className").token_type("IDENTIFIER"),
 	"varName": GrammarRule("varName").token_type("IDENTIFIER")
 }

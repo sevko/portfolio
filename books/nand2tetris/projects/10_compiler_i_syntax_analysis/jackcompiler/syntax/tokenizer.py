@@ -14,7 +14,7 @@ TOKENS = [
 	])))),
 	("COMMENT", re.compile(r"//.*?$|/\*.*?\*/", re.DOTALL | re.MULTILINE)),
 	("SYMBOL", re.compile(r"[{}\[\]().,;+*/&|<>=~-]")),
-	("INTEGER", re.compile(r"[1-9]\d*\b")),
+	("INTEGER", re.compile(r"\d+\b")),
 	("STRING", re.compile('"[^"\n]*"')),
 	("IDENTIFIER", re.compile(r"[a-zA-Z_]\w*")),
 	("WHITESPACE", re.compile(r"\s+"))
