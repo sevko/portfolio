@@ -83,11 +83,11 @@ class GrammarRule(object):
 			tokens in `self._tokens`.
 	"""
 
-	def __init__(self, name="", look_ahead=None):
+	def __init__(self, name=""):
 		self.original_name = name
 		self.name = name
 		self._rules = []
-		self._look_ahead = look_ahead
+		self._look_ahead = None
 
 	@_add_rule
 	def token(self, token_content):
@@ -171,6 +171,10 @@ class GrammarRule(object):
 
 		return get_optional
 
+	def look_ahead(self, rule):
+		self._look_ahead = rule
+		return self
+
 	def error(self, msg, *format_args):
 		except_msg = "\nRule `{0}`. Error: {1}\n\nToken context:\n\t`{2}`"
 		except_msg = except_msg.format(
@@ -186,11 +190,6 @@ class GrammarRule(object):
 		self._is_look_ahead = look_ahead
 
 		if self._look_ahead is not None:
-			# next_tokens = (tokens[ind + 1] for ind in range(len(tokens) - 1))
-			# if self._look_ahead(next_tokens, look_ahead=True):
-				# return
-
-			# pass
 			if not self._look_ahead([tokens[1]], look_ahead=True):
 				return
 
@@ -330,13 +329,14 @@ GRAMMAR = {
 			GrammarRule().token_type("STRING"),
 			GrammarRule().once("keywordConstant"),
 			GrammarRule().once("unaryOp").once("term"),
-			GrammarRule(look_ahead=GrammarRule().token("["))
+			GrammarRule()
+				.look_ahead(GrammarRule().token("["))
 				.once("varName")
 				.token("[")
 				.once("expression")
 				.token("]"),
-			GrammarRule(
-				look_ahead=GrammarRule().either([
+			GrammarRule().look_ahead(
+				GrammarRule().either([
 					GrammarRule().token("("),
 					GrammarRule().token(".")
 				])
@@ -345,7 +345,8 @@ GRAMMAR = {
 		]),
 	"subroutineCall": GrammarRule("subroutineCall")
 		.either([
-			GrammarRule(look_ahead=GrammarRule().token("("))
+			GrammarRule()
+				.look_ahead(GrammarRule().token("("))
 				.once("subroutineName")
 				.token("(")
 				.once("expressionList")
