@@ -66,12 +66,7 @@ class GrammarRule(object):
 
 	Attributes:
 		name (string): The name assigned to this rule; lends itself to more
-			useful ParserException messages in stack traces, and is updated ON
-			THE FLY based on the name of the calling `GrammarRule` and this
-			rule's `self.original_name` (see next).
-		original_name (string): The original name assigned to this rule on
-			`__init__()`. Used to reinitialize `self.name` after it was
-			modified by a specific caller.
+			useful ParserException messages in stack traces.
 		_rules (list of functions): The list of functions queued up in this
 			grammar rule, to be executed by `self()`. Added automatically
 			by the `_add_rule()` decorator.
@@ -84,7 +79,6 @@ class GrammarRule(object):
 	"""
 
 	def __init__(self, name=""):
-		self.original_name = name
 		self.name = name
 		self._rules = []
 		self._look_ahead = None
@@ -134,7 +128,6 @@ class GrammarRule(object):
 	def repeat(self, rule):
 		def get_repeat():
 			matches = []
-			rule.name = self.name + "." + rule.name
 			match = rule(self._tokens, optional=True)
 			while match:
 				matches.append(match)
@@ -147,7 +140,6 @@ class GrammarRule(object):
 	def either(self, rules):
 		def get_either():
 			for rule in rules:
-				rule.name = self.name + "." + rule.name
 				match = rule(self._tokens, optional=True)
 				if match:
 					return match
@@ -164,7 +156,6 @@ class GrammarRule(object):
 	@_add_rule
 	def optional(self, rule):
 		def get_optional():
-			rule.name = self.name + "." + rule.name
 			match = rule(self._tokens, optional=True)
 			if match:
 				return match
@@ -211,7 +202,7 @@ class GrammarRule(object):
 			matches[0], tokenizer.Token
 		)
 		return matches[0] if is_terminal else \
-			ParseTreeNode(self.original_name, matches)
+			ParseTreeNode(self.name, matches)
 
 	def __str__(self):
 		return self.name
