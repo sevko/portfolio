@@ -6,7 +6,7 @@ machine instructions.
 from jackcompiler import syntax
 from jackcompiler import compiler
 
-def compile(code_string):
+def compile_(code_string):
 	"""
 	Args:
 		code_string (string): Raw Jack source code.
