@@ -87,11 +87,11 @@ class GrammarRule(object):
 	def token(self, token_content):
 		def get_token():
 			if self._tokens[0].content == token_content:
-				return self._is_look_ahead or self._tokens.pop(0)
+				return self._tokens.pop(0)
 			elif not self._optional:
 				self.error(
-					"Expecting token `{0}` but got `{1}`.",
-					token_content, self._tokens.pop(0)
+					"Expecting token content `{0}` but got `{1}`",
+					token_content, self._tokens[0]
 				)
 
 		return get_token
@@ -100,11 +100,11 @@ class GrammarRule(object):
 	def token_type(self, token_type):
 		def get_token_type():
 			if self._tokens[0].type_ == token_type:
-				return self._is_look_ahead or self._tokens.pop(0)
+				return self._tokens.pop(0)
 			elif not self._optional:
 				self.error(
-					"Expecting token type `{0}` but got `{1}`.",
-					token_type, self._tokens.pop(0)
+					"Expecting token type `{0}` but got `{1}`",
+					token_type, self._tokens[0]
 				)
 
 		return get_token_type
@@ -112,14 +112,13 @@ class GrammarRule(object):
 	@_add_rule
 	def once(self, rule_name):
 		def get_once():
-			rule = GRAMMAR[rule_name]
-			match = rule(self._tokens, optional=self._optional)
+			match = GRAMMAR[rule_name](self._tokens, optional=self._optional)
 			if match:
 				return match
 			elif not self._optional:
 				self.error(
-					"Expecting rule {0} but got {1}.",
-					rule, self._tokens.pop(0)
+					"Expecting match for rule `{0}` but got `{1}`.",
+					rule_name, self._tokens[0]
 				)
 
 		return get_once
@@ -132,6 +131,7 @@ class GrammarRule(object):
 			while match:
 				matches.append(match)
 				match = rule(self._tokens, optional=True)
+
 			return matches
 
 		return get_repeat
@@ -146,9 +146,9 @@ class GrammarRule(object):
 			else:
 				if not self._optional:
 					self.error(
-						"Expecting any of:\n{0}\nbut got {1}.",
-						"\n".join(["\t" + str(rule) for rule in rules]),
-						self._tokens.pop(0)
+						"Expecting either one of {0} but got `{1}`",
+						", ".join(["`{0}`".format(rule) for rule in rules]),
+						self._tokens[0]
 					)
 
 		return get_either
@@ -157,8 +157,7 @@ class GrammarRule(object):
 	def optional(self, rule):
 		def get_optional():
 			match = rule(self._tokens, optional=True)
-			if match:
-				return match
+			return match if match else ParseTreeNode(rule.name, [])
 
 		return get_optional
 
@@ -180,29 +179,28 @@ class GrammarRule(object):
 		self._optional = optional or look_ahead
 		self._is_look_ahead = look_ahead
 
-		if self._look_ahead is not None:
+		if self._look_ahead:
 			if not self._look_ahead([tokens[1]], look_ahead=True):
 				return
 
 		matches = []
 		for rule in self._rules:
-			sub_matches = rule()
-			if sub_matches:
-				if isinstance(sub_matches, list):
-					matches.extend(sub_matches)
+			match = rule()
+			if match is not None:
+				if isinstance(match, list):
+					matches.extend(match)
 				else:
-					matches.append(sub_matches)
+					matches.append(match)
 				self._optional = False
-			elif self._is_look_ahead:
-				return False
-			elif self._optional:
-				return
 
-		is_terminal = len(matches) == 1 and isinstance(
-			matches[0], tokenizer.Token
-		)
-		return matches[0] if is_terminal else \
-			ParseTreeNode(self.name, matches)
+			elif self._optional:
+				return None
+
+			else:
+				print("<<<", rule)
+				self.error("Wait, what?")
+
+		return ParseTreeNode(self.name, matches)
 
 	def __str__(self):
 		return self.name
