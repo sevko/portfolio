@@ -108,6 +108,12 @@ class GrammarRule(object):
 
 	@_add_rule
 	def token(self, token_content):
+		"""
+		Args:
+			token_content (string): The exact token content to match (see
+				`tokenizer.Token.content`).
+		"""
+
 		def get_token():
 			if self._tokens[0].content == token_content:
 				return self._is_look_ahead or self._tokens.pop(0)
@@ -121,6 +127,12 @@ class GrammarRule(object):
 
 	@_add_rule
 	def token_type(self, token_type):
+		"""
+		Args:
+			token_type (string): The exact token type to match (see
+				`tokenizer.Token.type_`).
+		"""
+
 		def get_token_type():
 			if self._tokens[0].type_ == token_type:
 				return self._is_look_ahead or self._tokens.pop(0)
@@ -134,6 +146,12 @@ class GrammarRule(object):
 
 	@_add_rule
 	def once(self, rule_name):
+		"""
+		Args:
+			rule_name (string): The name of the rule in the global `GRAMMAR`
+				dictionary (see its keys) to execute.
+		"""
+
 		def get_once():
 			match = GRAMMAR[rule_name](self._tokens, optional=self._optional)
 			if match:
@@ -148,6 +166,12 @@ class GrammarRule(object):
 
 	@_add_rule
 	def repeat(self, rule):
+		"""
+		Args:
+			rule (`GrammarRule`): The `GrammarRule` to apply as many times as
+				possible to `self._tokens`.
+		"""
+
 		def get_repeat():
 			matches = []
 			match = rule(self._tokens, optional=True)
@@ -164,6 +188,13 @@ class GrammarRule(object):
 
 	@_add_rule
 	def either(self, rules):
+		"""
+		Args:
+			rules (list of `GrammarRule`): Any number of `GrammarRule`s to
+			apply to `self._tokens`. Once a match is found, no remaining
+			`GrammarRule`s are executed.
+		"""
+
 		def get_either():
 			for rule in rules:
 				match = rule(self._tokens, optional=True)
@@ -181,6 +212,12 @@ class GrammarRule(object):
 
 	@_add_rule
 	def optional(self, rule):
+		"""
+		Args:
+			rule (`GrammarRule`): A rule to optionally apply to `self._tokens`.
+				Won't through an exception on incompatible tokens.
+		"""
+
 		def get_optional():
 			match = rule(self._tokens, optional=True)
 			if match:
@@ -193,10 +230,31 @@ class GrammarRule(object):
 		return get_optional
 
 	def look_ahead(self, rule):
+		"""
+		Args:
+			rule (`GrammarRule`): The rule to use as a look-ahead for this
+			`GrammarRule`; if it doesn't validate `self._tokens`, no rules in
+			`self._rules` will be executed.
+		"""
+
 		self._look_ahead = rule
 		return self
 
 	def error(self, msg, *format_args):
+		"""
+		Raise a `ParserException` with a message that's padded with useful
+		debugging information. Preferable to direct `raise ParserException`
+		statements.
+
+		Args:
+			msg (string): The message to emit as part of `ParserException`.
+			*format_args (varargs): Any arguments to pass to `.format()` on
+				`msg`.
+
+		Raises:
+			ParserException
+		"""
+
 		except_msg = "\nRule `{0}`. Error: {1}\n\nToken context:\n\t`{2}`"
 		except_msg = except_msg.format(
 			self.name,
@@ -206,6 +264,24 @@ class GrammarRule(object):
 		raise ParserException(except_msg)
 
 	def __call__(self, tokens, optional=False, look_ahead=False):
+		"""
+		Args:
+			tokens (list of `tokenizer.Token`): The token stream for this rule
+				to operate on.
+			optional (bool, optional): Indicates whether this rule is optional
+				or not, which determines whether `ParserException`s are thrown
+				on incompatible tokens in `tokens`.
+			look_ahead (bool, optional): Indicates whether this rule is only a
+				look-ahead, and thus whether it should or shouldn't modify
+				`tokens`.
+
+		Returns:
+			(list or `ParseTreeNode`) A `ParseTreeNode` if this rule is an
+				official non-terminal (its name must match
+				`ParseTreeNode.NON_TERMINAL`); otherwise a list of all the
+				`ParseTreeNode`/`tokenizer.Token`s matched by its sub-rules.
+		"""
+
 		self._tokens = tokens
 		self._optional = optional or look_ahead
 		self._is_look_ahead = look_ahead
