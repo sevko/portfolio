@@ -36,12 +36,18 @@ class ParseTreeNode(object):
 			indentation.
 		"""
 
-		body = "\n".join([
-			"\t" + row
-			for item in self.children
-			for row in item.to_xml().split("\n")
-		])
-		return "<{0}>\n{1}\n</{0}>".format(self.name, body)
+
+		if self.children:
+			children = "\n".join([
+				"\t" + row
+				for item in self.children
+				for row in item.to_xml().split("\n")
+			])
+			body = "\n{0}\n".format(children)
+		else:
+			body = "\n"
+
+		return "<{0}>{1}</{0}>".format(self.name, body)
 
 class ParserException(Exception):
 	pass
@@ -242,7 +248,7 @@ GRAMMAR = {
 			GrammarRule("int").token("int"),
 			GrammarRule("char").token("char"),
 			GrammarRule("boolean").token("boolean"),
-			GrammarRule("IDENTIFIER").token_type("IDENTIFIER")
+			GrammarRule("identifier").token_type("identifier")
 		]),
 	"subroutineDec": GrammarRule("subroutineDec")
 		.either([
@@ -254,7 +260,7 @@ GRAMMAR = {
 			GrammarRule("returnType").token("void"),
 			GrammarRule("returnType").once("type"),
 		])
-		.token_type("IDENTIFIER")
+		.token_type("identifier")
 		.token("(")
 		.optional(GrammarRule("parameterList").once("parameterList"))
 		.token(")")
@@ -281,7 +287,7 @@ GRAMMAR = {
 	]),
 	"letStatement": GrammarRule("letStatement")
 		.token("let")
-		.token_type("IDENTIFIER")
+		.token_type("identifier")
 		.optional(
 			GrammarRule("index").token("[").once("expression").token("]")
 		)
@@ -329,8 +335,8 @@ GRAMMAR = {
 	"term": GrammarRule("term")
 		.either([
 			GrammarRule().token("(").once("expression").token(")"),
-			GrammarRule().token_type("INTEGER"),
-			GrammarRule().token_type("STRING"),
+			GrammarRule().token_type("integerConstant"),
+			GrammarRule().token_type("stringConstant"),
 			GrammarRule().once("keywordConstant"),
 			GrammarRule().once("unaryOp").once("term"),
 			GrammarRule()
@@ -401,16 +407,16 @@ GRAMMAR = {
 		]),
 	"parameterList": GrammarRule("parameterList")
 		.once("type")
-		.token_type("IDENTIFIER")
+		.token_type("identifier")
 		.repeat(
 			GrammarRule("moreParameters")
 				.token(",")
 				.once("type")
-				.token_type("IDENTIFIER")
+				.token_type("identifier")
 		),
-	"subroutineName": GrammarRule("subroutineName").token_type("IDENTIFIER"),
-	"className": GrammarRule("className").token_type("IDENTIFIER"),
-	"varName": GrammarRule("varName").token_type("IDENTIFIER")
+	"subroutineName": GrammarRule("subroutineName").token_type("identifier"),
+	"className": GrammarRule("className").token_type("identifier"),
+	"varName": GrammarRule("varName").token_type("identifier")
 }
 
 def parse(tokens):

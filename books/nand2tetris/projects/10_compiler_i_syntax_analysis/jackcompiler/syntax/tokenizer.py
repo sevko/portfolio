@@ -4,20 +4,21 @@ Contains functions that tokenize raw Jack code.
 
 import collections
 import re
+from xml.sax import saxutils
 
 # Maps token names to regular expression, for use by `tokenize()`.
 TOKENS = [
-	("KEYWORD", re.compile(r"({0})\b".format("|".join([
+	("keyword", re.compile(r"({0})\b".format("|".join([
 		"class", "constructor", "function", "method", "field", "static", "var",
 		"int", "char", "boolean", "void", "true", "false", "null", "this",
 		"let", "do", "if", "else", "while", "return"
 	])))),
-	("COMMENT", re.compile(r"//.*?$|/\*.*?\*/", re.DOTALL | re.MULTILINE)),
-	("SYMBOL", re.compile(r"[{}\[\]().,;+*/&|<>=~-]")),
-	("INTEGER", re.compile(r"\d+\b")),
-	("STRING", re.compile('"[^"\n]*"')),
-	("IDENTIFIER", re.compile(r"[a-zA-Z_]\w*")),
-	("WHITESPACE", re.compile(r"\s+"))
+	("comment", re.compile(r"//.*?$|/\*.*?\*/", re.DOTALL | re.MULTILINE)),
+	("symbol", re.compile(r"[{}\[\]().,;+*/&|<>=~-]")),
+	("integerConstant", re.compile(r"\d+\b")),
+	("stringConstant", re.compile('"[^"\n]*"')),
+	("identifier", re.compile(r"[a-zA-Z_]\w*")),
+	("whitespace", re.compile(r"\s+"))
 ]
 
 class Token(object):
@@ -41,7 +42,9 @@ class Token(object):
 			An XML representation of this Token.
 		"""
 
-		return "<{0}>{1}</{0}>".format(self.type_, self.content)
+		return "<{0}> {1} </{0}>".format(
+			self.type_, saxutils.escape(self.content)
+		)
 
 	def __str__(self):
 		return "({0}, `{1}`)".format(self.type_, self.content)
@@ -72,8 +75,8 @@ def tokenize(code_string):
 		token = get_token(code_string)
 		if token is not None:
 			code_string = code_string[len(token.content):]
-			if token.type_ not in ("WHITESPACE", "COMMENT"):
-				if token.type_ == "STRING":
+			if token.type_ not in ("whitespace", "comment"):
+				if token.type_ == "stringConstant":
 					token.content = token.content.strip('"')
 				tokens.append(token)
 		else:
