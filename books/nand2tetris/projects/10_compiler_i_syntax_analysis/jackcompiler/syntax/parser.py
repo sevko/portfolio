@@ -17,7 +17,11 @@ class ParseTreeNode(object):
 		children (list of (ParseTreeNode or tokenizer.Token)): A list of the
 			`ParseTreeNode`s that belong to the grammar rule that assembled
 			this `ParseTreeNode`.
+		NON_TERMINAL (list of strings): The names of all non-terminal nodes,
+			for which individual `ParseTreeNode`s should be returned by
+			`GrammarRule.__call__()`.
 	"""
+
 	NON_TERMINAL = [
 		"class", "classVarDec", "subroutineDec", "parameterList",
 		"subroutineBody", "varDec", "statements", "whileStatement",
@@ -88,6 +92,13 @@ class GrammarRule(object):
 		_optional (bool): Whether or not this rule is optional. Indicates
 			whether or not `ParserException` should be thrown on incompatible
 			tokens in `self._tokens`.
+		_look_ahead (None or function): Optionally set by `self.look_ahead()`;
+			if not None, it's used to perform a look-ahead verification of the
+			token-stream to confirm that the remainder of the rule should be
+			applied. Used to resolve ambiguity beyond the first token between
+			two `GrammarRule`s, so that one of them isn't partly applied (and
+			thus changes the token stream) before figuring out that it doesn't
+			apply to the remaining tokens.
 	"""
 
 	def __init__(self, name=""):
@@ -215,10 +226,6 @@ class GrammarRule(object):
 
 			elif self._optional:
 				return None
-
-			else:
-				print("<<<", rule)
-				self.error("Wait, what?")
 
 		return ParseTreeNode(self.name, matches) if \
 			self.name in ParseTreeNode.NON_TERMINAL else matches
