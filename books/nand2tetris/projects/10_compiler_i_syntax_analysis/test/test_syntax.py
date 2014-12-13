@@ -5,66 +5,67 @@ Unit tests for the `jackcompiler.syntax` subpackage.
 import unittest
 
 from jackcompiler.syntax import tokenizer
+from jackcompiler.syntax import parser
 
 class TestTokenizer(unittest.TestCase):
 	"""Test `jackcompiler.syntax.tokenizer`.
 	"""
 
 	def test_keyword_token(self):
-		"""Test `KEYWORD` token detection.
+		"""Test `keyword` token detection.
 		"""
 
 		matches = ["class", "constructor/aaaa", "null  ", "while"]
 		non_matches = ["classa", "random_word"]
-		self._tokenize_test_cases(matches, non_matches, "KEYWORD")
+		self._tokenize_test_cases(matches, non_matches, "keyword")
 
 	def test_comment_token(self):
-		"""Test `COMMENT` token detection.
+		"""Test `comment` token detection.
 		"""
 
 		matches = ["// 'tis a comment", "/*a\nmulti\nline\ncomment*/"]
 		non_matches = ["not // a comment"]
-		self._tokenize_test_cases(matches, non_matches, "COMMENT")
+		self._tokenize_test_cases(matches, non_matches, "comment")
 
 	def test_symbol_token(self):
-		"""Test `SYMBOL` token detection.
+		"""Test `symbol` token detection.
 		"""
 
 		matches = ["{", "<", "=", "*"]
 		non_matches = ["a{", " {", "p"]
-		self._tokenize_test_cases(matches, non_matches, "SYMBOL")
+		self._tokenize_test_cases(matches, non_matches, "symbol")
 
 	def test_integer_token(self):
-		"""Test `INTEGER` token detection.
+		"""Test `integerConstant` token detection.
 		"""
 
 		matches = ["1234567", "1212  ", "2121 word"]
-		non_matches = ["012121", "a12211"]
-		self._tokenize_test_cases(matches, non_matches, "INTEGER")
+		non_matches = ["_012121", "a12211"]
+		self._tokenize_test_cases(matches, non_matches, "integerConstant")
 
 	def test_string_token(self):
-		"""Test `STRING` token detection.
+		"""Test `stringConstant` token detection.
 		"""
 
 		matches = ['"is a string"', '"string" non-string']
 		non_matches = ['"\n"', "'string'", '"abcde']
-		self._tokenize_test_cases(matches, non_matches, "STRING")
+		self._tokenize_test_cases(matches, non_matches, "stringConstant")
 
 	def test_identifier_token(self):
-		"""Test `IDENTIFIER` token detection.
+		"""Test `identifier` token detection.
 		"""
 
 		matches = ["valid", "v4l1d", "va_lid 12020", "class_", "resource_"]
 		non_matches = ["0identifier", ">s", "-s", "class"]
-		self._tokenize_test_cases(matches, non_matches, "IDENTIFIER")
+		self._tokenize_test_cases(matches, non_matches, "identifier")
 
 	def test_whitespace_token(self):
-		"""Test `WHITESPACE` token detection.
+		"""Test `whitespace` token detection.
 		"""
 
 		matches = ["   ", "\t\n\r  \t ", " text"]
 		non_matches = ["_", "_ "]
-		self._tokenize_test_cases(matches, non_matches, "WHITESPACE")
+		self._tokenize_test_cases(matches, non_matches, "whitespace")
 
 	def test_tokenize(self):
 		"""Test whether `tokenize()` properly tokenizes a valid source string
@@ -85,28 +86,28 @@ class TestTokenizer(unittest.TestCase):
 			"""
 
 		tokens = [
-			("KEYWORD", "class"),
-			("IDENTIFIER", "Number"),
-			("SYMBOL", "{"),
-			("KEYWORD", "field"),
-			("KEYWORD", "int"),
-			("IDENTIFIER", "_value"),
-			("SYMBOL", ";"),
-			("KEYWORD", "constructor"),
-			("IDENTIFIER", "Number"),
-			("IDENTIFIER", "new"),
-			("SYMBOL", "("),
-			("KEYWORD", "int"),
-			("IDENTIFIER", "value"),
-			("SYMBOL", ")"),
-			("SYMBOL", "{"),
-			("KEYWORD", "let"),
-			("IDENTIFIER", "_value"),
-			("SYMBOL", "="),
-			("IDENTIFIER", "value"),
-			("SYMBOL", ";"),
-			("SYMBOL", "}"),
-			("SYMBOL", "}")
+			tokenizer.Token("keyword", "class"),
+			tokenizer.Token("identifier", "Number"),
+			tokenizer.Token("symbol", "{"),
+			tokenizer.Token("keyword", "field"),
+			tokenizer.Token("keyword", "int"),
+			tokenizer.Token("identifier", "_value"),
+			tokenizer.Token("symbol", ";"),
+			tokenizer.Token("keyword", "constructor"),
+			tokenizer.Token("identifier", "Number"),
+			tokenizer.Token("identifier", "new"),
+			tokenizer.Token("symbol", "("),
+			tokenizer.Token("keyword", "int"),
+			tokenizer.Token("identifier", "value"),
+			tokenizer.Token("symbol", ")"),
+			tokenizer.Token("symbol", "{"),
+			tokenizer.Token("keyword", "let"),
+			tokenizer.Token("identifier", "_value"),
+			tokenizer.Token("symbol", "="),
+			tokenizer.Token("identifier", "value"),
+			tokenizer.Token("symbol", ";"),
+			tokenizer.Token("symbol", "}"),
+			tokenizer.Token("symbol", "}")
 		]
 
 		self.assertEqual(tokenizer.tokenize(src_string), tokens)
@@ -130,11 +131,11 @@ class TestTokenizer(unittest.TestCase):
 
 		for match in matches:
 			token = tokenizer.get_token(match)
-			self.assertIsInstance(token, tuple)
-			self.assertEqual(token[0], token_type)
+			self.assertIsInstance(token, tokenizer.Token)
+			self.assertEqual(token.type_, token_type)
 
 		for non_match in non_matches:
 			token = tokenizer.get_token(non_match)
 			if token is not None:
-				self.assertIsInstance(token, tuple)
-				self.assertNotEqual(token[0], token_type)
+				self.assertIsInstance(token, tokenizer.Token)
+				self.assertNotEqual(token.type_, token_type)
