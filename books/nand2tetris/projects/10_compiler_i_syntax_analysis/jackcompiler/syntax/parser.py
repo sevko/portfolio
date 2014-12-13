@@ -18,6 +18,12 @@ class ParseTreeNode(object):
 			`ParseTreeNode`s that belong to the grammar rule that assembled
 			this `ParseTreeNode`.
 	"""
+	NON_TERMINAL = [
+		"class", "classVarDec", "subroutineDec", "parameterList",
+		"subroutineBody", "varDec", "statements", "whileStatement",
+		"ifStatement", "returnStatement", "letStatement", "doStatement",
+		"expression", "term", "expressionList"
+	]
 
 	def __init__(self, name, children):
 		self.name = name
@@ -87,7 +93,7 @@ class GrammarRule(object):
 	def token(self, token_content):
 		def get_token():
 			if self._tokens[0].content == token_content:
-				return self._tokens.pop(0)
+				return self._is_look_ahead or self._tokens.pop(0)
 			elif not self._optional:
 				self.error(
 					"Expecting token content `{0}` but got `{1}`",
@@ -100,7 +106,7 @@ class GrammarRule(object):
 	def token_type(self, token_type):
 		def get_token_type():
 			if self._tokens[0].type_ == token_type:
-				return self._tokens.pop(0)
+				return self._is_look_ahead or self._tokens.pop(0)
 			elif not self._optional:
 				self.error(
 					"Expecting token type `{0}` but got `{1}`",
@@ -129,7 +135,10 @@ class GrammarRule(object):
 			matches = []
 			match = rule(self._tokens, optional=True)
 			while match:
-				matches.append(match)
+				if isinstance(match, list):
+					matches.extend(match)
+				else:
+					matches.append(match)
 				match = rule(self._tokens, optional=True)
 
 			return matches
@@ -157,7 +166,12 @@ class GrammarRule(object):
 	def optional(self, rule):
 		def get_optional():
 			match = rule(self._tokens, optional=True)
-			return match if match else ParseTreeNode(rule.name, [])
+			if match:
+				return match
+			elif rule.name in ParseTreeNode.NON_TERMINAL:
+				return ParseTreeNode(rule.name, [])
+			else:
+				return []
 
 		return get_optional
 
@@ -200,7 +214,8 @@ class GrammarRule(object):
 				print("<<<", rule)
 				self.error("Wait, what?")
 
-		return ParseTreeNode(self.name, matches)
+		return ParseTreeNode(self.name, matches) if \
+			self.name in ParseTreeNode.NON_TERMINAL else matches
 
 	def __str__(self):
 		return self.name
@@ -241,7 +256,7 @@ GRAMMAR = {
 		])
 		.token_type("IDENTIFIER")
 		.token("(")
-		.optional(GrammarRule().once("parameterList"))
+		.optional(GrammarRule("parameterList").once("parameterList"))
 		.token(")")
 		.once("subroutineBody"),
 	"subroutineBody": GrammarRule("subroutineBody")
