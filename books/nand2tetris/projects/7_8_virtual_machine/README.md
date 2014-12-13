@@ -1,4 +1,4 @@
-# chapter 7: vmtranslator
+# chapters 7/8: vmtranslator
 The first iteration of a Virtual Machine translator for the *nand2tetris* **Hack** computer, which implements:
 
   * stack arithmetic
