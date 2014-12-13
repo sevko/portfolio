@@ -303,8 +303,17 @@ class GrammarRule(object):
 			elif self._optional:
 				return None
 
-		return ParseTreeNode(self.name, matches) if \
-			self.name in ParseTreeNode.NON_TERMINAL else matches
+		# Detect pass-through rules, like:
+		# `.repeat(GrammarRule("parameterList").once("parameterList"))`.
+		if len(self._rules) == 1 and \
+			len(matches) == 1 and \
+			isinstance(matches[0], ParseTreeNode) and \
+			self.name == matches[0].name:
+			return matches[0]
+
+		else:
+			return ParseTreeNode(self.name, matches) if \
+				self.name in ParseTreeNode.NON_TERMINAL else matches
 
 	def __str__(self):
 		return self.name
