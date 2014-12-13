@@ -71,9 +71,11 @@ def tokenize(code_string):
 	while code_string:
 		token = get_token(code_string)
 		if token is not None:
-			if token.type_ not in ("WHITESPACE", "COMMENT"):
-				tokens.append(token)
 			code_string = code_string[len(token.content):]
+			if token.type_ not in ("WHITESPACE", "COMMENT"):
+				if token.type_ == "STRING":
+					token.content = token.content.strip('"')
+				tokens.append(token)
 		else:
 			err_msg = "No token match for these characters: `{0}`".format(
 				re.match("[^\n]*", code_string).group(0)
