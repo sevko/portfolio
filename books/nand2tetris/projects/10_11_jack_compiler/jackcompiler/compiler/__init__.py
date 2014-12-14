@@ -1,2 +1,6 @@
-def compile_ast(ast):
-	return ast
+def compile_varDec():
+	pass
+
+def compile_cst(cst):
+	print(cst)
+	return cst

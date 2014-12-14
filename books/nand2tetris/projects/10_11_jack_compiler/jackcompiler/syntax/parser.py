@@ -512,4 +512,4 @@ GRAMMAR = {
 }
 
 def parse(tokens):
-	return GRAMMAR["class"](tokens).to_xml()
+	return GRAMMAR["class"](tokens)
