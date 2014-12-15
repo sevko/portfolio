@@ -40,7 +40,6 @@ class ParseTreeNode(object):
 			indentation.
 		"""
 
-
 		if self.children:
 			children = "\n".join([
 				"\t" + row
@@ -52,6 +51,27 @@ class ParseTreeNode(object):
 			body = "\n"
 
 		return "<{0}>{1}</{0}>".format(self.name, body)
+
+	def __getitem__(self, key):
+		"""
+		Retrieves an element from `self.children` either by numeric index or a
+		string key that's matched against children names.
+		"""
+
+		if isinstance(self.children, list):
+			if isinstance(key, str):
+					for child in self.children:
+						if isinstance(child, ParseTreeNode) and \
+							child.name == key:
+							return child
+					else:
+						except_msg = (
+							"`ParseTreeNode` with name `{0}` not found"
+							" in `{1}`."
+						).format(key, self.children)
+						raise KeyError(except_msg)
+			else:
+				return self.children[key]
 
 class ParserException(Exception):
 	pass
