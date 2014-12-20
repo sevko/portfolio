@@ -4,6 +4,19 @@ the language with several functions.
 """
 
 def _write_vm(function):
+	"""
+	Decorator wrapping all `VMWriter` methods responsible for writing VM
+	instruction blocks to the writer's internal buffer.
+
+	Args:
+		function (func): The function received by the decorator.
+
+	Returns:
+		A revised function which takes the output of the original and adds
+		it to the `VMWriter`'s internal `_vm_code_blocks`. Either appended or
+		inserted to a certain index depending on `self._goto_marker`.
+	"""
+
 	def _write_vm_block(*args):
 		block = function(*args)
 		if block is not None:
@@ -15,6 +28,30 @@ def _write_vm(function):
 	return _write_vm_block
 
 class VMWriter(object):
+	"""
+	A class that facilitates writing Virtual Machine code by maintaing an
+	internal buffer of instruction blocks that's updated by various methods.
+
+	Attributes:
+		_vm_code_blocks (list of strings): A list of Virtual Machine
+			instruction blocks written by the various `@_write_vm` methods.
+		_markers (list of ints): "Breakpoints" set by `set_marker()` and
+			visited by `goto_marker()`, which represent indexes in
+			`_vm_code_blocks`. Used to facilitate writing instruction blocks to
+			indexes that have already been passed over and contain other
+			instructions, as is the case when a VM instruction depends on the
+			Jack code that follows it and passing over the code twice isn't
+			desirable.
+		_goto_marker (bool): Whether or not the next instruction should be
+			written to the index of `_vm_code_blocks` contained in the last
+			item of _markers`.
+		FUNC_OP (dict): Maps symbols for operations that are NOT part of the
+		Jack VM spec to their respective function names.
+		BINARY_OP (dict): Maps symbols for binary operations to their
+			respective VM instruction names.
+		UNARY_OP (dict): Maps symbols for unary operations to their
+			respective VM instruction names.
+	"""
 
 	FUNC_OP = {
 		"*": "Math.multiply",
@@ -73,9 +110,20 @@ class VMWriter(object):
 		return "return"
 
 	def set_marker(self):
+		"""
+		Adds a marker that can be revisited with `goto_marker` to
+		`self._markers`.
+		"""
+
 		self._markers.append(len(self._vm_code_blocks))
 
 	def goto_marker(self):
+		"""
+		Indicates that the next instruction written with any of the
+		`@_write_vm` methods should be written to the index of
+		`_vm_code_blocks` contained in the last item of `_markers`.
+		"""
+
 		self._goto_marker = True
 
 	def get_code(self):
