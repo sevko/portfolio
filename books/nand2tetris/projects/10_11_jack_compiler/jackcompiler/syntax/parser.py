@@ -26,7 +26,8 @@ class ParseTreeNode(object):
 		"class", "classVarDec", "subroutineDec", "parameterList",
 		"subroutineBody", "varDec", "statements", "whileStatement",
 		"ifStatement", "returnStatement", "letStatement", "doStatement",
-		"expression", "term", "expressionList"
+		"expression", "term", "expressionList", "unaryExpression",
+		"indexExpression", "subroutineCall"
 	]
 
 	def __init__(self, name, children):
@@ -51,6 +52,21 @@ class ParseTreeNode(object):
 			body = "\n"
 
 		return "<{0}>{1}</{0}>".format(self.name, body)
+
+	def filter_token(self, token_content):
+		self.children = [
+			child for child in self.children if \
+				isinstance(child, tokenizer.Token) and \
+				child.content != token_content
+		]
+
+		return self
+
+	def count_nodes(self, name):
+		return sum([
+			1 for child in self.children if \
+				isinstance(child, ParseTreeNode) and child.name == name
+		])
 
 	def __getitem__(self, key):
 		"""
@@ -450,8 +466,8 @@ GRAMMAR = {
 			GrammarRule().token_type("integerConstant"),
 			GrammarRule().token_type("stringConstant"),
 			GrammarRule().once("keywordConstant"),
-			GrammarRule().once("unaryOp").once("term"),
-			GrammarRule()
+			GrammarRule("unaryExpression").once("unaryOp").once("term"),
+			GrammarRule("indexExpression")
 				.look_ahead(GrammarRule().token("["))
 				.once("varName")
 				.token("[")
