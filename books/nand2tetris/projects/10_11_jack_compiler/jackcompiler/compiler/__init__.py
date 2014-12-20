@@ -20,5 +20,4 @@ def compile_cst(cst):
 		"global": symbol_table.SymbolTable()
 	}
 	compile_node.compile_(cst, vm_writer, sym_tables)
-	return cst
 	return vm_writer.get_code()
