@@ -75,13 +75,15 @@ def _compile_subroutineCall(node, vm_writer, sym_tables):
 			node.children[2].content
 		])
 	else:
-		func_name = node.children[0].content
+		vm_writer.push("pointer", 0)
+		num_args += 1
+		func_name = sym_tables["global"].class_name + "." + \
+			node.children[0].content
 
 	compile_(node["expressionList"], vm_writer, sym_tables)
 	vm_writer.call(func_name, num_args)
 
 def _compile_term(node, vm_writer, sym_tables):
-	# print("-" + ",".join(str(child) for child in node.children))
 	is_token = isinstance(node.children[0], tokenizer.Token)
 	if is_token and node.children[0].type_ == "integerConstant":
 		vm_writer.push("constant", node.children[0].content)
