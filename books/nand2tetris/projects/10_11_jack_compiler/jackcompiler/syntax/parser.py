@@ -27,7 +27,7 @@ class ParseTreeNode(object):
 		"subroutineBody", "varDec", "statements", "whileStatement",
 		"ifStatement", "returnStatement", "letStatement", "doStatement",
 		"expression", "term", "expressionList", "unaryExpression",
-		"indexExpression", "subroutineCall", "keywordConstant"
+		"subroutineCall", "keywordConstant"
 	]
 
 	def __init__(self, name, children):

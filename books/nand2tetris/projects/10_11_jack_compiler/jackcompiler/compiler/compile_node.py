@@ -88,9 +88,25 @@ def _compile_term(node, vm_writer, sym_tables):
 	if is_token and node.children[0].type_ == "integerConstant":
 		vm_writer.push("constant", node.children[0].content)
 
+	elif is_token and node.children[0].type_ == "stringConstant":
+		string = node.children[0].content
+		vm_writer.push("constant", len(string))
+		vm_writer.call("String.new", 1)
+		for char in string:
+			vm_writer.push("constant", ord(char))
+			vm_writer.call("String.appendChar", 2)
+
 	elif is_token and node.children[0].type_ == "identifier":
-		sym = _get_symbol(sym_tables, node.children[0].content)
-		vm_writer.push(sym.segment, sym.index)
+		if len(node.children) == 4:
+			sym = _get_symbol(sym_tables, node.children[0].content)
+			vm_writer.push(sym.segment, sym.index)
+			compile_(node.children[2], vm_writer, sym_tables)
+			vm_writer.binary_op("+")
+			vm_writer.pop("pointer", 1)
+			vm_writer.push("that", 0)
+		else:
+			sym = _get_symbol(sym_tables, node.children[0].content)
+			vm_writer.push(sym.segment, sym.index)
 
 	else:
 		for child in node.children:
@@ -102,12 +118,6 @@ def _compile_expression(node, vm_writer, sym_tables):
 	for ind in xrange(1, len(node.children) - 1):
 		compile_(node.children[ind + 1], vm_writer, sym_tables)
 		vm_writer.binary_op(node.children[ind].content)
-
-def _compile_stringConstant(node, vm_writer, sym_tables):
-	pass
-
-def _compile_varName(node, vm_writer, sym_tables):
-	pass
 
 def _compile_keywordConstant(node, vm_writer, sym_tables):
 	token = node[0].content
@@ -124,7 +134,15 @@ def _compile_keywordConstant(node, vm_writer, sym_tables):
 def _compile_letStatement(node, vm_writer, sym_tables):
 	compile_(node[-2], vm_writer, sym_tables)
 	sym = _get_symbol(sym_tables, node.children[1].content)
-	vm_writer.pop(sym.segment, sym.index)
+	if len(node.children) == 8:
+		vm_writer.push(sym.segment, sym.index)
+		compile_(node.children[3], vm_writer, sym_tables)
+		vm_writer.binary_op("+")
+		vm_writer.pop("pointer", 1)
+		vm_writer.pop("that", 0)
+
+	else:
+		vm_writer.pop(sym.segment, sym.index)
 
 def _compile_doStatement(node, vm_writer, sym_tables):
 	compile_(node["subroutineCall"], vm_writer, sym_tables)
