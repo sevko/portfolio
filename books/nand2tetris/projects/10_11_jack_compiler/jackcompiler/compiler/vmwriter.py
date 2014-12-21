@@ -22,6 +22,7 @@ def _write_vm(function):
 		if block is not None:
 			if args[0]._goto_marker:
 				args[0]._vm_code_blocks.insert(args[0]._markers.pop(), block)
+				args[0]._goto_marker = False
 			else:
 				args[0]._vm_code_blocks.append(block)
 
@@ -108,6 +109,18 @@ class VMWriter(object):
 	@_write_vm
 	def return_(self):
 		return "return"
+
+	@_write_vm
+	def label(self, label):
+		return "label " + label
+
+	@_write_vm
+	def goto(self, label):
+		return "goto " + label
+
+	@_write_vm
+	def if_goto(self, label):
+		return "if-goto " + label
 
 	def set_marker(self):
 		"""
