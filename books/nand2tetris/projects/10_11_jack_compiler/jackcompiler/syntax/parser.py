@@ -27,7 +27,7 @@ class ParseTreeNode(object):
 		"subroutineBody", "varDec", "statements", "whileStatement",
 		"ifStatement", "returnStatement", "letStatement", "doStatement",
 		"expression", "term", "expressionList", "unaryExpression",
-		"indexExpression", "subroutineCall"
+		"indexExpression", "subroutineCall", "keywordConstant"
 	]
 
 	def __init__(self, name, children):
@@ -76,18 +76,24 @@ class ParseTreeNode(object):
 
 		if isinstance(self.children, list):
 			if isinstance(key, str):
-					for child in self.children:
-						if isinstance(child, ParseTreeNode) and \
-							child.name == key:
-							return child
-					else:
-						except_msg = (
-							"`ParseTreeNode` with name `{0}` not found"
-							" in `{1}`."
-						).format(key, self.children)
-						raise KeyError(except_msg)
+				for child in self.children:
+					if isinstance(child, ParseTreeNode) and \
+						child.name == key:
+						return child
+				else:
+					except_msg = (
+						"`ParseTreeNode` with name `{0}` not found"
+						" in `{1}`."
+					).format(key, self.children)
+					raise KeyError(except_msg)
 			else:
 				return self.children[key]
+
+	def __contains__(self, item):
+		return any(
+			node.name == item for node in self.children if
+				isinstance(node, ParseTreeNode)
+		)
 
 class ParserException(Exception):
 	pass
