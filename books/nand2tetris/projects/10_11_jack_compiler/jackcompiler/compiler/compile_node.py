@@ -5,7 +5,7 @@ indent = 0 # hack: REMOVE AFTER COMPLETION
 
 def compile_(node, vm_writer, sym_tables):
 	global indent # hack: REMOVE AFTER COMPLETION
-	print("  " * indent + node.name) # hack: REMOVE AFTER COMPLETION
+	# print("  " * indent + node.name) # hack: REMOVE AFTER COMPLETION
 
 	compile_func_name = "_compile_" + node.name
 	globals_dict = globals()
@@ -28,6 +28,18 @@ def _compile_subroutineDec(node, vm_writer, sym_tables):
 	sym_tables["local"].clear()
 	vm_writer.set_marker()
 	compile_(node["parameterList"], vm_writer, sym_tables)
+
+	func_type = node[0].content
+	if func_type == "method":
+		vm_writer.push("argument", 0)
+		vm_writer.pop("pointer", 0)
+
+	elif func_type == "constructor":
+		num_instance_vars = sym_tables["global"].num_symbols_by_type("field")
+		vm_writer.push("constant", num_instance_vars)
+		vm_writer.call("Memory.alloc", 1)
+		vm_writer.pop("pointer", 0)
+
 	compile_(node["subroutineBody"], vm_writer, sym_tables)
 
 	num_local_vars = sym_tables["local"].num_symbols_by_type("var")
@@ -46,14 +58,24 @@ def _compile_parameterList(node, vm_writer, sym_tables):
 			)
 
 def _compile_subroutineCall(node, vm_writer, sym_tables):
+	num_args = node["expressionList"].count_nodes("expression")
+
 	if len(node.children) == 6:
+		sym_name = node.children[0].content
+		try:
+			object_sym = _get_symbol(sym_tables, sym_name)
+			class_name = object_sym.kind
+			num_args += 1
+			vm_writer.push(object_sym.segment, object_sym.index)
+		except KeyError:
+			class_name = sym_name
+
 		func_name = "".join([
-			node.children[0].content, node.children[1].content,
+			class_name, node.children[1].content,
 			node.children[2].content
 		])
 	else:
 		func_name = node.children[0].content
-	num_args = node["expressionList"].count_nodes("expression")
 
 	compile_(node["expressionList"], vm_writer, sym_tables)
 	vm_writer.call(func_name, num_args)
@@ -65,7 +87,7 @@ def _compile_term(node, vm_writer, sym_tables):
 		vm_writer.push("constant", node.children[0].content)
 
 	elif is_token and node.children[0].type_ == "identifier":
-		sym = sym_tables["local"][node.children[0].content]
+		sym = _get_symbol(sym_tables, node.children[0].content)
 		vm_writer.push(sym.segment, sym.index)
 
 	else:
@@ -82,9 +104,6 @@ def _compile_expression(node, vm_writer, sym_tables):
 def _compile_stringConstant(node, vm_writer, sym_tables):
 	pass
 
-def _compile_keywordConstant(node, vm_writer, sym_tables):
-	pass
-
 def _compile_varName(node, vm_writer, sym_tables):
 	pass
 
@@ -93,12 +112,16 @@ def _compile_keywordConstant(node, vm_writer, sym_tables):
 	if token == "true":
 		vm_writer.push("constant", 0)
 		vm_writer.unary_op("~")
+
 	elif token == "false":
 		vm_writer.push("constant", 0)
 
+	elif token == "this":
+		vm_writer.push("pointer", 0)
+
 def _compile_letStatement(node, vm_writer, sym_tables):
 	compile_(node[-2], vm_writer, sym_tables)
-	sym = sym_tables["local"][node.children[1].content]
+	sym = _get_symbol(sym_tables, node.children[1].content)
 	vm_writer.pop(sym.segment, sym.index)
 
 def _compile_doStatement(node, vm_writer, sym_tables):
@@ -122,7 +145,7 @@ def _compile_ifStatement(node, vm_writer, sym_tables):
 	vm_writer.goto(end_label)
 	vm_writer.label(else_label)
 
-	if len(node.children) > 6:
+	if len(node.children) > 7:
 		compile_(node[9], vm_writer, sym_tables)
 
 	vm_writer.label(end_label)
@@ -156,6 +179,11 @@ def _compile_varDec(node, vm_writer, sym_tables):
 		)
 
 def _compile_classVarDec(node, vm_writer, sym_tables):
-	sym_tables["global"].add_symbol(
-		node[2].content, node[1].content, node[0].content
-	)
+	for varToken in node.filter_token(",")[2:-1]:
+		sym_tables["global"].add_symbol(
+			varToken.content, node[0].content, node[1].content
+		)
+
+def _get_symbol(sym_tables, sym_name):
+	sym_scope = "local" if sym_name in sym_tables["local"] else "global"
+	return sym_tables[sym_scope][sym_name]

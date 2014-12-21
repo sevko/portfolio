@@ -8,7 +8,8 @@ class SymbolTable(object):
 	SYMBOL_TYPE_SEGMENTS = {
 		"static": "static",
 		"argument": "argument",
-		"var": "local"
+		"var": "local",
+		"field": "this"
 	}
 
 	def __init__(self, class_name=None):
