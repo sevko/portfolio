@@ -27,9 +27,13 @@ def _compile_class(node, vm_writer, sym_tables):
 def _compile_subroutineDec(node, vm_writer, sym_tables):
 	sym_tables["local"].clear()
 	vm_writer.set_marker()
-	compile_(node["parameterList"], vm_writer, sym_tables)
 
 	func_type = node[0].content
+	if func_type == "method":
+		sym_tables["local"]._indexes["argument"] += 1
+
+	compile_(node["parameterList"], vm_writer, sym_tables)
+
 	if func_type == "method":
 		vm_writer.push("argument", 0)
 		vm_writer.pop("pointer", 0)
