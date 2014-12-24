@@ -129,7 +129,7 @@ def _compile_keywordConstant(node, vm_writer, sym_tables):
 		vm_writer.push("constant", 0)
 		vm_writer.unary_op("~")
 
-	elif token == "false":
+	elif token in ("false", "null"):
 		vm_writer.push("constant", 0)
 
 	elif token == "this":
