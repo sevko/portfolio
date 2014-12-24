@@ -26,7 +26,8 @@ class ParseTreeNode(object):
 		"class", "classVarDec", "subroutineDec", "parameterList",
 		"subroutineBody", "varDec", "statements", "whileStatement",
 		"ifStatement", "returnStatement", "letStatement", "doStatement",
-		"expression", "term", "expressionList"
+		"expression", "term", "expressionList", "unaryExpression",
+		"subroutineCall", "keywordConstant"
 	]
 
 	def __init__(self, name, children):
@@ -40,7 +41,6 @@ class ParseTreeNode(object):
 			indentation.
 		"""
 
-
 		if self.children:
 			children = "\n".join([
 				"\t" + row
@@ -52,6 +52,48 @@ class ParseTreeNode(object):
 			body = "\n"
 
 		return "<{0}>{1}</{0}>".format(self.name, body)
+
+	def filter_token(self, token_content):
+		self.children = [
+			child for child in self.children if \
+				isinstance(child, tokenizer.Token) and \
+				child.content != token_content
+		]
+
+		return self
+
+	def count_nodes(self, name):
+		return sum([
+			1 for child in self.children if \
+				isinstance(child, ParseTreeNode) and child.name == name
+		])
+
+	def __getitem__(self, key):
+		"""
+		Retrieves an element from `self.children` either by numeric index or a
+		string key that's matched against children names.
+		"""
+
+		if isinstance(self.children, list):
+			if isinstance(key, str):
+				for child in self.children:
+					if isinstance(child, ParseTreeNode) and \
+						child.name == key:
+						return child
+				else:
+					except_msg = (
+						"`ParseTreeNode` with name `{0}` not found"
+						" in `{1}`."
+					).format(key, self.children)
+					raise KeyError(except_msg)
+			else:
+				return self.children[key]
+
+	def __contains__(self, item):
+		return any(
+			node.name == item for node in self.children if
+				isinstance(node, ParseTreeNode)
+		)
 
 class ParserException(Exception):
 	pass
@@ -430,8 +472,8 @@ GRAMMAR = {
 			GrammarRule().token_type("integerConstant"),
 			GrammarRule().token_type("stringConstant"),
 			GrammarRule().once("keywordConstant"),
-			GrammarRule().once("unaryOp").once("term"),
-			GrammarRule()
+			GrammarRule("unaryExpression").once("unaryOp").once("term"),
+			GrammarRule("indexExpression")
 				.look_ahead(GrammarRule().token("["))
 				.once("varName")
 				.token("[")
@@ -512,4 +554,4 @@ GRAMMAR = {
 }
 
 def parse(tokens):
-	return GRAMMAR["class"](tokens).to_xml()
+	return GRAMMAR["class"](tokens)

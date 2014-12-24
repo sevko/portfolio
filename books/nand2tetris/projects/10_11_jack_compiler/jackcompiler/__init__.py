@@ -16,4 +16,4 @@ def compile_(code_string):
 		`code_string`.
 	"""
 
-	return compiler.compile_ast(syntax.parse(code_string))
+	return compiler.compile_cst(syntax.parse(code_string))

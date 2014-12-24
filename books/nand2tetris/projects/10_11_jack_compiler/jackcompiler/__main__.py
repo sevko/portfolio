@@ -9,13 +9,13 @@ import jackcompiler
 def compile_file(file_path):
 	"""
 	Compile a single Jack file into a file with an identical basename but an
-	`xml` extension in the current directory.
+	`vm` extension in the current directory.
 
 	Args:
 		file_path (string): The path to a Jack file.
 	"""
 
-	output_path = os.path.splitext(os.path.basename(file_path))[0] + ".xml"
+	output_path = os.path.splitext(os.path.basename(file_path))[0] + ".vm"
 	with open(file_path) as input_file:
 		with open(output_path, "w") as output_file:
 			output_file.write(jackcompiler.compile_(input_file.read()))
