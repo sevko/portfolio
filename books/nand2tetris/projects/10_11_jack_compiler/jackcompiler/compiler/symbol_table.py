@@ -15,6 +15,8 @@ class SymbolTable(object):
 		SYMBOL_TYPE_SEGMENTS (dict): Maps variable qualifies (see
 			`SYMBOL_TYPES`) to Jack Virtual Machine memory segments.
 		class_name (str): The name of the current class.
+		label_uid (int): Tracks the UID used to distinguihs labels from one
+			another.
 		_table (dict): Maps symbol names to `Symbol` objects.
 		_indexes (dict): Maps qualifier names (see `SYMBOL_TYPES`) to the
 			number of existing symbols of that type. Used to provide new
@@ -31,6 +33,7 @@ class SymbolTable(object):
 
 	def __init__(self, class_name=None):
 		self.class_name = class_name
+		self.label_uid = 0
 		self._table = {}
 		self._indexes = {type_: 0 for type_ in self.SYMBOL_TYPES}
 
