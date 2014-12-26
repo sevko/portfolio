@@ -1,8 +1,8 @@
 /**
- * A basic math library.
+ * The Hack Math standard library.
  */
-class Math {
 
+class Math {
 	static Array bit_masks;
 
 	/** Initializes the library. */
@@ -22,19 +22,36 @@ class Math {
 		return;
 	}
 
-	/** Returns the absolute value of x. */
-	function int abs(int x) {
-		if(x < 0){
-			let x = -x;
+	/**
+	 * @param val An integer.
+	 * @return The absolute value of `val`.
+	 */
+	function int abs(int val) {
+		if(val < 0){
+			let val = -val;
 		}
-		return x;
+		return val;
 	}
 
+	/**
+	 * @param val An integer.
+	 * @param bit The index of a bit inside `val` (must thus be in the
+	 *      inclusive range [0, 15]).
+	 * @return An integer greater than 0 if the bit at index `bit` of `val` is
+	 *      1; 0 if it's 0.
+	 */
 	function int getBit(int val, int bit){
 		return val & bit_masks[bit];
 	}
 
-	/** Returns the product of x and y. */
+	/**
+	 * Calculate the product of two numbers using an efficient algorithm whose
+	 * runtime is proportional to the number of bits in `y`.
+	 *
+	 * @param x An integer.
+	 * @param y An integer.
+	 * @return The product of `x` and `y` with sign preserved.
+	 */
 	function int multiply(int x, int y) {
 		var int product, bit;
 
@@ -51,7 +68,13 @@ class Math {
 		return product;
 	}
 
-	/** Returns the integer part of x/y. */
+	/**
+	 * Calculate the quotient of two numbers.
+	 *
+	 * @param x An integer.
+	 * @param y An integer.
+	 * @return The quotient of `x` and `y` with sign preserved.
+	 */
 	function int divide(int x, int y){
 		var int quotient;
 		var bool negX, negY;
@@ -76,6 +99,14 @@ class Math {
 		}
 	}
 
+	/**
+	 * Calculate the quotient of two positive numbers using an efficient
+	 * algorithm whose runtime is proportional to the number of bits in `y`.
+	 *
+	 * @param x A positive integer.
+	 * @param y A positive integer.
+	 * @return The quotient of `x` and `y`.
+	 */
 	function int dividePositive(int x, int y){
 		var int doubleQuotient;
 
@@ -97,7 +128,11 @@ class Math {
 		return 0;
 	}
 
-	/** Returns the greater number. */
+	/**
+	 * @param a A number.
+	 * @param b A number.
+	 * @return The greater of `a` and `b`.
+	 */
 	function int max(int a, int b) {
 		if(a < b){
 			return b;
@@ -107,7 +142,11 @@ class Math {
 		}
 	}
 
-	/** Returns the smaller number. */
+	/**
+	 * @param a A number.
+	 * @param b A number.
+	 * @return The lesser of `a` and `b`.
+	 */
 	function int min(int a, int b) {
 		if(a < b){
 			return a;
