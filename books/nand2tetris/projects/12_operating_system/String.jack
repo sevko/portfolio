@@ -1,55 +1,132 @@
 /**
  * Represents a String object. Implements the String type.
  */
-class String {
+class String{
+	field int length, maximumLen;
+	field Array chars;
 
 	/** Constructs a new empty String with a maximum length of maxLength. */
-	constructor String new(int maxLength) {
+	constructor String new(int maxLength){
+		let length = 0;
+		let maximumLen = maxLength;
+		if(maxLength > 0){
+			let chars = Array.new(maxLength);
+		}
+		return this;
 	}
 
 	/** De-allocates the string and frees its space. */
-	method void dispose() {
+	method void dispose(){
+		if(maximumLen > 0){
+			do Array.dispose(chars);
+		}
+		return;
 	}
 
 	/** Returns the current length of this String. */
-	method int length() {
+	method int length(){
+		return length;
 	}
 
 	/** Returns the character at location j. */
-	method char charAt(int j) {
+	method char charAt(int j){
+		return chars[j];
 	}
 
 	/** Sets the j'th character of this string to be c. */
-	method void setCharAt(int j, char c) {
+	method void setCharAt(int j, char c){
+		let chars[j] = c;
+		return;
 	}
 
 	/** Appends the character c to the end of this String.
 	 *  Returns this string as the return value. */
-	method String appendChar(char c) {
+	method String appendChar(char c){
+		let chars[length] = c;
+		let length = length + 1;
+		return this;
 	}
 
 	/** Erases the last character from this String. */
-	method void eraseLastChar() {
+	method void eraseLastChar(){
+		let length = length - 1;
+		return;
 	}
 
 	/** Returns the integer value of this String until the first non
 	 *  numeric character. */
-	method int intValue() {
+	method int intValue(){
+		var int chr, value;
+		var bool isDigit, isNegative;
+
+		let isNegative = (chars[0] = 45);
+		if(isNegative){
+			let chr = 1;
+		}
+		else {
+			let chr = 0;
+		}
+
+		let value = 0;
+		let isDigit = (47 < chars[chr]) & (chars[chr] < 58);
+
+		while(isDigit & (chr < length)){
+			let value = (value * 10) + chars[chr] - 48;
+			let chr = chr + 1;
+			let isDigit = (47 < chars[chr]) & (chars[chr] < 58);
+		}
+
+		if(isNegative){
+			let value = -value;
+		}
+
+		return value;
 	}
 
 	/** Sets this String to hold a representation of the given number. */
-	method void setInt(int number) {
+	method void setInt(int number){
+		var int orderMagnitude, digit, quotient;
+		var bool isNegative;
+		var Array digits;
+
+		let length = 0;
+		let isNegative = number < 0;
+
+		if(isNegative){
+			let number = -number;
+			do appendChar(45);
+		}
+
+		let digit = 0;
+		let digits = Array.new(5);
+
+		while(number > 0){
+			let quotient = number / 10;
+			let digits[digit] = number - (quotient * 10) + 48;
+			let number = quotient;
+			let digit = digit + 1;
+		}
+
+		while(digit > 0){
+			let digit = digit - 1;
+			do appendChar(digits[digit]);
+		}
+
+		return;
 	}
 
 	/** Returns the new line character. */
-	function char newLine() {
+	function char newLine(){
+		return 128;
 	}
 
 	/** Returns the backspace character. */
-	function char backSpace() {
+	function char backSpace(){
+		return 129;
 	}
 
 	/** Returns the double quote (") character. */
-	function char doubleQuote() {
+	function char doubleQuote(){
+		return 34;
 	}
 }
