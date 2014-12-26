@@ -1,0 +1,57 @@
+/**
+ * Graphic screen library.
+ */
+
+class Screen{
+
+	/**
+	 * Initializes the Screen.
+	 */
+	function void init(){
+		return;
+	}
+
+	/**
+	 * Erases the whole screen.
+	 */
+	function void clearScreen(){
+		return;
+	}
+
+	/**
+	 * Sets the color to be used in further draw commands
+	 *  where white = false, black = true.
+	 */
+	function void setColor(boolean b){
+		return;
+	}
+
+	/**
+	 * Draws the (x, y) pixel.
+	 */
+	function void drawPixel(int x, int y){
+		return;
+	}
+
+	/**
+	 * Draws a line from (x1, y1) to (x2, y2).
+	 */
+	function void drawLine(int x1, int y1, int x2, int y2){
+		return;
+	}
+
+	/**
+	 * Draws a filled rectangle where the top left corner
+	 *  is (x1, y1) and the bottom right corner is (x2, y2).
+	 */
+	function void drawRectangle(int x1, int y1, int x2, int y2){
+		return;
+	}
+
+	/**
+	 * Draws a filled circle of radius r around (cx, cy).
+	 */
+	function void drawCircle(int cx, int cy, int r){
+		return;
+	}
+}
