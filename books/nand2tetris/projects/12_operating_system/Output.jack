@@ -74,7 +74,7 @@ class Output{
 		do Output.create(64,30,51,51,59,59,59,27,3,30,0,0);  // @
 		do Output.create(63,30,51,51,24,12,12,0,12,12,0,0);  // ?
 
-		do Output.create(65,48,120,204,204,252,204,204,204,204,0,0);          // A ** TO BE FILLED **
+		do Output.create(65,12,30,51,51,63,51,51,51,51,0,0); // A
 		do Output.create(66,31,51,51,51,31,51,51,51,31,0,0); // B
 		do Output.create(67,28,54,35,3,3,3,35,54,28,0,0);    // C
 		do Output.create(68,15,27,51,51,51,51,51,27,15,0,0); // D
@@ -216,7 +216,7 @@ class Output{
 		let bitMap = Output.getMap(c);
 
 		let rowAddress = (screenRow * 32) + (screenColumn / 16);
-		let shiftLeft = (screenColumn - (screenColumn / 16)) > 8;
+		let shiftLeft = (screenColumn - (16 * (screenColumn / 16))) > 7;
 
 		while(charRow < 11){
 			let currRow = bitMap[charRow];
@@ -226,6 +226,7 @@ class Output{
 
 			let screenAddress[rowAddress] =
 				screenAddress[rowAddress] | currRow;
+			/* let screenAddress[rowAddress] = currRow; */
 			let rowAddress = rowAddress + 32;
 			let charRow = charRow + 1;
 		}
@@ -245,6 +246,12 @@ class Output{
 	 * appropriately.
 	 */
 	function void printString(String s){
+		var int ind;
+		let ind = 0;
+		while(ind < s.length()){
+			do Output.printChar(s.charAt(ind));
+			let ind = ind + 1;
+		}
 		return;
 	}
 
@@ -253,6 +260,11 @@ class Output{
 	 * appropriately.
 	 */
 	function void printInt(int i){
+		var String num;
+		let num = String.new(10);
+		do num.setInt(i);
+		do Output.printString(num);
+		do num.dispose();
 		return;
 	}
 
