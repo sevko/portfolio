@@ -5,18 +5,31 @@
  * 8 pixels wide (including 2 space pixels).
  */
 
-class Output {
+class Output{
 	// Character map for printing on the left of a screen word
 	static Array charMaps;
+
+	static int screenAddress;
+	static int charWidth, charHeight;
+	static int row, col, rowCharWidth, colCharHeight;
 
 	/**
 	 * Initializes the screen and locates the cursor at the screen's top-left.
 	 */
-	function void init() {
+	function void init(){
+		do Output.initMap();
+		let screenAddress = 16384;
+		let charWidth = 8;
+		let charHeight = 11;
+		let rowCharWidth = 64;
+		let colCharHeight = 23;
+		let row = 0;
+		let col = 0;
+		return;
 	}
 
 	// Initalizes the character map array
-	function void initMap() {
+	function void initMap(){
 		var int i;
 
 		let charMaps = Array.new(127);
@@ -61,7 +74,7 @@ class Output {
 		do Output.create(64,30,51,51,59,59,59,27,3,30,0,0);  // @
 		do Output.create(63,30,51,51,24,12,12,0,12,12,0,0);  // ?
 
-		do Output.create(65,0,0,0,0,0,0,0,0,0,0,0);          // A ** TO BE FILLED **
+		do Output.create(65,48,120,204,204,252,204,204,204,204,0,0);          // A ** TO BE FILLED **
 		do Output.create(66,31,51,51,51,31,51,51,51,31,0,0); // B
 		do Output.create(67,28,54,35,3,3,3,35,54,28,0,0);    // C
 		do Output.create(68,15,27,51,51,51,51,51,27,15,0,0); // D
@@ -122,7 +135,7 @@ class Output {
 		do Output.create(121,0,0,0,51,51,51,62,48,24,15,0);    // y
 		do Output.create(122,0,0,0,63,27,12,6,51,63,0,0);      // z
 
-		do Output.create(123,56,12,12,12,7,12,12,12,56,0,0);   // {
+		do Output.create(123,56,12,12,12,7,12,12,12,56,0,0);   //{
 		do Output.create(124,12,12,12,12,12,12,12,12,12,0,0);  // |
 		do Output.create(125,7,12,12,12,56,12,12,12,7,0,0);    // }
 		do Output.create(126,38,45,25,0,0,0,0,0,0,0,0);        // ~
@@ -159,8 +172,8 @@ class Output {
 	// Returns the character map (array of size 11) for the given character If
 	// an invalid character is given, returns the character map of a black
 	// square.
-	function Array getMap(char c) {
-		if ((c < 32) | (c > 126)) {
+	function Array getMap(char c){
+		if ((c < 32) | (c > 126)){
 			let c = 0;
 		}
 
@@ -168,42 +181,101 @@ class Output {
 	}
 
 	/**
-	 * Moves the cursor to the j’th column of the i’th row, and erases
-	 * the character that was there.
+	 * Moves the cursor to the `colNum`th column of the `rowNum`th row, and
+	 * erases the character that was there.
 	 */
-	function void moveCursor(int i, int j) {
+	function void moveCursor(int rowNum, int colNum){
+		var int baseColPixel, baseRowPixel;
+
+		let col = colNum;
+		let row = rowNum;
+
+		let baseColPixel = col * charWidth;
+		let baseRowPixel = row * charHeight;
+		do Screen.setColor(false);
+		do Screen.drawRectangle(
+			baseColPixel, baseRowPixel,
+			baseColPixel + charWidth - 1, baseRowPixel + charHeight - 1
+		);
+
+		return;
 	}
 
 	/**
 	 * Prints c at the cursor location and advances the cursor one column
 	 * forward.
 	 */
-	function void printChar(char c) {
+	function void printChar(char c){
+		var int currRow, charRow, screenRow, screenColumn, rowAddress;
+		var bool shiftLeft;
+		var Array bitMap;
+
+		let screenRow = row * charHeight;
+		let screenColumn = col * charWidth;
+		let charRow = 0;
+		let bitMap = Output.getMap(c);
+
+		let rowAddress = (screenRow * 32) + (screenColumn / 16);
+		let shiftLeft = (screenColumn - (screenColumn / 16)) > 8;
+
+		while(charRow < 11){
+			let currRow = bitMap[charRow];
+			if(shiftLeft){
+				let currRow = currRow * 256;
+			}
+
+			let screenAddress[rowAddress] =
+				screenAddress[rowAddress] | currRow;
+			let rowAddress = rowAddress + 32;
+			let charRow = charRow + 1;
+		}
+
+		if(col = (rowCharWidth - 1)){
+			do Output.println();
+		}
+		else {
+			let col = col + 1;
+		}
+
+		return;
 	}
 
 	/**
 	 * Prints s starting at the cursor location, and advances the cursor
 	 * appropriately.
 	 */
-	function void printString(String s) {
+	function void printString(String s){
+		return;
 	}
 
 	/**
 	 * Prints i starting at the cursor location, and advances the cursor
 	 * appropriately.
 	 */
-	function void printInt(int i) {
+	function void printInt(int i){
+		return;
 	}
 
 	/**
 	 * Advances the cursor to the beginning of the next line.
 	 */
-	function void println() {
+	function void println(){
+		let col = 0;
+
+		if(row = (colCharHeight - 1)){
+			let row = 0;
+		}
+		else {
+			let row = row + 1;
+		}
+
+		return;
 	}
 
 	/**
 	 * Moves the cursor one column back.
 	 */
-	function void backSpace() {
+	function void backSpace(){
+		return;
 	}
 }
