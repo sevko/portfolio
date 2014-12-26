@@ -3,6 +3,10 @@
  */
 
 class Math {
+	/**
+	 * Contains 2 raised to powers 0 through 15. Used to mask out individual
+	 * bits in `int` values (see `getBit()`).
+	 */
 	static Array bit_masks;
 
 	/** Initializes the library. */
@@ -123,9 +127,27 @@ class Math {
 		}
 	}
 
-	/** Returns the integer part of the square root of x. */
-	function int sqrt(int x) {
-		return 0;
+	/**
+	 * @param val A positive integer.
+	 * @return The integer part of the square root of `val` (approximated to a
+	 *      high degree of accuracy).
+	 */
+	function int sqrt(int val) {
+		var int root, bit, nextRoot, rootSquared;
+
+		let root = 0;
+		let bit = 7;
+		while(bit > -1){
+			let nextRoot = root + bit_masks[bit];
+			let rootSquared = nextRoot * nextRoot;
+			if(((rootSquared < val) | (rootSquared = val)) &
+				(rootSquared > 0)){
+				let root = nextRoot;
+			}
+			let bit = bit - 1;
+		}
+
+		return root;
 	}
 
 	/**
