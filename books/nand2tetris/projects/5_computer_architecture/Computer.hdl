@@ -1,0 +1,24 @@
+/**
+ * Chip name: Computer
+ * Inputs: reset
+ * Function: If reset=1, reset the computer's PC (Program Counter).
+ * Comment: The Computer chip integrates the `CPU`, `Memory`, and built-in
+ *      `ROM32K` chips, and roughly performs the following actions:
+ *
+ *          - feed instruction from ROM to CPU
+ *          - feed CPU's PC output back to ROM
+ *          - feed CPU's instruction execution output to RAM
+ *          - feed RAM's data output to CPU
+ */
+
+CHIP Computer {
+	IN reset;
+
+	PARTS:
+	ROM32K(address=nextInstruction, out=instruction);
+	CPU(
+		inM=nextM, instruction=instruction, reset=reset, outM=outM,
+		writeM=loadM, addressM=addressM, pc=nextInstruction
+	);
+	Memory(in=outM, load=loadM, address=addressM, out=nextM);
+}

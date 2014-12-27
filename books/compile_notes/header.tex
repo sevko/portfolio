@@ -1,0 +1,11 @@
+\usepackage[margin=1in]{geometry}
+\usepackage{xcolor}
+\let\StandardTexttt\texttt
+\definecolor{InlineCodeBgGray}{rgb}{0.93, 0.93, 0.93}
+\renewcommand{\texttt}[1]{\StandardTexttt{\colorbox{InlineCodeBgGray}{#1}}}
+\usepackage{mdframed}
+\renewmdenv[hidealllines=true,backgroundcolor=InlineCodeBgGray]{Shaded}
+\usepackage{array}
+\newcolumntype{$}{>{\global\let\currentrowstyle\relax}}
+\newcolumntype{^}{>{\currentrowstyle}}
+\newcommand{\rowstyle}[1]{\gdef\currentrowstyle{#1}#1\ignorespaces}

@@ -1,0 +1,42 @@
+/**
+ * Chip name: ALU
+ * Inputs: x[16], y[16], zx, nx, zy, ny, f, no
+ * Outputs: out[16], zr, ng
+ * Function: if zx then x=0
+ *      if nx then x=!x
+ *      if zy then y=0
+ *      if ny then y=!y
+ *      if f then out=x+y
+ *          else out=x&y
+ *      if no then out=!out
+ *      if out=0 then zr=1 else zr=0
+ *      if out<0 then ng=1 else ng=0
+ *  Comment: Overflow is neither detected nor handled.
+ */
+
+CHIP ALU {
+	IN x[16], y[16], zx, nx, zy, ny, f, no;
+	OUT out[16], zr, ng;
+
+	PARTS:
+	Mux16(a=x, b=false, sel=zx, out=zX);
+	NotIf(in=zX, if=nx, out=nX);
+
+	Mux16(a=y, b=false, sel=zy, out=zY);
+	NotIf(in=zY, if=ny, out=nY);
+
+	And16(a=nX, b=nY, out=and);
+	Add16(a=nX, b=nY, out=add);
+
+	Mux16(a=and, b=add, sel=f, out=fxy);
+	Not16(in=fxy, out=nF);
+	Mux16(
+		a=fxy, b=nF, sel=no, out[15]=ng, out[0..7]=half1, out[8..15]=half2,
+		out=out
+	);
+
+	Or8Way(in=half1, out=half1neqZero);
+	Or8Way(in=half2, out=half2neqZero);
+	Or(a=half1neqZero, b=half2neqZero, out=outNeqZero);
+	Not(in=outNeqZero, out=zr);
+}

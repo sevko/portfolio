@@ -1,0 +1,58 @@
+/**
+ * Chip name: CPU
+ * Inputs: inM[16]: the input M value.
+ *      instructions[16]: the Hack instruction to execute.
+ *      reset: whether to reset the internal PC.
+ * Outputs: outM[16]: a candidate value for M
+ *      writeM: whether to write `outM` to M
+ *      addressM[15]: the Memory address of M
+ *      pc[15]: the next instruction's address, as emitted by the internal PC.
+ *
+ * Comment: Executes the Hack instruction `instruction`, modifying the D and A
+ *      registers and updating the PC accordingly.
+ */
+
+CHIP CPU {
+	IN inM[16],
+		instruction[16],
+		reset;
+
+	OUT outM[16],
+		writeM,
+		addressM[15],
+		pc[15];
+
+	PARTS:
+	// Update the D register, if appropriate.
+	And(a=instruction[15], b=instruction[4], out=regDLoad);
+	DRegister(in=aluOut, load=regDLoad, out=regD);
+
+	// Update the A register, if appropriate.
+	Not(in=instruction[15], out=aInstruction);
+	Mux16(
+		a=aluOut, b[15]=false, b[0..14]=instruction[0..14], sel=aInstruction,
+		out=regACandidate
+	);
+	Or(a=aInstruction, b=instruction[5], out=regALoad);
+	ARegister(in=regACandidate, load=regALoad, out=regA, out[0..14]=addressM);
+
+	// Perform the ALU operation specified by `instruction`.
+	Mux16(a=regA, b=inM, sel=instruction[12], out=aluOp2);
+	ALU(
+		x=regD, y=aluOp2,
+		zx=instruction[11], nx=instruction[10], zy=instruction[9],
+		ny=instruction[8], f=instruction[7], no=instruction[6],
+		out=aluOut,
+		out=outM,
+		zr=zr, ng=ng
+	);
+
+	// Increment the PC, taking into account whether a jump/reset should occur
+	// instead.
+	Jump(eq=zr, lt=ng, instruction=instruction[0..2], out=jump);
+	And(a=jump, b=instruction[15], out=pcJump);
+	Not(in=pcJump, out=pcInc);
+	PC(in=regA, inc=pcInc, load=pcJump, reset=reset, out[0..14]=pc);
+
+	And(a=instruction[15], b=instruction[3], out=writeM);
+}

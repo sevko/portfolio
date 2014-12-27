@@ -1,0 +1,168 @@
+/**
+ * Graphic screen library.
+ */
+
+class Screen{
+
+	static int screenAddress;
+	static bool color;
+
+	/**
+	 * Initializes the Screen.
+	 */
+	function void init(){
+		let color = true;
+		let screenAddress = 16384;
+		return;
+	}
+
+	/**
+	 * Erases the whole screen.
+	 */
+	function void clearScreen(){
+		var int word, endWord;
+		let word = 0;
+		let endWord = ((512 / 16) * 256) + 1;
+
+		while(word < endWord){
+			let screenAddress[word] = 0;
+			let word = word + 1;
+		}
+		return;
+	}
+
+	/**
+	 * Sets the color to be used in further draw commands
+	 *  where white = false, black = true.
+	 */
+	function void setColor(boolean b){
+		let color = b;
+		return;
+	}
+
+	/**
+	 * Draws the (x, y) pixel.
+	 */
+	function void drawPixel(int x, int y){
+		var int xQuotient, bit, mask, address;
+		let xQuotient = x / 16;
+		let mask = 1;
+		let bit = x - (xQuotient * 16);
+		let address = (y * 32) + xQuotient;
+
+		while(bit > 0){
+			let mask = mask * 2;
+			let bit = bit - 1;
+		}
+
+		if(color){
+			let screenAddress[address] = screenAddress[address] | mask;
+		}
+		else {
+			let screenAddress[address] = screenAddress[address] & (~mask);
+		}
+		return;
+	}
+
+	/**
+	 * Draws a line from (x1, y1) to (x2, y2).
+	 */
+	function void drawLine(int x1, int y1, int x2, int y2){
+		var int width, height, dx1, dy1, dx2, dy2;
+		var int temp, longDist, shortDist, numerator, pixel;
+
+		let width = x2 - x1;
+		let height = y2 - y1;
+
+		let dy2 = 0;
+		if(width < 0){
+			let dx1 = -1;
+			let dx2 = -1;
+		}
+		else {
+			let dx1 = 1;
+			let dx2 = 1;
+		}
+
+		if(height < 0){
+			let dy1 = -1;
+		}
+		else {
+			let dy1 = 1;
+		}
+
+		let longDist = Math.abs(width) + 1;
+		let shortDist = Math.abs(height);
+
+		if(longDist < shortDist){
+			let temp = longDist;
+			let longDist = shortDist;
+			let shortDist = temp;
+
+			let dx2 = 0;
+			if(height < 0){
+				let dy2 = -1;
+			}
+			else {
+				let dy2 = 1;
+			}
+		}
+
+		let numerator = longDist / 2;
+		let pixel = 0;
+		while(pixel < (longDist + 1)){
+			do Screen.drawPixel(x1, y1);
+			let numerator = numerator + shortDist;
+			if(numerator > (longDist - 1)){
+				let numerator = numerator - longDist;
+				let x1 = x1 + dx1;
+				let y1 = y1 + dy1;
+			}
+			else {
+				let x1 = x1 + dx2;
+				let y1 = y1 + dy2;
+			}
+			let pixel = pixel + 1;
+		}
+
+		return;
+	}
+
+	/**
+	 * Draws a filled rectangle where the top left corner
+	 *  is (x1, y1) and the bottom right corner is (x2, y2).
+	 */
+	function void drawRectangle(int x1, int y1, int x2, int y2){
+		var int col;
+		while(y1 < (y2 + 1)){
+			let col = x1;
+			while(col < (x2 + 1)){
+				do Screen.drawPixel(col, y1);
+				let col = col + 1;
+			}
+			let y1 = y1 + 1;
+		}
+		return;
+	}
+
+	/**
+	 * Draws a filled circle of radius r around (cx, cy).
+	 */
+	function void drawCircle(int cx, int cy, int r){
+		var int vertOffset, left, right, horDist;
+		let vertOffset = r;
+		while(vertOffset > -1){
+			let horDist = Math.sqrt((r * r) - (vertOffset * vertOffset));
+			let left = cx - horDist;
+			let right = cx + horDist;
+			while(left < right){
+				do Screen.drawPixel(left, cy - vertOffset);
+				do Screen.drawPixel(left, cy + vertOffset);
+				let left = left + 1;
+			}
+			let vertOffset = vertOffset - 1;
+		}
+
+		return;
+	}
+}

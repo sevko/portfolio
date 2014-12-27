@@ -1,0 +1,19 @@
+/**
+ * Chip name: Dmux4Way
+ * Inputs: in, sel[2]
+ * Outputs: a, b, c, d
+ * Function: If sel=00 then {a=in, b=c=d=0}
+ *      else if sel=01 then {b=in, c=c=d=0}
+ *      else if sel=10 then {c=in, a=b=d=0}
+ *      else if sel=11 then {d=in, a=b=c=0}
+ */
+
+CHIP DMux4Way {
+	IN in, sel[2];
+	OUT a, b, c, d;
+
+	PARTS:
+	DMux(in=in, sel=sel[1], a=ab, b=cd);
+	DMux(in=ab, sel=sel[0], a=a, b=b);
+	DMux(in=cd, sel=sel[0], a=c, b=d);
+}

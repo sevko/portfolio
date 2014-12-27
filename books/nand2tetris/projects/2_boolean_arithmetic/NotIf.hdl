@@ -1,0 +1,18 @@
+/**
+ * Chip name: NotIf
+ * Inputs: in[16], if
+ * Outputs: out[16]
+ * Function: if if=1 then out[0..15]=!in[0..15] else out[0..15]=in[0..15]
+ * Comment: Helper chip for ALU; abstracts a conditional Not to prevent the
+ * same statements/logic being repeated in multiple parts of the ALU
+ * definition.
+ */
+
+CHIP NotIf {
+	IN in[16], if;
+	OUT out[16];
+
+	PARTS:
+	Not16(in=in, out=notIn);
+	Mux16(a=in, b=notIn, sel=if, out=out);
+}

@@ -1,0 +1,16 @@
+/**
+ * Chip name: Inc16
+ * Inputs: in[16]
+ * Outputs: out[16]
+ * Function: out=in+1
+ * Comment: Integer 2's complement addition. Overflow is neither detected nor
+ *      handled.
+ */
+
+CHIP Inc16 {
+	IN in[16];
+	OUT out[16];
+
+	PARTS:
+	Add16(a=in, b[1..15]=false, b[0]=true, out=out);
+}

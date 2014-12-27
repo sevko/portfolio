@@ -1,0 +1,24 @@
+/**
+ * Chip name: PC
+ * Inputs: in[16], inc, load, reset
+ * Outputs: out[16]
+ * Function: If reset(t - 1) then out(t) = 0
+ *      else if load(t - 1) then out(t) = in(t - 1)
+ *      else if inc(t - 1) then out(t) = out(t - 1) + 1
+ *      else out(t) = out(t - 1)
+ * Comment: "=" is 16-bit assignment.
+ *      "+" is 16-bit arithmetic addition.
+ */
+
+CHIP PC {
+	IN in[16], load, inc, reset;
+	OUT out[16];
+
+	PARTS:
+	Inc16(in=currOut, out=incOut);
+	Mux16(a=currOut, b=incOut, sel=inc, out=t1);
+	Mux16(a=t1, b=in, sel=load, out=t2);
+	Mux16(a=t2, b=false, sel=reset, out=nextOut);
+
+	Register(in=nextOut, load=true, out=currOut, out=out);
+}

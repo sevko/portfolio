@@ -1,0 +1,12 @@
+/**
+ * The main entry point of the simulation.
+ */
+
+class Main {
+	function void main(){
+		var Simulation sim;
+		let sim = Simulation.new(20, 4);
+		do sim.run();
+		return;
+	}
+}

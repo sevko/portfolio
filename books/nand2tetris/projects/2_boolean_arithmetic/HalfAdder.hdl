@@ -1,0 +1,16 @@
+/**
+ * Chip name: HalfAdder
+ * Inputs: a, b
+ * Outputs: sum, carry
+ * Function: sum = LSB of a + b
+ *      sum = MSB of a + b
+ */
+
+CHIP HalfAdder {
+	IN a, b;
+	OUT sum, carry;
+
+	PARTS:
+	Xor(a=a, b=b, out=sum);
+	And(a=a, b=b, out=carry);
+}

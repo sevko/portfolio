@@ -1,0 +1,63 @@
+/**
+ * A library of basic system services.
+ */
+
+class Sys{
+	/**
+	 * Performs all the initializations required by the OS.
+	 */
+	function void init(){
+		do Memory.init();
+		do Math.init();
+		do Output.init();
+		do Screen.init();
+		do Keyboard.init();
+		do Main.main();
+		do Sys.halt();
+
+		/**
+		 * The following return statement is useless due to the preceding
+		 * `Sys.halt()` and because `Sys.init()` is the first function called
+		 * on boot, meaning that the Hack Virtual Machine will have no caller
+		 * function to return to.
+		 */
+		return;
+	}
+
+	/**
+	 * Halts execution.
+	 */
+	function void halt(){
+		while(true){}
+		return;
+	}
+
+	/**
+	 * Waits approximately duration milliseconds and then returns.
+	 * Implemented using a non-portable hack due to the limitations of the
+	 * Hack computer.
+	 */
+	function void wait(int duration){
+		var int tick, cycleNum;
+		let cycleNum = 0;
+
+		while(cycleNum < 4){
+			let tick = 0;
+			while(tick < 20000){
+				let tick = tick + 1;
+			}
+			let cycleNum = cycleNum + 1;
+		}
+		return;
+	}
+
+	/**
+	 * Prints the given error code in the form "ERR<errorCode>", and halts.
+	 */
+	function void error(int errorCode){
+		do Output.printString("ERR");
+		do Output.printInt(errorCode);
+		do Sys.halt();
+		return;
+	}
+}
