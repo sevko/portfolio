@@ -60,10 +60,63 @@ class Screen{
 	 * Draws a line from (x1, y1) to (x2, y2).
 	 */
 	function void drawLine(int x1, int y1, int x2, int y2){
-		while(x1 < x2){
-			do Screen.drawPixel(x1, y1);
-			let x1 = x1 + 1;
+		var int width, height, dx1, dy1, dx2, dy2;
+		var int temp, longDist, shortDist, numerator, pixel;
+
+		let width = x2 - x1;
+		let height = y2 - y1;
+
+		let dy2 = 0;
+		if(width < 0){
+			let dx1 = -1;
+			let dx2 = -1;
 		}
+		else {
+			let dx1 = 1;
+			let dx2 = 1;
+		}
+
+		if(height < 0){
+			let dy1 = -1;
+		}
+		else {
+			let dy1 = 1;
+		}
+
+		let longDist = Math.abs(width) + 1;
+		let shortDist = Math.abs(height);
+
+		if(longDist < shortDist){
+			let temp = longDist;
+			let longDist = shortDist;
+			let shortDist = temp;
+
+			let dx2 = 0;
+			if(height < 0){
+				let dy2 = -1;
+			}
+			else {
+				let dy2 = 1;
+			}
+		}
+
+		let numerator = longDist / 2;
+		let pixel = 0;
+		while(pixel < (longDist + 1)){
+			do Screen.drawPixel(x1, y1);
+			let numerator = numerator + shortDist;
+			if(numerator > (longDist - 1)){
+				let numerator = numerator - longDist;
+				let x1 = x1 + dx1;
+				let y1 = y1 + dy1;
+			}
+			else {
+				let x1 = x1 + dx2;
+				let y1 = y1 + dy2;
+			}
+			let pixel = pixel + 1;
+		}
+
 		return;
 	}
 
