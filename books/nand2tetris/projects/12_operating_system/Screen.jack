@@ -20,6 +20,14 @@ class Screen{
 	 * Erases the whole screen.
 	 */
 	function void clearScreen(){
+		var int word, endWord;
+		let word = 0;
+		let endWord = ((512 / 16) * 256) + 1;
+
+		while(word < endWord){
+			let screenAddress[word] = 0;
+			let word = word + 1;
+		}
 		return;
 	}
 
@@ -126,9 +134,9 @@ class Screen{
 	 */
 	function void drawRectangle(int x1, int y1, int x2, int y2){
 		var int col;
-		while(y1 < y2){
+		while(y1 < (y2 + 1)){
 			let col = x1;
-			while(col < x2){
+			while(col < (x2 + 1)){
 				do Screen.drawPixel(col, y1);
 				let col = col + 1;
 			}

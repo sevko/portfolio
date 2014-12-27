@@ -212,7 +212,7 @@ class Output{
 	 * forward.
 	 */
 	function void printChar(char c){
-		var int currRow, charRow, screenRow, screenColumn, rowAddress;
+		var int currRow, charRow, screenRow, screenColumn, rowAddress, mask;
 		var bool shiftLeft;
 		var Array bitMap;
 
@@ -223,6 +223,12 @@ class Output{
 
 		let rowAddress = (screenRow * 32) + (screenColumn / 16);
 		let shiftLeft = (screenColumn - (16 * (screenColumn / 16))) > 7;
+		if(shiftLeft){
+			let mask = 255;
+		}
+		else {
+			let mask = 32512;
+		}
 
 		while(charRow < 11){
 			let currRow = bitMap[charRow];
@@ -231,7 +237,7 @@ class Output{
 			}
 
 			let screenAddress[rowAddress] =
-				screenAddress[rowAddress] | currRow;
+				(screenAddress[rowAddress] & mask) | currRow;
 			let rowAddress = rowAddress + 32;
 			let charRow = charRow + 1;
 		}
