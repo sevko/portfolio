@@ -125,6 +125,15 @@ class Screen{
 	 *  is (x1, y1) and the bottom right corner is (x2, y2).
 	 */
 	function void drawRectangle(int x1, int y1, int x2, int y2){
+		var int col;
+		while(y1 < y2){
+			let col = x1;
+			while(col < x2){
+				do Screen.drawPixel(col, y1);
+				let col = col + 1;
+			}
+			let y1 = y1 + 1;
+		}
 		return;
 	}
 
@@ -132,6 +141,20 @@ class Screen{
 	 * Draws a filled circle of radius r around (cx, cy).
 	 */
 	function void drawCircle(int cx, int cy, int r){
+		var int vertOffset, left, right, horDist;
+		let vertOffset = r;
+		while(vertOffset > -1){
+			let horDist = Math.sqrt((r * r) - (vertOffset * vertOffset));
+			let left = cx - horDist;
+			let right = cx + horDist;
+			while(left < right){
+				do Screen.drawPixel(left, cy - vertOffset);
+				do Screen.drawPixel(left, cy + vertOffset);
+				let left = left + 1;
+			}
+			let vertOffset = vertOffset - 1;
+		}
+
 		return;
 	}
 }
