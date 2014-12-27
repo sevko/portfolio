@@ -1,0 +1,180 @@
+/**
+ * The Hack Math standard library.
+ */
+
+class Math {
+	/**
+	 * Contains 2 raised to powers 0 through 15. Used to mask out individual
+	 * bits in `int` values (see `getBit()`).
+	 */
+	static Array bit_masks;
+
+	/** Initializes the library. */
+	function void init() {
+		var int bit, mask;
+
+		let bit_masks = Array.new(16);
+		let bit = 0;
+		let mask = 1;
+
+		while(bit < 16){
+			let bit_masks[bit] = mask;
+			let mask = mask + mask;
+			let bit = bit + 1;
+		}
+
+		return;
+	}
+
+	/**
+	 * @param val An integer.
+	 * @return The absolute value of `val`.
+	 */
+	function int abs(int val) {
+		if(val < 0){
+			let val = -val;
+		}
+		return val;
+	}
+
+	/**
+	 * @param val An integer.
+	 * @param bit The index of a bit inside `val` (must thus be in the
+	 *      inclusive range [0, 15]).
+	 * @return An integer greater than 0 if the bit at index `bit` of `val` is
+	 *      1; 0 if it's 0.
+	 */
+	function int getBit(int val, int bit){
+		return val & bit_masks[bit];
+	}
+
+	/**
+	 * Calculate the product of two numbers using an efficient algorithm whose
+	 * runtime is proportional to the number of bits in `y`.
+	 *
+	 * @param x An integer.
+	 * @param y An integer.
+	 * @return The product of `x` and `y` with sign preserved.
+	 */
+	function int multiply(int x, int y) {
+		var int product, bit;
+
+		let product = 0;
+		let bit = 0;
+		while(bit < 16){
+			if(Math.getBit(y, bit)){
+				let product = product + x;
+			}
+			let x = x + x;
+			let bit = bit + 1;
+		}
+
+		return product;
+	}
+
+	/**
+	 * Calculate the quotient of two numbers.
+	 *
+	 * @param x An integer.
+	 * @param y An integer.
+	 * @return The quotient of `x` and `y` with sign preserved.
+	 */
+	function int divide(int x, int y){
+		var int quotient;
+		var bool negX, negY;
+		let negX = x < 0;
+		let negY = y < 0;
+
+		if(negX){
+			let x = -x;
+		}
+
+		if(negY){
+			let y = -y;
+		}
+
+		let quotient = Math.dividePositive(x, y);
+
+		if((negX | negY) & (~(negX & negY))){
+			return -quotient;
+		}
+		else {
+			return quotient;
+		}
+	}
+
+	/**
+	 * Calculate the quotient of two positive numbers using an efficient
+	 * algorithm whose runtime is proportional to the number of bits in `y`.
+	 *
+	 * @param x A positive integer.
+	 * @param y A positive integer.
+	 * @return The quotient of `x` and `y`.
+	 */
+	function int dividePositive(int x, int y){
+		var int doubleQuotient;
+
+		if(y > x){
+			return 0;
+		}
+
+		let doubleQuotient = Math.divide(x, y * 2) * 2;
+		if((x - (y * doubleQuotient)) < y){
+			return doubleQuotient;
+		}
+		else {
+			return doubleQuotient + 1;
+		}
+	}
+
+	/**
+	 * @param val A positive integer.
+	 * @return The integer part of the square root of `val` (approximated to a
+	 *      high degree of accuracy).
+	 */
+	function int sqrt(int val) {
+		var int root, bit, nextRoot, rootSquared;
+
+		let root = 0;
+		let bit = 7;
+		while(bit > -1){
+			let nextRoot = root + bit_masks[bit];
+			let rootSquared = nextRoot * nextRoot;
+			if(((rootSquared < val) | (rootSquared = val)) &
+				(rootSquared > 0)){
+				let root = nextRoot;
+			}
+			let bit = bit - 1;
+		}
+
+		return root;
+	}
+
+	/**
+	 * @param a A number.
+	 * @param b A number.
+	 * @return The greater of `a` and `b`.
+	 */
+	function int max(int a, int b) {
+		if(a < b){
+			return b;
+		}
+		else {
+			return a;
+		}
+	}
+
+	/**
+	 * @param a A number.
+	 * @param b A number.
+	 * @return The lesser of `a` and `b`.
+	 */
+	function int min(int a, int b) {
+		if(a < b){
+			return a;
+		}
+		else {
+			return b;
+		}
+	}
+}
