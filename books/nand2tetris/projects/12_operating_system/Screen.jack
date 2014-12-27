@@ -4,10 +4,15 @@
 
 class Screen{
 
+	static int screenAddress;
+	static bool color;
+
 	/**
 	 * Initializes the Screen.
 	 */
 	function void init(){
+		let color = true;
+		let screenAddress = 16384;
 		return;
 	}
 
@@ -23,6 +28,7 @@ class Screen{
 	 *  where white = false, black = true.
 	 */
 	function void setColor(boolean b){
+		let color = b;
 		return;
 	}
 
@@ -30,6 +36,23 @@ class Screen{
 	 * Draws the (x, y) pixel.
 	 */
 	function void drawPixel(int x, int y){
+		var int xQuotient, bit, mask, address;
+		let xQuotient = x / 16;
+		let mask = 1;
+		let bit = x - (xQuotient * 16);
+		let address = (y * 32) + xQuotient;
+
+		while(bit > 0){
+			let mask = mask * 2;
+			let bit = bit - 1;
+		}
+
+		if(color){
+			let screenAddress[address] = screenAddress[address] | mask;
+		}
+		else {
+			let screenAddress[address] = screenAddress[address] & (~mask);
+		}
 		return;
 	}
 
@@ -37,6 +60,10 @@ class Screen{
 	 * Draws a line from (x1, y1) to (x2, y2).
 	 */
 	function void drawLine(int x1, int y1, int x2, int y2){
+		while(x1 < x2){
+			do Screen.drawPixel(x1, y1);
+			let x1 = x1 + 1;
+		}
 		return;
 	}
 
