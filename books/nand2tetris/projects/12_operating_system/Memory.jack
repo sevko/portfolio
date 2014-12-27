@@ -1,0 +1,76 @@
+/**
+ * Memory operations library.
+ */
+
+class Memory {
+	static int baseAddress, heapAddress, nextAvailableAddr;
+
+	/**
+	 * Initializes memory parameters.
+	 */
+	function void init(){
+		let baseAddress = 0;
+		let heapAddress = 2048;
+		let heapAddress[0] = 16383 - 2048 + 1;
+		let heapAddress[1] = -1;
+		let nextAvailableAddr = heapAddress;
+		return;
+	}
+
+	/**
+	 * Returns the value of the main memory at the given address.
+	 */
+	function int peek(int address){
+		return baseAddress[address];
+	}
+
+	/**
+	 * Sets the value of the main memory at this address
+	 * to the given value.
+	 */
+	function void poke(int address, int value){
+		let baseAddress[address] = value;
+		return;
+	}
+
+	/**
+	 * Finds and allocates from the heap a memory block of the
+	 * specified size and returns a reference to its base address.
+	 */
+	function int alloc(int size){
+		var int prevSegmentAddr, currSegmentAddr, allocAddr;
+
+		if((size < 1) | (nextAvailableAddr = -1)){
+			do Sys.error(5);
+		}
+
+		let prevSegmentAddr = -1;
+		let currSegmentAddr = nextAvailableAddr;
+
+		while((currSegmentAddr[0] - 1) < size){
+			let prevSegmentAddr = currSegmentAddr;
+			let currSegmentAddr = currSegmentAddr[1];
+			if(currSegmentAddr = -1){
+				do Sys.error(6);
+				return -1;
+			}
+		}
+
+		let allocAddr = currSegmentAddr + currSegmentAddr[0] - size;
+		let allocAddr[-1] = size + 1;
+		if(((currSegmentAddr[0] - size) < 4) & (prevSegmentAddr > 0)){
+			let prevSegmentAddr[1] = currSegmentAddr[1];
+		}
+
+		return allocAddr;
+	}
+
+	/**
+	 * De-allocates the given object and frees its space.
+	 */
+	function void deAlloc(int object){
+		let object[0] = nextAvailableAddr;
+		let nextAvailableAddr = object - 1;
+		return;
+	}
+}
