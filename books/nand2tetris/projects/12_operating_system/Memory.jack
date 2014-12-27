@@ -61,6 +61,9 @@ class Memory {
 		if(((currSegmentAddr[0] - size) < 4) & (prevSegmentAddr > 0)){
 			let prevSegmentAddr[1] = currSegmentAddr[1];
 		}
+		else {
+			let currSegmentAddr[0] = currSegmentAddr[0] - size - 1;
+		}
 
 		return allocAddr;
 	}

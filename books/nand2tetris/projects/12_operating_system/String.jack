@@ -23,7 +23,7 @@ class String{
 	 */
 	method void dispose(){
 		if(maximumLen > 0){
-			do Array.dispose(chars);
+			do chars.dispose();
 		}
 		return;
 	}
