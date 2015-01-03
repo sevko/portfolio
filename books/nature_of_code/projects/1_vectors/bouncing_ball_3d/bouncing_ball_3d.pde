@@ -1,9 +1,13 @@
 /**
- *
+ * An animation of a sphere bouncing around a box, tracing its path as it
+ * travels.
  */
 
 import peasy.*;
 
+/**
+ * A 3-dimensional vector.
+ */
 class Vec3 {
 	float x, y, z;
 
@@ -44,41 +48,24 @@ void draw(){
 
 	sphereLoc.add(sphereVelocity);
 	if((sphereLoc.x > boxDimensions.x) || (sphereLoc.x < 0)){
-		// sphereLoc.x = (sphereLoc.x < 0) ? 0 : boxDimensions.x;
 		sphereVelocity.x *= -1;
-
-		collisions[numCollisions++] = new Vec3(
-			sphereLoc.x, sphereLoc.y, sphereLoc.z
-		);
-		if(numCollisions == collisions.length){
-			collisions = (Vec3 [])expand(collisions);
-		}
+		storeCollision();
 	}
 
 	if((sphereLoc.y > boxDimensions.y) || (sphereLoc.y < 0)){
-		// sphereLoc.y = (sphereLoc.y < 0) ? 0 : boxDimensions.y;
 		sphereVelocity.y *= -1;
-
-		collisions[numCollisions++] = new Vec3(
-			sphereLoc.x, sphereLoc.y, sphereLoc.z
-		);
-		if(numCollisions == collisions.length){
-			collisions = (Vec3 [])expand(collisions);
-		}
+		storeCollision();
 	}
 
 	if((sphereLoc.z > boxDimensions.z) || (sphereLoc.z < 0)){
-		// sphereLoc.z = (sphereLoc.z < 0) ? 0 : boxDimensions.z;
 		sphereVelocity.z *= -1;
-
-		collisions[numCollisions++] = new Vec3(
-			sphereLoc.x, sphereLoc.y, sphereLoc.z
-		);
-		if(numCollisions == collisions.length){
-			collisions = (Vec3 [])expand(collisions);
-		}
+		storeCollision();
 	}
 
+	/**
+	 * Trace the sphere's path from collision to collision with an
+	 * exponentially fading color.
+	 */
 	for(int coll = 0; coll < numCollisions - 1; coll++){
 		int fadeColor = (numCollisions - coll);
 		fadeColor *= fadeColor;
@@ -91,9 +78,13 @@ void draw(){
 		Vec3 end = collisions[coll + 1];
 		line(start.x, start.y, start.z, end.x, end.y, end.z);
 	}
+
 	if(numCollisions > 0){
 		Vec3 lastColl = collisions[numCollisions - 1];
-		line(lastColl.x, lastColl.y, lastColl.z, sphereLoc.x, sphereLoc.y, sphereLoc.z);
+		line(
+			lastColl.x, lastColl.y, lastColl.z,
+			sphereLoc.x, sphereLoc.y, sphereLoc.z
+		);
 	}
 
 	stroke(0);
@@ -109,4 +100,16 @@ void draw(){
 	translate(sphereLoc.x, sphereLoc.y, sphereLoc.z);
 	sphere(1);
 	popMatrix();
+}
+
+/**
+ * Store the current `sphereLoc` in `collisions`; expand the latter as needed.
+ */
+void storeCollision(){
+	collisions[numCollisions++] = new Vec3(
+		sphereLoc.x, sphereLoc.y, sphereLoc.z
+	);
+	if(numCollisions == collisions.length){
+		collisions = (Vec3 [])expand(collisions);
+	}
 }
