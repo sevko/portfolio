@@ -1,11 +1,23 @@
 /**
- *
+ * A naive 2D simulation of a ball bouncing around a box.
  */
 
-float x = 100;
-float y = 100;
-float dx = 1;
-float dy = 3.3;
+class PVector {
+	float x, y;
+
+	PVector(float x_, float y_){
+		x = x_;
+		y = y_;
+	}
+
+	void add(PVector vector){
+		x += vector.x;
+		y += vector.y;
+	}
+}
+
+PVector location = new PVector(100, 100);
+PVector velocity = new PVector(1, 3.3);
 
 void setup(){
 	size(640, 360);
@@ -15,18 +27,16 @@ void setup(){
 void draw(){
 	background(255);
 
-	x += dx;
-	y += dy;
-
-	if((x > width) || (x < 0)){
-		dx *= -1;
+	location.add(velocity);
+	if((location.x > width) || (location.x < 0)){
+		velocity.x *= -1;
 	}
 
-	if((y > height) || (y < 0)){
-		dy *= -1;
+	if((location.y > height) || (location.y < 0)){
+		velocity.y *= -1;
 	}
 
 	stroke(0);
 	fill(175);
-	ellipse(x, y, 16, 16);
+	ellipse(location.x, location.y, 16, 16);
 }
