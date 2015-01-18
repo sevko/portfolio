@@ -15,9 +15,10 @@
 		var newImg = context.createImageData(img.width - 1, img.height);
 
 		var gradient = getGradient(oldImg);
+		gradient = carveSeam(oldImg, newImg, gradient);
 		var pix = oldImg.data;
 		for(var ind = 0, offset = 0; ind < gradient.length; ind++, offset += 4){
-			pix[offset] = gradient[ind];
+			pix[offset] = gradient[ind] / 20;
 			pix[offset + 1] = 0;
 			pix[offset + 2] = 0;
 			pix[offset + 3] = 0xFF;
@@ -28,13 +29,24 @@
 
 // return RGBA array
 function carveSeam(oldImg, newImg, gradient){
-	var pix = newImg.data;
-	for(var ind = 0, offset = 0; ind < gradient.length; ind++, offset +=4){
-		pix[offset] = gradient[ind];
-		pix[offset + 1] = 0;
-		pix[offset + 2] = 0;
-		pix[offset + 3] = 0xFF;
+	var sumGrad = gradient.slice();
+	var width = oldImg.width;
+	for(var y = 1; y < oldImg.height; y++){
+		for(var x = 0; x < width; x++){
+			var ind = y * width + x;
+			var parentInd = ind - width;
+			var parents = [sumGrad[parentInd]];
+			if(x > 0){
+				parents.push(sumGrad[parentInd - 1]);
+			}
+			if(x < width - 1){
+				parents.push(sumGrad[parentInd + 1]);
+			}
+			sumGrad[ind] += Math.min.apply(null, parents);
+		}
 	}
+
+	return sumGrad;
 }
 
 /**
