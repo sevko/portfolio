@@ -10,17 +10,25 @@
 
 		var context = canvas.getContext("2d");
 		context.drawImage(img, 0, 0, img.width, img.height);
-		var imgData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+		var oldImg = context.getImageData(0, 0, canvas.width, canvas.height);
 		var newImg = context.createImageData(img.width - 1, img.height);
-		carveSeam(imgData, newImg);
-		context.putImageData(imgData, 0, 0);
+
+		var gradient = getGradient(oldImg);
+		var pix = oldImg.data;
+		for(var ind = 0, offset = 0; ind < gradient.length; ind++, offset += 4){
+			pix[offset] = gradient[ind];
+			pix[offset + 1] = 0;
+			pix[offset + 2] = 0;
+			pix[offset + 3] = 0xFF;
+		}
+		context.putImageData(oldImg, 0, 0);
 	};
 }();
 
 // return RGBA array
-function carveSeam(img, newImg){
-	var gradient = getGradient(img);
-	var pix = img.data;
+function carveSeam(oldImg, newImg, gradient){
+	var pix = newImg.data;
 	for(var ind = 0, offset = 0; ind < gradient.length; ind++, offset +=4){
 		pix[offset] = gradient[ind];
 		pix[offset + 1] = 0;
@@ -29,7 +37,16 @@ function carveSeam(img, newImg){
 	}
 }
 
-// return intensity array
+/**
+ * Compute the image gradient of a canvas.
+ *
+ * @param {ImageData} img The `ImageData` of the canvas to operate on.
+ * @return {Array of number} The energy, intensity, or gradient of each pixel
+ *      inside `img`, computed with `getColor()` on adjacent pixels in both the
+ *      `x` and `y` directions. When no valid neighbor is present in any one
+ *      direction (ie, when the pixel is on the edge of the canvas), the pixel
+ *      itself is used as a substitute.
+ */
 function getGradient(img){
 	var gradient = new Array(img.height * img.width);
 	var pix = img.data;
@@ -65,7 +82,10 @@ function getColor(pix, ind){
 	};
 }
 
-// return gradient
+/**
+ * @return {number} The magnitude of the gradient between `color1` and
+ *      `color2`.
+ */
 function colorGradient(color1, color2){
 	var diffR = color1.red - color2.red;
 	var diffG = color1.green - color2.green;
