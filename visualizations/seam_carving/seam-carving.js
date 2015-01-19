@@ -11,12 +11,15 @@
 		var context = canvas.getContext("2d");
 		context.drawImage(img, 0, 0, img.width, img.height);
 
-		var oldImg = context.getImageData(0, 0, canvas.width, canvas.height);
-		var newImg = context.createImageData(img.width - 1, img.height);
-
-		var gradient = getGradient(oldImg);
-		carveSeam(oldImg, newImg, gradient);
-		context.putImageData(oldImg, 0, 0);
+		setInterval(function(){
+			var oldImg = context.getImageData(0, 0, canvas.width, canvas.height);
+			var newImg = context.createImageData(oldImg.width - 1, oldImg.height);
+			canvas.width--;
+			var gradient = getGradient(oldImg);
+			carveSeam(oldImg, newImg, gradient);
+			context.putImageData(newImg, 0, 0);
+			console.log('-');
+		}, 100);
 
 		// var pix = oldImg.data;
 		// for(var ind = 0, offset = 0; ind < gradient.length; ind++, offset += 4){
@@ -81,13 +84,22 @@ function carveSeam(oldImg, newImg, gradient){
 		seam[row] = minParentInd;
 	}
 
-	var pix = oldImg.data;
-	for(var ind = 0; ind < seam.length; ind++){
-		var offset = seam[ind] * 4;
-		pix[offset] = 0xFF;
-		pix[offset + 1] = 0xFF;
-		pix[offset + 2] = 0xFF;
-		pix[offset + 3] = 0xFF;
+	var oldPix = oldImg.data;
+	var newPix = newImg.data;
+	var breakpoint = seam.pop();
+	for(
+		var ind = 0, newOffset = 0;
+		ind < oldImg.width * oldImg.height;
+		ind++, newOffset += 4){
+		if(ind === breakpoint){
+			ind++;
+			breakpoint = seam.pop();
+		}
+		var oldOffset = ind * 4;
+		newPix[newOffset] = oldPix[oldOffset];
+		newPix[newOffset + 1] = oldPix[oldOffset + 1];
+		newPix[newOffset + 2] = oldPix[oldOffset + 2];
+		newPix[newOffset + 3] = oldPix[oldOffset + 3];
 	}
 }
 
