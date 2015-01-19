@@ -1,4 +1,4 @@
-"use strict";
+// "use strict";
 
 !function setup(){
 	var img = new Image();
@@ -16,10 +16,22 @@
 			var newImg = context.createImageData(oldImg.width - 1, oldImg.height);
 			canvas.width--;
 			var gradient = getGradient(oldImg);
-			carveSeam(oldImg, newImg, gradient);
-			context.putImageData(newImg, 0, 0);
-			console.log('-');
-		}, 100);
+			var seam = getSeam(oldImg.height, oldImg.width, gradient);
+			for(var ind = 0; ind < seam.length; ind++){
+				oldImg.data[seam[ind] * 4] = 0xFF;
+				oldImg.data[seam[ind] * 4 + 1] = 0;
+				oldImg.data[seam[ind] * 4 + 2] = 0;
+				oldImg.data[seam[ind] * 4 + 3] = 0xFF;
+			}
+			context.putImageData(oldImg, 0, 0);
+
+			function theFuck(){
+				carveSeam(oldImg, newImg, seam);
+				context.putImageData(newImg, 0, 0);
+				console.log(abc);
+			}
+			setTimeout(theFuck, 700);
+		}, 1000);
 
 		// var pix = oldImg.data;
 		// for(var ind = 0, offset = 0; ind < gradient.length; ind++, offset += 4){
@@ -32,11 +44,39 @@
 	};
 }();
 
-// return RGBA array
-function carveSeam(oldImg, newImg, gradient){
+function carveSeam(oldImg, newImg, seam){
+	var oldPix = oldImg.data;
+	var newPix = newImg.data;
+	var breakpoint = seam.pop();
+	for(
+		var ind = 0, newOffset = 0;
+		ind < oldImg.width * oldImg.height;
+		ind++, newOffset += 4){
+		while(ind === breakpoint){
+			ind++;
+			breakpoint = seam.pop();
+		}
+		var oldOffset = ind * 4;
+		newPix[newOffset] = oldPix[oldOffset];
+		newPix[newOffset + 1] = oldPix[oldOffset + 1];
+		newPix[newOffset + 2] = oldPix[oldOffset + 2];
+		newPix[newOffset + 3] = oldPix[oldOffset + 3];
+	}
+}
+
+/**
+ * Identify the least valuable seam of pixels in an image gradient.
+ *
+ * @param {number} height The (int) height of the image whose gradient is
+ *      contained in `gradient`.
+ * @param {number} width The (int) width of the image whose gradient is
+ *      contained in `gradient`.
+ * @param {Array of number} gradient An image gradient, containing the
+ *      intensity of any particular pixel in an image (see `getGradient()`).
+ */
+function getSeam(height, width, gradient){
 	var sumGrad = gradient.slice();
-	var width = oldImg.width;
-	for(var y = 1; y < oldImg.height; y++){
+	for(var y = 1; y < height; y++){
 		for(var x = 0; x < width; x++){
 			var ind = y * width + x;
 			var parentInd = ind - width;
@@ -51,7 +91,7 @@ function carveSeam(oldImg, newImg, gradient){
 		}
 	}
 
-	var seam = new Array(oldImg.height);
+	var seam = new Array(height);
 	var minParentInd = sumGrad.length - width;
 	for(var x = minParentInd + 1; x < sumGrad.length; x++){
 		if(sumGrad[x] < sumGrad[minParentInd]){
@@ -59,48 +99,28 @@ function carveSeam(oldImg, newImg, gradient){
 		}
 	}
 	seam[0] = minParentInd;
-
-	for(var row = 1; row < oldImg.height; row++){
+	for(var row = 1; row < height; row++){
 		var currInd = seam[row - 1];
 		var parentInd = currInd - width;
 
-		var p1 = sumGrad[parentInd - 1];
-		var p2 = sumGrad[parentInd];
-		var p3 = sumGrad[parentInd + 1];
-		var minParentInd;
-		switch(Math.min(p1, p2, p3)){
-			case p1:
-				minParentInd = parentInd - 1;
-				break;
-
-			case p2:
-				minParentInd = parentInd;
-				break;
-
-			default:
-				minParentInd = parentInd + 1;
-				break;
+		var parents = {};
+		parents[sumGrad[parentInd]] = parentInd;
+		if(currInd % width > 0){
+			parents[sumGrad[parentInd - 1]] = parentInd - 1;
 		}
-		seam[row] = minParentInd;
-	}
 
-	var oldPix = oldImg.data;
-	var newPix = newImg.data;
-	var breakpoint = seam.pop();
-	for(
-		var ind = 0, newOffset = 0;
-		ind < oldImg.width * oldImg.height;
-		ind++, newOffset += 4){
-		if(ind === breakpoint){
-			ind++;
-			breakpoint = seam.pop();
+		if(currInd % width < width - 1){
+			parents[sumGrad[parentInd + 1]] = parentInd + 1;
 		}
-		var oldOffset = ind * 4;
-		newPix[newOffset] = oldPix[oldOffset];
-		newPix[newOffset + 1] = oldPix[oldOffset + 1];
-		newPix[newOffset + 2] = oldPix[oldOffset + 2];
-		newPix[newOffset + 3] = oldPix[oldOffset + 3];
+
+		seam[row] = parents[Math.min.apply(null, Object.keys(parents))];
+		if(minParentInd < 0){
+			console.log('what the fuck?', currInd, parentInd, row);
+		}
 	}
+	console.log('width', width, 'height', height);
+
+	return seam;
 }
 
 /**
