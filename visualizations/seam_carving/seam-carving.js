@@ -15,15 +15,17 @@
 		var newImg = context.createImageData(img.width - 1, img.height);
 
 		var gradient = getGradient(oldImg);
-		gradient = carveSeam(oldImg, newImg, gradient);
-		var pix = oldImg.data;
-		for(var ind = 0, offset = 0; ind < gradient.length; ind++, offset += 4){
-			pix[offset] = gradient[ind] / 20;
-			pix[offset + 1] = 0;
-			pix[offset + 2] = 0;
-			pix[offset + 3] = 0xFF;
-		}
+		carveSeam(oldImg, newImg, gradient);
 		context.putImageData(oldImg, 0, 0);
+
+		// var pix = oldImg.data;
+		// for(var ind = 0, offset = 0; ind < gradient.length; ind++, offset += 4){
+			// pix[offset] = gradient[ind] / 20;
+			// pix[offset + 1] = 0;
+			// pix[offset + 2] = 0;
+			// pix[offset + 3] = 0xFF;
+		// }
+		// context.putImageData(oldImg, 0, 0);
 	};
 }();
 
@@ -46,7 +48,47 @@ function carveSeam(oldImg, newImg, gradient){
 		}
 	}
 
-	return sumGrad;
+	var seam = new Array(oldImg.height);
+	var minParentInd = sumGrad.length - width;
+	for(var x = minParentInd + 1; x < sumGrad.length; x++){
+		if(sumGrad[x] < sumGrad[minParentInd]){
+			minParentInd = x;
+		}
+	}
+	seam[0] = minParentInd;
+
+	for(var row = 1; row < oldImg.height; row++){
+		var currInd = seam[row - 1];
+		var parentInd = currInd - width;
+
+		var p1 = sumGrad[parentInd - 1];
+		var p2 = sumGrad[parentInd];
+		var p3 = sumGrad[parentInd + 1];
+		var minParentInd;
+		switch(Math.min(p1, p2, p3)){
+			case p1:
+				minParentInd = parentInd - 1;
+				break;
+
+			case p2:
+				minParentInd = parentInd;
+				break;
+
+			default:
+				minParentInd = parentInd + 1;
+				break;
+		}
+		seam[row] = minParentInd;
+	}
+
+	var pix = oldImg.data;
+	for(var ind = 0; ind < seam.length; ind++){
+		var offset = seam[ind] * 4;
+		pix[offset] = 0xFF;
+		pix[offset + 1] = 0xFF;
+		pix[offset + 2] = 0xFF;
+		pix[offset + 3] = 0xFF;
+	}
 }
 
 /**
