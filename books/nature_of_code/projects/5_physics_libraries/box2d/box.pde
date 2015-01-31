@@ -2,7 +2,7 @@
  * A simple object that maintains a `Box2D` state.
  */
 
-class Box {
+class Box implements Renderable {
 	float height_, width_;
 	Body body;
 
