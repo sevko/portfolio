@@ -20,12 +20,7 @@ class Box implements Renderable {
 		float worldHeight = box2d.scalarPixelsToWorld(height_ / 2);
 		shape.setAsBox(worldWidth, worldHeight);
 
-		FixtureDef fixture = new FixtureDef();
-		fixture.shape = shape;
-		fixture.density = 1;
-		fixture.friction = 0.3;
-		fixture.restitution = 0.5;
-		body.createFixture(fixture);
+		body.createFixture(shape, 1);
 	}
 
 	void display(){
@@ -62,13 +57,7 @@ class Polygon implements Renderable {
 			worldVerts[ind] = box2d.vectorPixelsToWorld(vertices[ind]);
 		}
 		shape.set(worldVerts, worldVerts.length);
-
-		FixtureDef fixture = new FixtureDef();
-		fixture.shape = shape;
-		fixture.density = 1;
-		fixture.friction = 0.3;
-		fixture.restitution = 0.5;
-		body.createFixture(fixture);
+		body.createFixture(shape, 1);
 	}
 
 	void display(){
