@@ -38,7 +38,6 @@ class CurvedBoundary implements Renderable {
 
 		Vec2[] worldVertices = new Vec2[vertices.length];
 		for(int ind = 0; ind < vertices.length; ind++){
-			print(vertices[ind]);
 			worldVertices[ind] = box2d.coordPixelsToWorld(vertices[ind]);
 		}
 		shape.createChain(worldVertices, worldVertices.length);
