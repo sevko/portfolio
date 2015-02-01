@@ -34,13 +34,7 @@ void setup(){
 }
 
 void mousePressed(){
-	objects.add(new Polygon(mouseX, mouseY, new Vec2[]{
-		new Vec2(-0, 10),
-		new Vec2(10, 10),
-		new Vec2(15, 5),
-		new Vec2(10, -5),
-		new Vec2(-10, -5)
-	}));
+	objects.add(new Figure(mouseX, mouseY));
 }
 
 void draw(){

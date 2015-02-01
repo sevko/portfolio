@@ -83,3 +83,51 @@ class Polygon implements Renderable {
 		popMatrix();
 	}
 }
+
+/**
+ * A figure with a rectangular body and circular head.
+ */
+class Figure implements Renderable {
+	private final static int BODY_WIDTH = 10,
+		BODY_HEIGHT = 30,
+		HEAD_RADIUS = 5;
+
+	Body body;
+
+	Figure(float x, float y){
+		BodyDef bodyDef = new BodyDef();
+		bodyDef.type = BodyType.DYNAMIC;
+		bodyDef.position.set(box2d.coordPixelsToWorld(x, y));
+		body = box2d.createBody(bodyDef);
+
+		PolygonShape bodyShape = new PolygonShape();
+		bodyShape.setAsBox(
+			box2d.scalarPixelsToWorld(BODY_WIDTH / 2),
+			box2d.scalarPixelsToWorld(BODY_HEIGHT / 2)
+		);
+		body.createFixture(bodyShape, 1);
+
+		CircleShape headShape = new CircleShape();
+		headShape.m_radius = box2d.scalarPixelsToWorld(HEAD_RADIUS);
+		Vec2 worldHeadOffset = box2d.vectorPixelsToWorld(
+			new Vec2(0, -BODY_HEIGHT / 2)
+		);
+		headShape.m_p.set(worldHeadOffset.x, worldHeadOffset.y);
+		body.createFixture(headShape, 1);
+	}
+
+	void display(){
+		rectMode(CENTER);
+		fill(175);
+		pushMatrix();
+
+		Vec2 pos = box2d.getBodyPixelCoord(body);
+		float angle = body.getAngle();
+		translate(pos.x, pos.y);
+		rotate(-angle);
+
+		rect(0, 0, BODY_WIDTH, BODY_HEIGHT);
+		ellipse(0, -BODY_HEIGHT / 2, HEAD_RADIUS * 2, HEAD_RADIUS * 2);
+		popMatrix();
+	}
+}
