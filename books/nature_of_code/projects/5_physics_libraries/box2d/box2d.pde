@@ -34,7 +34,11 @@ void setup(){
 }
 
 void mousePressed(){
-	objects.add(new Figure(mouseX, mouseY));
+	Pair pair = new Pair(
+		new Vec2(mouseX - 5, mouseY),
+		new Vec2(mouseX + 5, mouseY)
+	);
+	objects.add(pair);
 }
 
 void draw(){

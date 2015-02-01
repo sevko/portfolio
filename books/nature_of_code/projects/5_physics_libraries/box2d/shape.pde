@@ -2,6 +2,9 @@
  * A simple object that maintains a `Box2D` state.
  */
 
+import org.jbox2d.dynamics.joints.DistanceJointDef;
+import org.jbox2d.dynamics.joints.DistanceJoint;
+
 class Box implements Renderable {
 	float height_, width_;
 	Body body;
@@ -129,5 +132,63 @@ class Figure implements Renderable {
 		rect(0, 0, BODY_WIDTH, BODY_HEIGHT);
 		ellipse(0, -BODY_HEIGHT / 2, HEAD_RADIUS * 2, HEAD_RADIUS * 2);
 		popMatrix();
+	}
+}
+
+class Pair implements Renderable {
+	private class Particle {
+		Body body;
+
+		Particle(Vec2 pos){
+			BodyDef bodyDef = new BodyDef();
+			bodyDef.type = BodyType.DYNAMIC;
+			bodyDef.position.set(box2d.coordPixelsToWorld(pos.x, pos.y));
+			body = box2d.createBody(bodyDef);
+
+			CircleShape shape = new CircleShape();
+			shape.m_radius = box2d.scalarPixelsToWorld(5);
+			body.createFixture(shape, 1);
+		}
+
+		void display(){
+			pushMatrix();
+
+			Vec2 pos = box2d.getBodyPixelCoord(body);
+			float angle = body.getAngle();
+			translate(pos.x, pos.y);
+			rotate(-angle);
+
+			Fixture fixture = body.getFixtureList();
+			CircleShape shape = (CircleShape) fixture.getShape();
+			float radius = box2d.scalarWorldToPixels(shape.getRadius());
+			ellipse(0, 0, radius, radius);
+
+			popMatrix();
+		}
+	}
+
+	private Particle p1, p2;
+	private final static int LENGTH = 32;
+
+	Pair(Vec2 pos1, Vec2 pos2){
+		p1 = new Particle(pos1);
+		p2 = new Particle(pos2);
+		DistanceJointDef jointDef = new DistanceJointDef();
+		jointDef.bodyA = p1.body;
+		jointDef.bodyB = p2.body;
+		jointDef.length = box2d.scalarPixelsToWorld(LENGTH);
+		jointDef.frequencyHz = 0;
+		jointDef.dampingRatio = 0;
+		DistanceJoint joint = (DistanceJoint) box2d.world.createJoint(jointDef);
+	}
+
+	void display(){
+		Vec2 pos1 = box2d.getBodyPixelCoord(p1.body);
+		Vec2 pos2 = box2d.getBodyPixelCoord(p2.body);
+		stroke(0);
+
+		line(pos1.x, pos1.y, pos2.x, pos2.y);
+		p1.display();
+		p2.display();
 	}
 }
