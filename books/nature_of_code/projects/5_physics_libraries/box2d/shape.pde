@@ -2,19 +2,21 @@
  * A simple object that maintains a `Box2D` state.
  */
 
-import org.jbox2d.dynamics.joints.DistanceJointDef;
-import org.jbox2d.dynamics.joints.DistanceJoint;
+// import org.jbox2d.dynamics.joints.DistanceJointDef;
+// import org.jbox2d.dynamics.joints.DistanceJoint;
+// import org.jbox2d.dynamics.joints.RevoluteJointDef;
+import org.jbox2d.dynamics.joints.*;
 
 class Box implements Renderable {
 	float height_, width_;
 	Body body;
 
-	Box(float x, float y){
-		height_ = 10;
-		width_ = 16;
+	Box(float x, float y, float widthArg, float heightArg, boolean fixed){
+		width_ = widthArg;
+		height_ = heightArg;
 
 		BodyDef bodyDef = new BodyDef();
-		bodyDef.type = BodyType.DYNAMIC;
+		bodyDef.type = fixed ? BodyType.STATIC : BodyType.DYNAMIC;
 		bodyDef.position.set(box2d.coordPixelsToWorld(x, y));
 		body = box2d.createBody(bodyDef);
 
@@ -179,7 +181,7 @@ class Pair implements Renderable {
 		jointDef.length = box2d.scalarPixelsToWorld(LENGTH);
 		jointDef.frequencyHz = 0;
 		jointDef.dampingRatio = 0;
-		DistanceJoint joint = (DistanceJoint) box2d.world.createJoint(jointDef);
+		box2d.world.createJoint(jointDef);
 	}
 
 	void display(){
@@ -190,5 +192,34 @@ class Pair implements Renderable {
 		line(pos1.x, pos1.y, pos2.x, pos2.y);
 		p1.display();
 		p2.display();
+	}
+}
+
+/**
+ * A windmill with a self-propelled rotor.
+ */
+class Windmill implements Renderable {
+	RevoluteJoint joint;
+	Box box1, box2;
+
+	Windmill(float x, float y){
+		box1 = new Box(x, y, 120, 10, false);
+		box2 = new Box(x, y, 10, 40, true);
+
+		RevoluteJointDef jointDef = new RevoluteJointDef();
+		jointDef.initialize(box1.body, box2.body, box1.body.getWorldCenter());
+		jointDef.motorSpeed = PI * 2;
+		jointDef.maxMotorTorque = 1e3;
+		jointDef.enableMotor = true;
+		joint = (RevoluteJoint) box2d.world.createJoint(jointDef);
+	}
+
+	void toggleMotor(){
+		joint.enableMotor(!joint.isMotorEnabled());
+	}
+
+	void display(){
+		box1.display();
+		box2.display();
 	}
 }

@@ -34,11 +34,8 @@ void setup(){
 }
 
 void mousePressed(){
-	Pair pair = new Pair(
-		new Vec2(mouseX - 5, mouseY),
-		new Vec2(mouseX + 5, mouseY)
-	);
-	objects.add(pair);
+	Windmill newWindmill = new Windmill(mouseX, mouseY);
+	objects.add(newWindmill);
 }
 
 void draw(){
