@@ -1,5 +1,5 @@
 /**
- *
+ * A sketch demonstrating flocking behavior.
  */
 
 Boid[] boids;
@@ -28,7 +28,7 @@ void draw(){
 }
 
 /**
- * An actor that implements flock behavior.
+ * An actor that implements flocking behavior.
  */
 class Boid {
 	private static final float MAX_FORCE = 0.05,
@@ -86,85 +86,70 @@ class Boid {
 	}
 
 	void flock(Boid[] boids){
-		PVector cohesiveForce = cohesion(boids);
-		cohesiveForce.mult(20);
-		applyForce(separate(boids));
-		applyForce(align(boids));
-		applyForce(cohesiveForce);
-	}
-
-	private PVector separate(Boid[] boids){
 		float neighborDist = 30;
+		ArrayList<Boid> neighbors = new ArrayList<Boid>();
+		for(Boid boid : boids){
+			float distance = dist(boid.loc.x, boid.loc.y, loc.x, loc.y);
+			if(0 < distance && distance < neighborDist){
+				neighbors.add(boid);
+			}
+		}
+
+		if(neighbors.size() > 0){
+			applyForce(separate(neighbors));
+			applyForce(align(neighbors));
+			applyForce(cohesion(neighbors));
+		}
+	}
+
+	/**
+	 * Apply a force to this Boid to separate it from all the Boids in `boids`.
+	 */
+	private PVector separate(ArrayList<Boid> boids){
 		PVector separation = new PVector(0, 0);
-		float numNeighbors = 0;
 
 		for(Boid boid : boids){
-			float distance = dist(boid.loc.x, boid.loc.y, loc.x, loc.y);
-			if(0 < distance && distance < neighborDist){
-				PVector disp = PVector.sub(loc, boid.loc);
-				disp.normalize();
-				disp.div(distance);
-				separation.add(disp);
-				numNeighbors++;
-			}
+			PVector disp = PVector.sub(loc, boid.loc);
+			disp.normalize();
+			separation.add(disp);
 		}
 
-		if(numNeighbors > 0){
-			separation.div(numNeighbors);
-			separation.normalize();
-			separation.mult(MAX_SPEED);
-			PVector steer = PVector.sub(separation, vel);
-			return steer;
-		}
-		else {
-			return new PVector(0, 0);
-		}
+		separation.div(boids.size());
+		separation.normalize();
+		separation.mult(MAX_SPEED);
+		PVector steer = PVector.sub(separation, vel);
+		return steer;
 	}
 
-	private PVector align(Boid[] boids){
-		float neighborDist = 50;
+	/**
+	 * Apply a force to this Boid to align its movement with that of the Boids
+	 * in `boids`.
+	 */
+	private PVector align(ArrayList<Boid> boids){
 		PVector alignment = new PVector(0, 0);
-		float numNeighbors = 0;
 
 		for(Boid boid : boids){
-			float distance = dist(boid.loc.x, boid.loc.y, loc.x, loc.y);
-			if(0 < distance && distance < neighborDist){
-				alignment.add(boid.vel);
-				numNeighbors++;
-			}
+			alignment.add(boid.vel);
 		}
 
-		if(numNeighbors > 0){
-			alignment.div(numNeighbors);
-			alignment.normalize();
-			alignment.mult(MAX_SPEED);
-			PVector steer = PVector.sub(alignment, vel);
-			return steer;
-		}
-		else {
-			return new PVector(0, 0);
-		}
+		alignment.div(boids.size());
+		alignment.normalize();
+		alignment.mult(MAX_SPEED);
+		PVector steer = PVector.sub(alignment, vel);
+		return steer;
 	}
 
-	private PVector cohesion(Boid[] boids){
-		float neighborDist = 50;
+	/**
+	 * Apply a force to this Boid to move it closer to the Boids in `boids`.
+	 */
+	private PVector cohesion(ArrayList<Boid> boids){
 		PVector cohesion = new PVector(0, 0);
-		float numNeighbors = 0;
 
 		for(Boid boid : boids){
-			float distance = dist(boid.loc.x, boid.loc.y, loc.x, loc.y);
-			if(0 < distance && distance < neighborDist){
-				cohesion.add(boid.loc);
-				numNeighbors++;
-			}
+			cohesion.add(boid.loc);
 		}
 
-		if(numNeighbors > 0){
-			cohesion.div(numNeighbors);
-			return cohesion;
-		}
-		else {
-			return new PVector(0, 0);
-		}
+		cohesion.div(boids.size());
+		return cohesion;
 	}
 }
