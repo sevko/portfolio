@@ -1,3 +1,8 @@
+/**
+ * Conway's Game of Life rendered in a full-screen window with a cell per
+ * pixel. See `gameOfLife()`.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -11,9 +16,18 @@ typedef struct {
 	bool curr, next;
 } Cell_t;
 
-const int NUM_TICKS = 1000,
+const int NUM_TICKS = 400,
 	TICK_US = 1e6 / 30;
 
+/**
+ * Set the color of a pixel to red at specific coordinates in an SDL screen.
+ *
+ * @param surface The SDL surface to draw to.
+ * @param x The x-coordinate of the pixel to plot. No bounds checking is
+ *      performed.
+ * @param y The y-coordinate of the pixel to plot. No bounds checking is
+ *      performed.
+ */
 inline void drawPixel(SDL_Surface *surface, int x, int y){
 	Uint8 *pixelAddress = (Uint8 *) surface->pixels +
 		y * surface->pitch +
@@ -21,8 +35,17 @@ inline void drawPixel(SDL_Surface *surface, int x, int y){
 	*(Uint32 *)pixelAddress = 0xFF0000;
 };
 
+/**
+ * Simulate Conway's Game of Life with the classic ruleset:
+ *
+ *   1. A live cell dies when the number of alive neighbors is <= 1 or >= 4.
+ *   2. A dead cell comes to life if it has 3 alive neighbors.
+ *
+ * The simulation will be rendered on a full-screen SDL surface, with a cell
+ * per pixel.
+ */
 int gameOfLife(void){
-	if((SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) == -1)){
+	if((SDL_Init(SDL_INIT_VIDEO) == -1)){
 		fprintf(stderr, "Could not initialize SDL: %s.\n", SDL_GetError());
 		return 1;
 	}
@@ -34,14 +57,23 @@ int gameOfLife(void){
 
 	srand(time(NULL));
 	Cell_t cells[height][width];
-	for(int y = 0; y < height; y++){
-		for(int x = 0; x < width; x++){
-			cells[y][x] = (Cell_t){0};
-			if(rand() % 15 == 1){
-				cells[y][x].curr = true;
-			}
+
+	// Convenience macro for iterating over all cells in `cells`.
+	#define forEachCell(...) \
+		do {\
+			for(int y = 0; y < height; y++){\
+				for(int x = 0; x < width; x++){\
+					__VA_ARGS__\
+				}\
+			}\
+		} while(0)
+
+	forEachCell(
+		cells[y][x] = (Cell_t){0};
+		if(rand() % 15 == 1){
+			cells[y][x].curr = true;
 		}
-	}
+	);
 
 	int tick = NUM_TICKS;
 	while(tick--){
@@ -68,14 +100,12 @@ int gameOfLife(void){
 			}
 		}
 
-		for(int y = 0; y < height; y++){
-			for(int x = 0; x < width; x++){
-				cells[y][x].curr = cells[y][x].next;
-				if(cells[y][x].curr){
-					drawPixel(surface, x, y);
-				}
+		forEachCell(
+			cells[y][x].curr = cells[y][x].next;
+			if(cells[y][x].curr){
+				drawPixel(surface, x, y);
 			}
-		}
+		);
 
 		SDL_Flip(surface);
 		SDL_FillRect(surface, NULL, 0x000000);
