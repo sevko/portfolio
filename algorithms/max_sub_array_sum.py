@@ -1,6 +1,6 @@
 """
-A linear-complexity algorithm to find the sub-array of an array with the largest
-sum relative to its other sub-arrays.
+A linear-complexity algorithm to find the sub-array of an array with the
+largest sum relative to its other sub-arrays. Essentially Kadane's algorithm.
 """
 
 import random
@@ -31,14 +31,14 @@ def max_sub_array_sum(arr):
 	prev_sum = arr[0]
 	max_sum = prev_sum
 
-	for ind in range(1, len(arr)):
-		if arr[ind] < 0 and prev_sum > max_sum:
+	for item in arr[1:]:
+		if item < 0 and prev_sum > max_sum:
 			max_sum = prev_sum
 
 		if prev_sum < 0:
-			prev_sum = arr[ind]
+			prev_sum = item
 		else:
-			prev_sum += arr[ind]
+			prev_sum += item
 
 	if prev_sum > max_sum:
 		max_sum = prev_sum
