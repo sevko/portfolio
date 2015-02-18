@@ -1,12 +1,25 @@
+"""
+A sketch that trains a simple machine learner to correctly identify points that
+are above and below a line. It trains it on a data point once per `draw()`
+tick, and renders the (ideally improving) results.
+"""
+
 import random
 
 class Perceptron(object):
+	"""
+	A simple machine learner.
+	"""
 
 	def __init__(self, num_weights, learning_constant=1):
 		self.weights = [random.uniform(-1, 1) for _ in range(num_weights)]
 		self.learning_constant = learning_constant
 
 	def feedforward(self, inputs):
+		"""
+		Return the computed result for the given `inputs` using `self.weights`.
+		"""
+
 		if len(inputs) != len(self.weights):
 			raise Exception("Number of inputs and weights must be equal.")
 
@@ -16,6 +29,11 @@ class Perceptron(object):
 		return self._activate(sum(outputs))
 
 	def train(self, inputs, expected):
+		"""
+		Compare the result of `self.feedforward()` for `inputs` against the
+		`expected` output, and adjust `self.weights` accordingly.
+		"""
+
 		result = self.feedforward(inputs)
 		err = expected - result
 		self.weights = [
@@ -44,20 +62,24 @@ def setup():
 
 def draw():
 	globals_["count"] += 1
-	print(globals_["count"])
 	test_cases = globals_["test_cases"]
 	test_case = test_cases[globals_["count"] % len(test_cases)]
 	globals_["perceptron"].train(*test_case)
 
 	background(255)
 	line(0, globals_["function"](0), width, globals_["function"](width))
-	for pt, _ in globals_["test_cases"]:
+	for ind in range(len(globals_["test_cases"])):
+		if ind < globals_["count"]:
+			stroke(0xFF, 0, 0)
+		pt, _ = globals_["test_cases"][ind]
+
 		if globals_["perceptron"].feedforward(pt) > 0:
 			noFill()
 		else:
 			fill(0)
 
 		ellipse(pt[0], pt[1], 8, 8)
+		stroke(0)
 
 	fill(0xFF, 0, 0)
 	ellipse(test_case[0][0], test_case[0][1], 8, 8)
