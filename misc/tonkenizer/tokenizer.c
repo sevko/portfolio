@@ -60,28 +60,19 @@ Token_t *getTokens(const char *src, int length, int *numTokens){
 	return tokens;
 }
 
+#define ENUM_CASE(name) \
+		case TOK_##name: \
+			tokenName = #name; \
+			break;
+
 void printToken(const Token_t *token){
 	const char *tokenName;
 	switch(token->type){
-		case TOK_WORD:
-			tokenName = "WORD";
-			break;
-
-		case TOK_NUMBER:
-			tokenName = "NUMBER";
-			break;
-
-		case TOK_WHITESPACE:
-			tokenName = "WHITESPACE";
-			break;
-
-		case TOK_NONE:
-			tokenName = "NONE";
-			break;
+		ENUM_CASE(WORD)
+		ENUM_CASE(NUMBER)
+		ENUM_CASE(WHITESPACE)
+		ENUM_CASE(NONE)
 	}
-	// putchar('\'');
-	// fwrite(token->body, token->length, 1, stdout);
-	// fputs("', ", stdout);
 	printf("%s: `", tokenName);
 	fwrite(token->body, token->length, 1, stdout);
 	fputs("`\n", stdout);
