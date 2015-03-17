@@ -2,28 +2,34 @@
 #include <pcre.h>
 #include <string.h>
 
-typedef enum {TOK_WORD, TOK_NUMBER, TOK_NONE, TOK_WHITESPACE} TokenType_t;
+typedef enum {
+	TOK_WORD, TOK_NUMBER, TOK_NONE, TOK_WHITESPACE, TOK_SYMBOL, TOK_KEYWORD
+} TokenType_t;
+
 typedef struct {
 	const char *body;
 	int length;
 	TokenType_t type;
 } Token_t;
-pcre *g_tokenRegexes;
 
-pcre *WORD_REGEX, *NUMBER_REGEX, *WHITESPACE_REGEX;
+pcre *WORD_REGEX, *NUMBER_REGEX, *WHITESPACE_REGEX, *KEYWORD_REGEX,
+	*SYMBOL_REGEX;
 
-#define TRY_REGEX(tokType) \
-	if(pcre_exec(tokType##_REGEX, NULL, src, length, 0, 0, matchOffsets, 6) !=\
-		PCRE_ERROR_NOMATCH){ \
-		tokenType = TOK_##tokType; \
-	}
 int getToken(const char *src, int length, Token_t *token){
+	#define TRY_REGEX(tokType) \
+		if(pcre_exec(tokType##_REGEX, NULL, src, length, 0, PCRE_ANCHORED, matchOffsets, 6) !=\
+			PCRE_ERROR_NOMATCH){ \
+			tokenType = TOK_##tokType; \
+		}
+
 	int matchOffsets[3];
 	TokenType_t tokenType = TOK_NONE;
 
-	TRY_REGEX(WORD)
+	TRY_REGEX(KEYWORD)
+	else TRY_REGEX(WORD)
 	else TRY_REGEX(NUMBER)
 	else TRY_REGEX(WHITESPACE)
+	else TRY_REGEX(SYMBOL)
 
 	if(tokenType != TOK_NONE){
 		token->type = tokenType;
@@ -36,7 +42,6 @@ int getToken(const char *src, int length, Token_t *token){
 	}
 }
 
-// TODO: use &numTokens instead of *numTokens
 Token_t *getTokens(const char *src, int length, int *numTokens){
 	Token_t *tokens = malloc(100 * sizeof(Token_t));
 	*numTokens = 0;
@@ -60,49 +65,59 @@ Token_t *getTokens(const char *src, int length, int *numTokens){
 	return tokens;
 }
 
-#define ENUM_CASE(name) \
+void printToken(const Token_t *token){
+	#define ENUM_CASE(name) \
 		case TOK_##name: \
 			tokenName = #name; \
 			break;
 
-void printToken(const Token_t *token){
 	const char *tokenName;
 	switch(token->type){
 		ENUM_CASE(WORD)
 		ENUM_CASE(NUMBER)
 		ENUM_CASE(WHITESPACE)
 		ENUM_CASE(NONE)
+		ENUM_CASE(KEYWORD)
+		ENUM_CASE(SYMBOL)
 	}
 	printf("%s: `", tokenName);
 	fwrite(token->body, token->length, 1, stdout);
 	fputs("`\n", stdout);
 }
 
-#define INIT_REGEX(name, regexStr) \
-	name##_REGEX = pcre_compile(regexStr, 0, &errMsg, &errOffset, NULL); \
-	if(name##_REGEX == NULL){ \
-		printf( \
-			"`%s`. Failed to compile regular expression `%s` at index `%d`.\n", \
-			errMsg, regexStr, errOffset \
-		); \
-		return 1; \
-	}
-
 int main(){
+	#define INIT_REGEX(name, regexStr) \
+		name##_REGEX = pcre_compile(regexStr, 0, &errMsg, &errOffset, NULL); \
+		if(name##_REGEX == NULL){ \
+			printf( \
+				"`%s`. Failed to compile regular expression `%s` at index `%d`.\n", \
+				errMsg, regexStr, errOffset \
+			); \
+			return 1; \
+		}
+
 	const char *errMsg;
 	int errOffset;
 
-	INIT_REGEX(NUMBER, "^[0-9]+")
-	INIT_REGEX(WORD, "^[a-zA-Z_]+")
-	INIT_REGEX(WHITESPACE, "^[ \t\n]+")
+	INIT_REGEX(NUMBER, "[0-9]+")
+	INIT_REGEX(WORD, "[a-zA-Z_]+")
+	INIT_REGEX(WHITESPACE, "[ \t\n]+")
+	INIT_REGEX(
+		KEYWORD,
+		"(class|constructor|function|method|field|static|var|int|char|"
+		"boolean|void|true|false|null|this|let|do|if|else|while|return)"
+	)
+	INIT_REGEX(SYMBOL, "[{}\\[\\]().,;+*/&|<>=~-]")
 
-	const char *srcStr = "302 hello what 90 20 are";
+	const char *srcStr = "class{function foo(int a){return a + 1;}";
 	int numTokens;
 	Token_t *tokens = getTokens(srcStr, strlen(srcStr), &numTokens);
 	for(int ind = 0; ind < numTokens; ind++){
 		printToken(&(tokens[ind]));
 	}
 
+	pcre_free(SYMBOL_REGEX);
+	pcre_free(KEYWORD_REGEX);
 	pcre_free(NUMBER_REGEX);
 	pcre_free(WORD_REGEX);
 	pcre_free(WHITESPACE_REGEX);
