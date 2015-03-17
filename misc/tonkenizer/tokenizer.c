@@ -12,20 +12,18 @@ pcre *g_tokenRegexes;
 
 pcre *WORD_REGEX, *NUMBER_REGEX, *WHITESPACE_REGEX;
 
+#define TRY_REGEX(tokType) \
+	if(pcre_exec(tokType##_REGEX, NULL, src, length, 0, 0, matchOffsets, 6) !=\
+		PCRE_ERROR_NOMATCH){ \
+		tokenType = TOK_##tokType; \
+	}
 int getToken(const char *src, int length, Token_t *token){
 	int matchOffsets[3];
 	TokenType_t tokenType = TOK_NONE;
-	if(pcre_exec(WORD_REGEX, NULL, src, length, 0, 0, matchOffsets, 6) != PCRE_ERROR_NOMATCH){
-		tokenType = TOK_WORD;
-	}
 
-	else if(pcre_exec(NUMBER_REGEX, NULL, src, length, 0, 0, matchOffsets, 6) != PCRE_ERROR_NOMATCH){
-		tokenType = TOK_NUMBER;
-	}
-
-	else if(pcre_exec(WHITESPACE_REGEX, NULL, src, length, 0, 0, matchOffsets, 6) != PCRE_ERROR_NOMATCH){
-		tokenType = TOK_WHITESPACE;
-	}
+	TRY_REGEX(WORD)
+	else TRY_REGEX(NUMBER)
+	else TRY_REGEX(WHITESPACE)
 
 	if(tokenType != TOK_NONE){
 		token->type = tokenType;
@@ -89,38 +87,23 @@ void printToken(const Token_t *token){
 	fputs("`\n", stdout);
 }
 
+#define INIT_REGEX(name, regexStr) \
+	name##_REGEX = pcre_compile(regexStr, 0, &errMsg, &errOffset, NULL); \
+	if(name##_REGEX == NULL){ \
+		printf( \
+			"`%s`. Failed to compile regular expression `%s` at index `%d`.\n", \
+			errMsg, regexStr, errOffset \
+		); \
+		return 1; \
+	}
+
 int main(){
 	const char *errMsg;
 	int errOffset;
-	const char *regexStr = "^[0-9]+";
-	NUMBER_REGEX = pcre_compile(regexStr, 0, &errMsg, &errOffset, NULL);
-	if(NUMBER_REGEX == NULL){
-		printf(
-			"`%s`. Failed to compile regular expression `%s` at index `%d`.\n",
-			errMsg, regexStr, errOffset
-		);
-		return 1;
-	}
 
-	regexStr = "^[a-zA-Z]+";
-	WORD_REGEX = pcre_compile(regexStr, 0, &errMsg, &errOffset, NULL);
-	if(WORD_REGEX == NULL){
-		printf(
-			"`%s`. Failed to compile regular expression `%s` at index `%d`.\n",
-			errMsg, regexStr, errOffset
-		);
-		return 1;
-	}
-
-	regexStr = "^[ \t]+";
-	WHITESPACE_REGEX = pcre_compile(regexStr, 0, &errMsg, &errOffset, NULL);
-	if(WHITESPACE_REGEX == NULL){
-		printf(
-			"`%s`. Failed to compile regular expression `%s` at index `%d`.\n",
-			errMsg, regexStr, errOffset
-		);
-		return 1;
-	}
+	INIT_REGEX(NUMBER, "^[0-9]+")
+	INIT_REGEX(WORD, "^[a-zA-Z_]+")
+	INIT_REGEX(WHITESPACE, "^[ \t\n]+")
 
 	const char *srcStr = "302 hello what 90 20 are";
 	int numTokens;
