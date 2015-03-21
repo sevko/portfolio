@@ -8,7 +8,13 @@
 static pcre **g_regexes;
 static int numRegexes = 0;
 
-int getToken(const char *src, int length, Token_t *token){
+/**
+ * Given a string `src` of length `length`, attempt extracting a token from it.
+ * If one is found, the length of the token's body will be returned (ie
+ * `token->length`), and the token itself will be stored in `*token`.
+ * Otherwise, returns -1.
+ */
+static int getToken(const char *src, int length, Token_t *token){
 	#define TRY_REGEX(tokType) \
 		if(pcre_exec(tokType##_REGEX, NULL, src, length, 0, PCRE_ANCHORED, matchOffsets, 6) !=\
 			PCRE_ERROR_NOMATCH){ \
