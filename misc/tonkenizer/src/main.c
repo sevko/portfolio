@@ -1,3 +1,8 @@
+/**
+ * Contains functions that call the functions implemented in the
+ * `src/tokenizer` module.
+ */
+
 #include <stdio.h>
 #include <sys/time.h>
 #include <locale.h>
@@ -5,6 +10,10 @@
 
 #include "src/tokenizer.h"
 
+/**
+ * Read the file at `filePath` into a `char *`, and return it. Store the number
+ * of bytes read in `*fileLength`.
+ */
 char *readFile(const char *filePath, int *fileLength){
 	FILE *file = fopen(filePath, "r");
 	fseek(file, 0, SEEK_END);
@@ -31,7 +40,7 @@ long getMicrotime(){
 
 int main(){
 	int fileLength;
-	char *corpus = readFile("corpus.txt", &fileLength);
+	char *corpus = readFile("corpus3.txt", &fileLength);
 
 	initTokenizer();
 	unsigned long startTime = getMicrotime();
