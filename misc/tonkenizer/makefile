@@ -1,9 +1,16 @@
 .PHONY: all clean
 
-all:
-	gcc tokenizer.c -Og -o tokenizer -std=c99 -lpcre
+FLAGS = -Wall -std=c99 -lpcre
+debug: FLAGS += -Og -g3
+all: FLAGS += -Ofast
 
-run: all
+all: bin
+debug: bin
+
+bin: tokenizer.c
+	gcc tokenizer.c -o tokenizer $(FLAGS)
+
+run: bin
 	./tokenizer
 
 clean:

@@ -43,7 +43,8 @@ int getToken(const char *src, int length, Token_t *token){
 }
 
 Token_t *getTokens(const char *src, int length, int *numTokens){
-	Token_t *tokens = malloc(100 * sizeof(Token_t));
+	int tokenBufferLength = 100;
+	Token_t *tokens = malloc(tokenBufferLength * sizeof(Token_t));
 	*numTokens = 0;
 	const char *nextTokenPtr = src;
 
@@ -56,7 +57,11 @@ Token_t *getTokens(const char *src, int length, int *numTokens){
 			return NULL;
 		}
 		else {
-			(*numTokens)++;
+			if(++(*numTokens) == tokenBufferLength){
+				tokenBufferLength *= 2;
+				tokens = realloc(tokens, tokenBufferLength * sizeof(Token_t));
+			}
+
 			length -= numBytesRead;
 			nextTokenPtr += numBytesRead;
 		}
