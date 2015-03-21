@@ -5,8 +5,8 @@
 
 #include "src/tokenizer.h"
 
-static pcre *WORD_REGEX, *NUMBER_REGEX, *WHITESPACE_REGEX, *KEYWORD_REGEX,
-	*SYMBOL_REGEX;
+static pcre **g_regexes;
+static int numRegexes = 0;
 
 int getToken(const char *src, int length, Token_t *token){
 	#define TRY_REGEX(tokType) \
@@ -18,11 +18,16 @@ int getToken(const char *src, int length, Token_t *token){
 	int matchOffsets[3];
 	TokenType_t tokenType = TOK_NONE;
 
-	TRY_REGEX(KEYWORD)
-	else TRY_REGEX(WORD)
-	else TRY_REGEX(NUMBER)
-	else TRY_REGEX(WHITESPACE)
-	else TRY_REGEX(SYMBOL)
+	for(int ind = 0; ind < numRegexes; ind++){
+		int match = pcre_exec(
+			g_regexes[ind], NULL, src, length, 0, PCRE_ANCHORED,
+			matchOffsets, 6
+		);
+		if(match != PCRE_ERROR_NOMATCH){
+			tokenType = ind;
+			break;
+		}
+	}
 
 	if(tokenType != TOK_NONE){
 		token->type = tokenType;
@@ -83,32 +88,45 @@ void printToken(const Token_t *token){
 	fputs("`\n", stdout);
 }
 
-void initTokenizer(){
-	#define INIT_REGEX(name, regexStr) \
-		name##_REGEX = pcre_compile(regexStr, 0, &errMsg, &errOffset, NULL); \
-		if(name##_REGEX == NULL){ \
-			printf( \
-				"`%s`. Failed to compile regular expression `%s` at index `%d`.\n", \
-				errMsg, regexStr, errOffset \
-			); \
-			exit(1); \
-		}
-
-	const char *errMsg;
+pcre *initRegex(const char *regexStr){
 	int errOffset;
+	const char *errMsg;
+	pcre *regex = pcre_compile(regexStr, 0, &errMsg, &errOffset, NULL);
+	if(regex == NULL){
+		fprintf(
+			stderr,
+			"`%s`. Failed to compile regular expression `%s` at index `%d`.\n",
+			errMsg, regexStr, errOffset
+		);
+	}
+	return regex;
+}
 
-	INIT_REGEX(NUMBER, "[0-9]+")
-	INIT_REGEX(WORD, "[a-zA-Z_]+")
-	INIT_REGEX(WHITESPACE, "[ \t\n]+")
-	INIT_REGEX(KEYWORD, "int|bool|char")
-	INIT_REGEX(SYMBOL, "[{}\\[\\]().,;+*/&|<>=~-]")
+int initTokenizer(){
+	numRegexes = 5;
+	const char *regexStrings[numRegexes];
+	regexStrings[TOK_NUMBER] = "[0-9]+";
+	regexStrings[TOK_WORD] = "[a-zA-Z_]+";
+	regexStrings[TOK_WHITESPACE] = "[ \t\n]+";
+	regexStrings[TOK_KEYWORD] = "int|bool|char";
+	regexStrings[TOK_SYMBOL] = "[{}\\[\\]().,;+*/&|<>=~-]";
+
+	g_regexes = malloc(numRegexes * sizeof(pcre *));
+	for(int ind = 0; ind < numRegexes; ind++){
+		pcre *regex = initRegex(regexStrings[ind]);
+		if(regex == NULL){
+			return 0;
+		}
+		else {
+			g_regexes[ind] = regex;
+		}
+	}
+	return 1;
 }
 
 void deinitTokenizer(){
-	pcre_free(SYMBOL_REGEX);
-	pcre_free(KEYWORD_REGEX);
-	pcre_free(NUMBER_REGEX);
-	pcre_free(WORD_REGEX);
-	pcre_free(WHITESPACE_REGEX);
-
+	for(int ind = 0; ind < numRegexes; ind++){
+		free(g_regexes[ind]);
+	}
+	free(g_regexes);
 }

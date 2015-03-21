@@ -1,11 +1,7 @@
-/*
- * @brief h
-*/
-
 #pragma once
 
 typedef enum {
-	TOK_WORD, TOK_NUMBER, TOK_NONE, TOK_WHITESPACE, TOK_SYMBOL, TOK_KEYWORD
+	TOK_WORD, TOK_NUMBER, TOK_WHITESPACE, TOK_SYMBOL, TOK_KEYWORD, TOK_NONE
 } TokenType_t;
 
 typedef struct {
@@ -15,5 +11,5 @@ typedef struct {
 } Token_t;
 
 Token_t *getTokens(const char *src, int length, int *numTokens);
-void initTokenizer();
+int initTokenizer();
 void deinitTokenizer();
