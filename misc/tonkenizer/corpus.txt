@@ -1,0 +1,9 @@
+class {
+	function foo(int a){
+		return a + 1;
+	}
+
+	function bar(int c, char d){
+		return str(c) + d;
+	}
+}

@@ -123,25 +123,21 @@ int main(){
 	)
 	INIT_REGEX(SYMBOL, "[{}\\[\\]().,;+*/&|<>=~-]")
 
-	const char *srcStr = "class{function foo(int a){return a + 1;}";
+	int fileLength;
+	char *corpus = readFile("corpus.txt", &fileLength);
 	int numTokens;
-	Token_t *tokens = getTokens(srcStr, strlen(srcStr), &numTokens);
+	Token_t *tokens = getTokens(corpus, fileLength, &numTokens);
 	for(int ind = 0; ind < numTokens; ind++){
 		printToken(&(tokens[ind]));
 	}
-
+	free(corpus);
 	free(tokens);
+
 	pcre_free(SYMBOL_REGEX);
 	pcre_free(KEYWORD_REGEX);
 	pcre_free(NUMBER_REGEX);
 	pcre_free(WORD_REGEX);
 	pcre_free(WHITESPACE_REGEX);
-
-	int fileLength;
-	char *contents = readFile("corpus.txt", &fileLength);
-	fwrite(contents, 1, fileLength, stdout);
-	printf("%d\n", fileLength);
-	free(contents);
 
 	return 0;
 }
