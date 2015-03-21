@@ -85,6 +85,21 @@ void printToken(const Token_t *token){
 	fputs("`\n", stdout);
 }
 
+char *readFile(const char *filePath, int *fileLength){
+	FILE *file = fopen(filePath, "r");
+	fseek(file, 0, SEEK_END);
+	int length = ftell(file);
+	rewind(file);
+	char *contents = malloc(length);
+	if(fread(contents, 1, length, file) != length){
+		fprintf(stderr, "Could not read all of file: %s\n", filePath);
+		exit(1);
+	}
+	fclose(file);
+	*fileLength = length;
+	return contents;
+}
+
 int main(){
 	#define INIT_REGEX(name, regexStr) \
 		name##_REGEX = pcre_compile(regexStr, 0, &errMsg, &errOffset, NULL); \
@@ -104,8 +119,7 @@ int main(){
 	INIT_REGEX(WHITESPACE, "[ \t\n]+")
 	INIT_REGEX(
 		KEYWORD,
-		"(class|constructor|function|method|field|static|var|int|char|"
-		"boolean|void|true|false|null|this|let|do|if|else|while|return)"
+		"int|bool|char"
 	)
 	INIT_REGEX(SYMBOL, "[{}\\[\\]().,;+*/&|<>=~-]")
 
@@ -116,10 +130,18 @@ int main(){
 		printToken(&(tokens[ind]));
 	}
 
+	free(tokens);
 	pcre_free(SYMBOL_REGEX);
 	pcre_free(KEYWORD_REGEX);
 	pcre_free(NUMBER_REGEX);
 	pcre_free(WORD_REGEX);
 	pcre_free(WHITESPACE_REGEX);
+
+	int fileLength;
+	char *contents = readFile("corpus.txt", &fileLength);
+	fwrite(contents, 1, fileLength, stdout);
+	printf("%d\n", fileLength);
+	free(contents);
+
 	return 0;
 }
