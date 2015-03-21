@@ -1,20 +1,11 @@
 #include <stdio.h>
 #include <pcre.h>
 #include <string.h>
-#include <sys/time.h>
-#include <locale.h>
+#include <stdlib.h>
 
-typedef enum {
-	TOK_WORD, TOK_NUMBER, TOK_NONE, TOK_WHITESPACE, TOK_SYMBOL, TOK_KEYWORD
-} TokenType_t;
+#include "src/tokenizer.h"
 
-typedef struct {
-	const char *body;
-	int length;
-	TokenType_t type;
-} Token_t;
-
-pcre *WORD_REGEX, *NUMBER_REGEX, *WHITESPACE_REGEX, *KEYWORD_REGEX,
+static pcre *WORD_REGEX, *NUMBER_REGEX, *WHITESPACE_REGEX, *KEYWORD_REGEX,
 	*SYMBOL_REGEX;
 
 int getToken(const char *src, int length, Token_t *token){
@@ -92,31 +83,7 @@ void printToken(const Token_t *token){
 	fputs("`\n", stdout);
 }
 
-char *readFile(const char *filePath, int *fileLength){
-	FILE *file = fopen(filePath, "r");
-	fseek(file, 0, SEEK_END);
-	int length = ftell(file);
-	rewind(file);
-	char *contents = malloc(length);
-	if(fread(contents, 1, length, file) != length){
-		fprintf(stderr, "Could not read all of file: %s\n", filePath);
-		exit(1);
-	}
-	fclose(file);
-	*fileLength = length;
-	return contents;
-}
-
-/**
- * Returns the current time in microseconds.
- */
-long getMicrotime(){
-	struct timeval currentTime;
-	gettimeofday(&currentTime, NULL);
-	return currentTime.tv_sec * (int)1e6 + currentTime.tv_usec;
-}
-
-int main(){
+void initTokenizer(){
 	#define INIT_REGEX(name, regexStr) \
 		name##_REGEX = pcre_compile(regexStr, 0, &errMsg, &errOffset, NULL); \
 		if(name##_REGEX == NULL){ \
@@ -124,7 +91,7 @@ int main(){
 				"`%s`. Failed to compile regular expression `%s` at index `%d`.\n", \
 				errMsg, regexStr, errOffset \
 			); \
-			return 1; \
+			exit(1); \
 		}
 
 	const char *errMsg;
@@ -135,33 +102,13 @@ int main(){
 	INIT_REGEX(WHITESPACE, "[ \t\n]+")
 	INIT_REGEX(KEYWORD, "int|bool|char")
 	INIT_REGEX(SYMBOL, "[{}\\[\\]().,;+*/&|<>=~-]")
+}
 
-	int fileLength;
-	char *corpus = readFile("corpus.txt", &fileLength);
-	int numTokens;
-
-	unsigned long startTime = getMicrotime();
-	Token_t *tokens = getTokens(corpus, fileLength, &numTokens);
-
-	setlocale(LC_NUMERIC, "");
-	printf(
-		"Time taken: %ldus\n"
-		"File length: %'d chars\n"
-		"Number tokens: %'d\n",
-		getMicrotime() - startTime, fileLength, numTokens);
-
-	free(corpus);
-	free(tokens);
-
+void deinitTokenizer(){
 	pcre_free(SYMBOL_REGEX);
 	pcre_free(KEYWORD_REGEX);
 	pcre_free(NUMBER_REGEX);
 	pcre_free(WORD_REGEX);
 	pcre_free(WHITESPACE_REGEX);
 
-	long startTime1 = getMicrotime();
-	usleep(123456);
-	printf("%ld\n", getMicrotime() - startTime1);
-
-	return 0;
 }

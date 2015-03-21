@@ -1,17 +1,31 @@
-.PHONY: all clean
+PROJECT_EXECUTABLE = bin/tokenizer
+FLAGS = -Wall -Wextra -I ./ -std=c99
+C_COMPILER = gcc $(FLAGS)
+CC = @echo "\tcc $@" && $(C_COMPILER)
+LIBS = -lpcre
 
-FLAGS = -Wall -std=c99 -lpcre
-debug: FLAGS += -Og -g3
+SRC = $(wildcard src/*.c)
+OBJ = $(patsubst %.c, bin/%.o, $(foreach file, $(SRC), $(notdir $(file))))
+
+.PHONY: all debug run clean
+
 all: FLAGS += -Ofast
+all: bin $(PROJECT_EXECUTABLE)
 
-all: bin
-debug: bin
+debug: FLAGS += -Og -g3
+debug: bin $(PROJECT_EXECUTABLE)
 
-bin: tokenizer.c
-	gcc tokenizer.c -o tokenizer $(FLAGS)
+run: all
+	./$(PROJECT_EXECUTABLE)
 
-run: bin
-	./tokenizer
+$(PROJECT_EXECUTABLE): $(OBJ)
+	$(CC) -o $@ $^ $(LIBS)
+
+bin/%.o: src/%.c
+	$(CC) -o $@ -c $^
+
+bin:
+	@mkdir bin
 
 clean:
-	rm tokenizer
+	@rm -rf bin $(PROJECT_EXECUTABLE)
