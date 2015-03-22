@@ -42,58 +42,75 @@ char *tokenToString(Token_t *token){
 	return bytesWritten == -1 ? NULL : str;
 }
 
-Token_t *tokenize(const char *src, int *numTotalTokens){
+int getToken(const char *src, Token_t *token){
 	#define YYCTYPE char
 	#define YYCURSOR src
 	#define YYMARKER temp
+	TokenType_t type;
+	const char *start = YYCURSOR;
 
+	/*!re2c
+	re2c:yyfill:enable = 0;
+
+	"int"|"void" {
+		type = TOK_KEYWORD;
+		goto CREATE_TOKEN;
+	}
+
+	ANYLETTER = [a-zA-Z];
+	ANYLETTER+ {
+		type = TOK_IDENTIFIER;
+		goto CREATE_TOKEN;
+	}
+
+	";" {
+		type = TOK_SYMBOL;
+		goto CREATE_TOKEN;
+	}
+
+	[ \r\t]+ {
+		type = TOK_WHITESPACE;
+		goto CREATE_TOKEN;
+	}
+
+	"\x00" {
+		return 0;
+	}
+
+	[^] {
+		puts("Invalid token");
+	}
+	*/
+
+	CREATE_TOKEN:
+	token->body = start;
+	token->length = YYCURSOR - start;
+	token->type = type;
+	return token->length;
+}
+
+Token_t *tokenize(const char *src, int *numTotalTokens){
 	int tokenBufLength = 100;
 	Token_t *tokens = malloc(tokenBufLength * sizeof(Token_t));
 	int numTokens = 0;
 
 	while(true){
-		const char *start = YYCURSOR;
-		TokenType_t type;
 		Token_t *token = &(tokens[numTokens++]);
-		/*!re2c
-		re2c:yyfill:enable = 0;
+		int length = getToken(src, token);
+		switch(length){
+			case -1:
+				free(tokens);
+				return NULL;
+				break;
 
-		"int"|"void" {
-			type = TOK_KEYWORD;
-			goto CREATE_TOKEN;
+			case 0:
+				*numTotalTokens = numTokens - 1;
+				return tokens;
+				break;
+
+			default:
+				src += length;
 		}
-
-		ANYLETTER = [a-zA-Z];
-		ANYLETTER+ {
-			type = TOK_IDENTIFIER;
-			goto CREATE_TOKEN;
-		}
-
-		";" {
-			type = TOK_SYMBOL;
-			goto CREATE_TOKEN;
-		}
-
-		[ \r\t]+ {
-			type = TOK_WHITESPACE;
-			goto CREATE_TOKEN;
-		}
-
-		"\x00" {
-			*numTotalTokens = numTokens - 1;
-			return tokens;
-		}
-
-		[^] {
-			puts("Invalid token");
-			continue;
-		}
-		*/
-
-		CREATE_TOKEN:
-		token->body = start;
-		token->length = YYCURSOR - start;
-		token->type = type;
 
 		if(numTokens == tokenBufLength){
 			tokenBufLength *= 2;
