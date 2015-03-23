@@ -12,7 +12,7 @@
 // The various token types recognized by the parser.
 typedef enum {
 	TOK_KEYWORD, TOK_IDENTIFIER, TOK_WORD, TOK_SYMBOL, TOK_WHITESPACE,
-	TOK_NONE
+	TOK_NONE, TOK_END
 } TokenType_t;
 
 // A token.
@@ -54,59 +54,47 @@ char *tokenToString(Token_t *token){
 }
 
 /**
- * Attempt extracting a token from `src`. If one is found, the number of bytes
- * read is returned and the token is stored in `*token`; a 0 is returned on
- * EOF; a -1 is returned when an un-tokenizable character was encountered.
+ * Attempt reading a token from `*src`. If one is found, the `TokenType_t` of
+ * the token is returned, and `*src` is set to the first byte right after the
+ * last matching byte of the token.
  */
-int getToken(const char *src, Token_t *token){
+TokenType_t readToken(const char **src){
 	#define YYCTYPE char
-	#define YYCURSOR src
+	#define YYCURSOR (*src)
 	#define YYMARKER temp
-	TokenType_t type;
-	const char *start = YYCURSOR;
 
 	/*!re2c
 	re2c:yyfill:enable = 0;
 
 	"int"|"void" {
-		type = TOK_KEYWORD;
-		goto CREATE_TOKEN;
+		return TOK_KEYWORD;
 	}
 
 	ANYLETTER = [a-zA-Z];
 	ANYLETTER+ {
-		type = TOK_IDENTIFIER;
-		goto CREATE_TOKEN;
+		return TOK_IDENTIFIER;
 	}
 
 	";" {
-		type = TOK_SYMBOL;
-		goto CREATE_TOKEN;
+		return TOK_SYMBOL;
 	}
 
 	[ \r\t]+ {
-		type = TOK_WHITESPACE;
-		goto CREATE_TOKEN;
+		return TOK_WHITESPACE;
 	}
 
 	"\x00" {
-		return 0;
+		return TOK_END;
 	}
 
 	[^] {
-		puts("Invalid token");
+		return TOK_NONE;
 	}
 	*/
-
-	CREATE_TOKEN:
-	token->body = start;
-	token->length = YYCURSOR - start;
-	token->type = type;
-	return token->length;
 }
 
 /**
- * Tokenize a `string` using `getToken()`, and return an array of all the
+ * Tokenize a `string` using `readToken()`, and return an array of all the
  * resultant `Token_t`s. The number of tokens will be stored in
  * `*numTotalTokens`. Note that `src` is expected to be null-terminated.
  */
@@ -116,22 +104,23 @@ Token_t *tokenize(const char *src, int *numTotalTokens){
 	int numTokens = 0;
 
 	while(true){
-		Token_t *token = &(tokens[numTokens++]);
-		int length = getToken(src, token);
-		switch(length){
-			case -1:
-				free(tokens);
-				*numTotalTokens = 0;
-				return NULL;
-				break;
+		const char *start = src;
+		TokenType_t tokType = readToken(&src);
 
-			case 0:
-				*numTotalTokens = numTokens - 1;
-				return tokens;
-				break;
-
-			default:
-				src += length;
+		if(tokType == TOK_END){
+			*numTotalTokens = numTokens;
+			return tokens;
+		}
+		else if(tokType == TOK_NONE){
+			free(tokens);
+			*numTotalTokens = 0;
+			return NULL;
+		}
+		else {
+			Token_t *token = &tokens[numTokens++];
+			token->body = start;
+			token->length = src - start;
+			token->type = tokType;
 		}
 
 		if(numTokens == tokenBufLength){
