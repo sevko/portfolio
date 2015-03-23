@@ -7,8 +7,8 @@ dev: FLAGS += -Og -g
 release: bin
 dev: bin
 
-bin: example.re
-	re2c -o example.c example.re
+bin: example.re.c
+	re2c -o example.c example.re.c
 	gcc -o $(EXECUTABLE) $(FLAGS) example.c
 
 run: bin
