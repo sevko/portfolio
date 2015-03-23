@@ -59,37 +59,25 @@ char *tokenToString(Token_t *token){
  * last matching byte of the token.
  */
 TokenType_t readToken(const char **src){
-	#define YYCTYPE char
-	#define YYCURSOR (*src)
-	#define YYMARKER temp
+	const char *temp;
+	/**
+	 * Silence the `unused variable` warning if `re2c` ends up not using
+	 * `temp`, which it will for simple parsers.
+	 */
+	(void)temp;
 
 	/*!re2c
 	re2c:yyfill:enable = 0;
+	re2c:define:YYCURSOR = *src;
+	re2c:define:YYCTYPE = char;
+	re2c:define:YYMARKER = temp;
 
-	"int"|"void" {
-		return TOK_KEYWORD;
-	}
-
-	ANYLETTER = [a-zA-Z];
-	ANYLETTER+ {
-		return TOK_IDENTIFIER;
-	}
-
-	";" {
-		return TOK_SYMBOL;
-	}
-
-	[ \r\t]+ {
-		return TOK_WHITESPACE;
-	}
-
-	"\x00" {
-		return TOK_END;
-	}
-
-	[^] {
-		return TOK_NONE;
-	}
+	"int"|"void" {return TOK_KEYWORD;}
+	[a-zA-Z]+ {return TOK_IDENTIFIER;}
+	";" {return TOK_SYMBOL;}
+	[ \r\t]+ {return TOK_WHITESPACE;}
+	"\x00" {return TOK_END;}
+	[^] {return TOK_NONE;}
 	*/
 }
 
