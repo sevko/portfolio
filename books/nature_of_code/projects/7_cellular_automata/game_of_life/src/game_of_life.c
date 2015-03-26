@@ -10,8 +10,6 @@
 #include <unistd.h>
 #include <time.h>
 
-#include "game_of_life.h"
-
 typedef struct {
 	bool curr, next;
 } Cell_t;

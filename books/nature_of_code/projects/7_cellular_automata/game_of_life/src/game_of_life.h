@@ -1,5 +1,0 @@
-/**
- * @brief 
- */
-
-#pragma once
