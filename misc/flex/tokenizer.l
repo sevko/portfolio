@@ -1,3 +1,7 @@
+/**
+ * A simple tokenizer written using the flex scanner generator.
+ */
+
 %{
 typedef enum {
 	TOK_KEYWORD, TOK_IDENTIFIER, TOK_NUMBER, TOK_SYMBOL, TOK_WHITESPACE,
