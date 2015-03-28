@@ -1,6 +1,6 @@
 %{
 typedef enum {
-	TOK_KEYWORD, TOK_IDENTIFIER, TOK_WORD, TOK_SYMBOL, TOK_WHITESPACE,
+	TOK_KEYWORD, TOK_IDENTIFIER, TOK_NUMBER, TOK_SYMBOL, TOK_WHITESPACE,
 	TOK_NONE, TOK_END
 } TokenType_t;
 
@@ -11,9 +11,14 @@ typedef struct {
 	TokenType_t type;
 } Token_t;
 
+// Used by `addToken()` to store tokens as the flex scanner identifies them.
 int tokenBufLength = 10, numTokens = 0;
 Token_t *tokens;
 
+/**
+ * Store the current token in the `tokens` array, by copying `yyleng` bytes
+ * from `yytext`. Resizes `tokens` as necessary.
+ */
 void addToken(TokenType_t type){
 	Token_t *token = &tokens[numTokens++];
 	token->body = malloc(yyleng);
@@ -29,10 +34,11 @@ void addToken(TokenType_t type){
 %}
 %%
 
-int|void addToken(TOK_KEYWORD);
-[a-zA-Z]+ addToken(TOK_IDENTIFIER);
-; addToken(TOK_SYMBOL);
-[ \r\t]+ addToken(TOK_WHITESPACE);
+int|void|string addToken(TOK_KEYWORD);
+[a-zA-Z_][a-zA-Z0-9_]* addToken(TOK_IDENTIFIER);
+[0-9]+(\.[0-9]+)? addToken(TOK_NUMBER);
+[-+/*{}()[\];=] addToken(TOK_SYMBOL);
+[ \r\t\n]+ addToken(TOK_WHITESPACE);
 . addToken(TOK_NONE);
 <<EOF>> addToken(TOK_END); return 0;
 
@@ -53,7 +59,7 @@ char *tokenToString(Token_t *token){
 	switch(token->type){
 		CASE(KEYWORD)
 		CASE(IDENTIFIER)
-		CASE(WORD)
+		CASE(NUMBER)
 		CASE(SYMBOL)
 		CASE(WHITESPACE)
 		CASE(NONE)

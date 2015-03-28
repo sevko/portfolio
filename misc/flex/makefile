@@ -12,7 +12,7 @@ bin: tokenizer.l
 	gcc -o $(EXECUTABLE) $(FLAGS) lex.yy.c -lfl
 
 run: bin
-	echo -n "int void foo bar" | ./$(EXECUTABLE)
+	cat corpus.txt | ./$(EXECUTABLE)
 
 clean:
 	rm tokenizer.c $(EXECUTABLE)

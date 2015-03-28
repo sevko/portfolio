@@ -1,0 +1,4 @@
+void foo(){
+	string a = b;
+	return 1234 + 4.433;
+}
