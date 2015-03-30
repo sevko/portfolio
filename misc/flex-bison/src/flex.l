@@ -4,6 +4,7 @@
 #define YY_DECL extern int yylex()
 #include "bin/bison.h"
 #define PRINT_TOK(msg) printf(msg ": `%.*s`\n", yyleng, yytext)
+int lineNum = 0;
 %}
 
 %%
@@ -26,7 +27,10 @@ end return END;
 	yylval.sval = strdup(yytext);
 	return STRING;
 }
-\n+ return ENDL;
+\n+ {
+	lineNum += yyleng;
+	return ENDL;
+}
 . ;
 
 %%

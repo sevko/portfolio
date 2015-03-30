@@ -6,6 +6,7 @@
 
 #define PRINTFERR(...) fprintf(stderr, __VA_ARGS__)
 
+extern int lineNum;
 extern int yylex();
 extern int yyparser();
 extern FILE *yyin;
@@ -40,7 +41,7 @@ template:
 	;
 
 typeline:
-	TYPE STRING ENDL {printf("New type: %s\n", $2);}
+	TYPE STRING ENDL {printf("%d: New type: %s\n", lineNum, $2);}
 	;
 
 body_section:
@@ -49,7 +50,9 @@ body_section:
 	;
 
 body_line:
-	INT INT INT INT STRING ENDL {printf("New snazzle: %d, %d, %d, %d, %s\n", $1, $2, $3, $4, $5);}
+	INT INT INT INT STRING ENDL {
+		printf("New snazzle: %d, %d, %d, %d, %s\n", $1, $2, $3, $4, $5);
+	}
 
 footer:
 	END ENDL;
@@ -74,6 +77,6 @@ int main(){
 }
 
 void yyerror(const char *err){
-	PRINTFERR("Error: %s\n", err);
+	PRINTFERR("Err: line %d: %s\n", lineNum + 1, err);
 	exit(1);
 }
