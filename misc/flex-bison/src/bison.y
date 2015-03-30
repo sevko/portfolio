@@ -22,7 +22,7 @@ void yyerror(const char *err);
 %token <fval> FLOAT
 %token <sval> STRING
 %token SNAZZLE TYPE
-%token END
+%token END ENDL
 
 %%
 
@@ -31,36 +31,28 @@ snazzle:
 	;
 
 header:
-	SNAZZLE FLOAT {printf("Reading a snazzle file version: %f\n", $2);}
+	SNAZZLE FLOAT ENDL {printf("Reading a snazzle file version: %f\n", $2);}
 	;
 
 template:
-	typelines
-	;
-
-typelines:
-	typelines typeline
+	template typeline
 	| typeline
 	;
 
 typeline:
-	TYPE STRING {printf("New type: %s\n", $2);}
+	TYPE STRING ENDL {printf("New type: %s\n", $2);}
 	;
 
 body_section:
-	body_lines
-	;
-
-body_lines:
-	body_lines body_line
+	body_section body_line
 	| body_line
 	;
 
 body_line:
-	INT INT INT INT STRING {printf("New snazzle: %d, %d, %d, %d, %s\n", $1, $2, $3, $4, $5);}
+	INT INT INT INT STRING ENDL {printf("New snazzle: %d, %d, %d, %d, %s\n", $1, $2, $3, $4, $5);}
 
 footer:
-	END;
+	END ENDL;
 
 %%
 
@@ -82,6 +74,6 @@ int main(){
 }
 
 void yyerror(const char *err){
-	fprintf(stderr, "Error: %s\n", err);
+	PRINTFERR("Error: %s\n", err);
 	exit(1);
 }

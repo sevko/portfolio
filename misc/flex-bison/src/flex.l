@@ -8,7 +8,7 @@
 
 %%
 
-[ \t\n] ; // ignore whitespace
+[ \t] ; // ignore whitespace
 sNaZZle return SNAZZLE;
 type return TYPE;
 end return END;
@@ -26,6 +26,7 @@ end return END;
 	yylval.sval = strdup(yytext);
 	return STRING;
 }
+\n+ return ENDL;
 . ;
 
 %%
