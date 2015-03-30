@@ -5,7 +5,7 @@ CC = @echo "\tcc $@" && $(C_COMPILER)
 LIBS = $(foreach lib, fl, -l$(lib))
 
 SRC = $(wildcard src/*.c)
-OBJ = $(foreach file, flex parser, bin/$(file).o)
+OBJ = $(foreach file, flex bison parser, bin/$(file).o)
 
 .PHONY: all debug run clean
 
@@ -21,11 +21,17 @@ run: all
 $(PROJECT_EXECUTABLE): $(OBJ)
 	$(CC) -o $@ $^ $(LIBS)
 
-bin/flex.o: bin/flex.c
-	$(CC) -w -o $@ -c $^
+bin/flex.o: bin/flex.c bin/bison.c
+	$(CC) -w -o $@ -c bin/flex.c
 
 bin/flex.c: src/flex.l
 	flex -o $@ $^
+
+bin/bison.o: bin/bison.c
+	$(CC) -w -o $@ -c $^
+
+bin/bison.c: src/bison.y
+	bison -d $^ -o $@
 
 bin/parser.o: bin/flex.c src/parser.c
 	$(CC) -o $@ -c src/parser.c
