@@ -5,7 +5,7 @@ CC = @echo "\tcc $@" && $(C_COMPILER)
 LIBS = $(foreach lib, fl, -l$(lib))
 
 SRC = $(wildcard src/*.c)
-OBJ = $(foreach file, flex bison parser, bin/$(file).o)
+OBJ = $(foreach file, flex bison, bin/$(file).o)
 
 .PHONY: all debug run clean
 
@@ -32,9 +32,6 @@ bin/bison.o: bin/bison.c
 
 bin/bison.c: src/bison.y
 	bison -d $^ -o $@
-
-bin/parser.o: bin/flex.c src/parser.c
-	$(CC) -o $@ -c src/parser.c
 
 bin:
 	@mkdir bin
