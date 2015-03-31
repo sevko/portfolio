@@ -6,6 +6,9 @@
 
 #define PRINTFERR(...) fprintf(stderr, __VA_ARGS__)
 
+/**
+ * Represents the contents of a statement parsed by bison.
+ */
 typedef struct {
 	enum {STMT_HEADER, STMT_TYPE, STMT_BODY, STMT_FOOTER} type;
 	union {
@@ -21,7 +24,6 @@ typedef struct {
 		} body;
 	} stmt;
 } Statement_t;
-Statement_t *stmts;
 
 extern int lineNum;
 extern int yylex();
@@ -29,9 +31,21 @@ extern int yyparser();
 extern FILE *yyin;
 void yyerror(const char *err);
 
-int numStmts = 0;
+/**
+ * Variables used to store a buffer of the `Statement_t`s parsed by bison.
+ */
+Statement_t *stmts;
 int stmtsBufLength = 10;
 
+/**
+ * Will contain the total number of parsed statements contained in `stmts`
+ * after bison finishes parsing the input.
+ */
+int numStmts = 0;
+
+/**
+ * Add `stmt` to `stmts`.
+ */
 void addStmt(Statement_t stmt){
 	stmts[numStmts++] = stmt;
 	if(numStmts == stmtsBufLength){
@@ -40,6 +54,10 @@ void addStmt(Statement_t stmt){
 	}
 }
 
+/**
+ * Free all of the members contained inside `*stmt`, like `char *`. `stmt`
+ * itself is /not/ free'd.
+ */
 void freeStmtMembers(Statement_t *stmt){
 	switch(stmt->type){
 		case STMT_TYPE:
@@ -52,6 +70,10 @@ void freeStmtMembers(Statement_t *stmt){
 	}
 }
 
+/**
+ * Return a string representation of `stmt` that has to be `free()`'d after
+ * use.
+ */
 char *stmtToString(Statement_t *stmt){
 	char *str;
 	switch(stmt->type){
@@ -80,6 +102,11 @@ char *stmtToString(Statement_t *stmt){
 	}
 
 	return str;
+}
+
+void yyerror(const char *err){
+	PRINTFERR("Err: line %d: %s\n", lineNum + 1, err);
+	exit(1);
 }
 
 %}
@@ -187,9 +214,4 @@ int main(){
 	free(stmts);
 	yylex_destroy();
 	fclose(file);
-}
-
-void yyerror(const char *err){
-	PRINTFERR("Err: line %d: %s\n", lineNum + 1, err);
-	exit(1);
 }
