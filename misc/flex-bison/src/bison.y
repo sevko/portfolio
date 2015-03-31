@@ -1,3 +1,7 @@
+/**
+ * The Snazzle Bison parser.
+ */
+
 %{
 #include <stdio.h>
 #include <string.h>

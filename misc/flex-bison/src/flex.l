@@ -1,3 +1,7 @@
+/**
+ * The Snazzle Flex tokenizer.
+ */
+
 %{
 #include <stdio.h>
 
