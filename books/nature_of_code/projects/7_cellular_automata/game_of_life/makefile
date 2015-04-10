@@ -1,4 +1,4 @@
-PROJECT_EXECUTABLE = game_of_life
+PROJECT_EXECUTABLE = bin/game_of_life
 FLAGS = -Wall -Wextra -I ./ -std=c99
 LIBS = $(shell sdl-config --libs)
 C_COMPILER = gcc $(FLAGS)
