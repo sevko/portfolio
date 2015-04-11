@@ -2,9 +2,11 @@
 #include "array_queue.h"
 
 int main(){
-	int numbers[] = {1, 2, 3, 4, 5, 6, 7};
+	const int NUM_NUMBERS = 9;
+	int numbers[NUM_NUMBERS];
 	ArrayQueue_t *queue = ArrayQueue_create();
-	for(int ind = 0; ind < (signed)(sizeof(numbers) / sizeof(numbers[0])); ind++){
+	for(int ind = 0; ind < NUM_NUMBERS; ind++){
+		numbers[ind] = ind;
 		ArrayQueue_enqueue(queue, &numbers[ind]);
 	}
 	while(!ArrayQueue_empty(queue)){
