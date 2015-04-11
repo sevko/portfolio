@@ -7,14 +7,14 @@ struct ArrayQueue {
 	int numElements;
 
 	void **blockBeginning;
-	size_t blockLength;
+	int blockLength;
 };
 
 ArrayQueue_t *ArrayQueue_create(void){
 	ArrayQueue_t *queue = malloc(sizeof(ArrayQueue_t));;
 
-	size_t blockLength = 10 * sizeof(void *);
-	void *blockBeginning = malloc(blockLength);
+	int blockLength = 2;
+	void *blockBeginning = malloc(blockLength * sizeof(void *));
 	*queue = (ArrayQueue_t){
 		.head = blockBeginning,
 		.tail = blockBeginning,
@@ -31,16 +31,20 @@ void ArrayQueue_destroy(ArrayQueue_t *queue){
 }
 
 void ArrayQueue_enqueue(ArrayQueue_t *queue, void *item){
-	*queue->tail = item;
-	queue->tail++;
+	*(queue->tail++) = item;
 	queue->numElements++;
 
-	/* resize logic */
+	if(queue->tail == queue->blockBeginning + queue->blockLength){
+		queue->blockLength *= 2;
+		void **originalBlockBeginning = queue->blockBeginning;
+		queue->blockBeginning = realloc(queue->blockBeginning, queue->blockLength * sizeof(void *));
+		queue->head = queue->head - originalBlockBeginning + queue->blockBeginning;
+		queue->tail = queue->tail - originalBlockBeginning + queue->blockBeginning;
+	}
 }
 
 void *ArrayQueue_dequeue(ArrayQueue_t *queue){
-	void *item = *queue->head;
-	queue->head++;
+	void *item = *(queue->head++);
 	queue->numElements--;
 	return item;
 }
