@@ -14,5 +14,6 @@ void ArrayQueue_destroy(ArrayQueue_t *queue);
 void ArrayQueue_enqueue(ArrayQueue_t *queue, void *item);
 void *ArrayQueue_dequeue(ArrayQueue_t *queue);
 void *ArrayQueue_peek(ArrayQueue_t *queue);
+void *ArrayQueue_peekIndex(ArrayQueue_t *queue, int index);
 int ArrayQueue_size(ArrayQueue_t *queue);
 bool ArrayQueue_empty(ArrayQueue_t *queue);

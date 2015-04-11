@@ -13,7 +13,7 @@ struct ArrayQueue {
 ArrayQueue_t *ArrayQueue_create(void){
 	ArrayQueue_t *queue = malloc(sizeof(ArrayQueue_t));;
 
-	int blockLength = 2;
+	int blockLength = 10;
 	void *blockBeginning = malloc(blockLength * sizeof(void *));
 	*queue = (ArrayQueue_t){
 		.head = blockBeginning,
@@ -51,6 +51,10 @@ void *ArrayQueue_dequeue(ArrayQueue_t *queue){
 
 void *ArrayQueue_peek(ArrayQueue_t *queue){
 	return *queue->head;
+}
+
+void *ArrayQueue_peekIndex(ArrayQueue_t *queue, int index){
+	return queue->head[index];
 }
 
 int ArrayQueue_size(ArrayQueue_t *queue){
