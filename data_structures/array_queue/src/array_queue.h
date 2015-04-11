@@ -9,7 +9,7 @@
 
 typedef struct ArrayQueue ArrayQueue_t;
 
-ArrayQueue_t *create(void);
+ArrayQueue_t *ArrayQueue_create(void);
 void ArrayQueue_destroy(ArrayQueue_t *queue);
 void ArrayQueue_enqueue(ArrayQueue_t *queue, void *item);
 void *ArrayQueue_dequeue(ArrayQueue_t *queue);
