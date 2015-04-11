@@ -1,7 +1,14 @@
+/**
+ * A libtap unit-test for all methods in `src/array_queue.c`.
+ */
+
 #include <stdio.h>
 #include "array_queue.h"
 #include <tap.h>
 
+/**
+ * Test all of the ArrayQueue_t methods in one go.
+ */
 static void _test_ArrayQueue(void){
 	ArrayQueue_t *queue = ArrayQueue_create();
 	int NUM_TEST_VALUES = 100;

@@ -1,3 +1,7 @@
+/**
+ * All documentation comments live in `src/array_queue.h`.
+ */
+
 #include <stdlib.h>
 
 #include "array_queue.h"
