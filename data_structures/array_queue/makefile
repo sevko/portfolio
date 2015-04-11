@@ -1,6 +1,5 @@
-PROJECT_EXECUTABLE = bin/game_of_life
+PROJECT_EXECUTABLE = bin/array_queue
 FLAGS = -Wall -Wextra -I ./ -std=c99
-LIBS = $(shell sdl-config --libs)
 C_COMPILER = gcc $(FLAGS)
 CC = @echo "\tcc $@" && $(C_COMPILER)
 
@@ -16,13 +15,13 @@ debug: FLAGS += -Og -g3
 debug: bin $(PROJECT_EXECUTABLE)
 
 run: all
-	./$(PROJECT_EXECUTABLE)
+	./$(PROJECT_EXECUTABLE) | tap-spec
 
 $(PROJECT_EXECUTABLE): $(OBJ)
-	$(CC) -o $@ $^ $(LIBS)
+	$(CC) -o $@ $^ -ltap
 
 bin/%.o: src/%.c
-	$(CC) -o $@ -c $^ $(shell sdl-config --cflags)
+	$(CC) -o $@ -c $^
 
 bin:
 	@mkdir bin
