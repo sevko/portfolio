@@ -3,7 +3,7 @@
 #include <math.h>
 
 /* Return the upper bound for the `n`th prime. */
-static int nthPrimeUpperBound(int n){
+static unsigned int nthPrimeUpperBound(int n){
 	/*
 	 * See here for citations for relevant academic material:
 	 * http://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
@@ -19,7 +19,7 @@ static int nthPrimeUpperBound(int n){
 	}
 }
 
-int findNthPrimeNumber(int n){
+unsigned int findNthPrimeNumber(int n){
 	const int upperBound = nthPrimeUpperBound(n);
 	char numbers[upperBound];
 	memset(numbers, 0, upperBound);
