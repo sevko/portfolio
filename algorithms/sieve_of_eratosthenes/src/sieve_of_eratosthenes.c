@@ -4,6 +4,12 @@
 
 /* Return the upper bound for the `n`th prime. */
 static int nthPrimeUpperBound(int n){
+	/*
+	 * See here for citations for relevant academic material:
+	 * http://en.wikipedia.org/wiki/Prime_number_theorem#Approximations_for_the_nth_prime_number
+	 * Since the inequality only holds for `n >= 6`, we hardcode the upper
+	 * bounds for lower `n`.
+	 */
 	if(n >= 6){
 		return n * (log(n) + log(log(n)));
 	}
