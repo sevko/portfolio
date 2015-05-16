@@ -4,6 +4,7 @@
 #include "sieve_of_eratosthenes.h"
 
 void test_findNthPrimeNumber(void){
+	puts("Testing findNthPrimeNumber() against the first 100 primes.");
 	const int numPrimes = 100;
 	const int primes[] = {
 		2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67,
@@ -15,6 +16,7 @@ void test_findNthPrimeNumber(void){
 		467, 479, 487, 491, 499, 503, 509, 521, 523, 541
 	};
 
+	bool allPass = true;
 	for(int ind = 0; ind < numPrimes; ind++){
 		int primeNumber = ind + 1;
 		int actual = findNthPrimeNumber(primeNumber);
@@ -24,7 +26,15 @@ void test_findNthPrimeNumber(void){
 				stderr, "prime %d: actual %d != expected %d.\n",
 				primeNumber, actual, expected
 			);
+			allPass = false;
 		}
+	}
+
+	if(allPass){
+		puts("All passed!");
+	}
+	else {
+		fputs("ERROR: One or more tests failed!\n", stderr);
 	}
 }
 
