@@ -39,14 +39,15 @@ unsigned int findNthPrimeNumber(int n){
 
 	int upperFactorBound = ceil(sqrt(upperBound));
 	int factor = 3;
+	int factorInd = 0;
 	while(factor <= upperFactorBound){
 		int multiple = factor * 3;
+		int multipleDelta = factor * 2;
 		while(multiple < upperBound){
 			numbers[NUM_TO_IND(multiple)] = 1;
-			multiple += factor * 2;
+			multiple += multipleDelta;
 		}
 
-		int factorInd = NUM_TO_IND(factor);
 		while(numbers[++factorInd] == 1);
 		factor = IND_TO_NUM(factorInd);
 	}
