@@ -1,9 +1,17 @@
+/**
+ * Various tests for `findNthPrimeNumber()`, exported by
+ * `src/sieve_of_eratosthenes.h`.
+ */
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <sys/time.h>
 
 #include "sieve_of_eratosthenes.h"
 
+/**
+ * Test `findNthPrimeNumber` against the first 100 primes.
+ */
 static void test_findNthPrimeNumber(void){
 	puts("Testing findNthPrimeNumber() against the first 100 primes.");
 	const int numPrimes = 100;
@@ -39,15 +47,16 @@ static void test_findNthPrimeNumber(void){
 	}
 }
 
-/**
- * Returns the current time in microseconds.
- */
+/* Returns the current time in microseconds. */
 static long getMicrotime(){
 	struct timeval currentTime;
 	gettimeofday(&currentTime, NULL);
 	return currentTime.tv_sec * (int)1e6 + currentTime.tv_usec;
 }
 
+/**
+ * Report the time `findNthPrimeNumber()` took for large n.
+ */
 static void test_findNthPrimeNumberSpeed(void){
 	puts("Testing speed:");
 	unsigned int expectedPrime = 15485863;
