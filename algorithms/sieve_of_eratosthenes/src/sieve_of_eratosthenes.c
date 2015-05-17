@@ -25,23 +25,28 @@ static unsigned int nthPrimeUpperBound(int n){
 }
 
 unsigned int findNthPrimeNumber(int n){
+	if(n == 1){
+		return 2;
+	}
+
 	const int upperBound = nthPrimeUpperBound(n);
-	char numbers[upperBound];
-	memset(numbers, 0, upperBound);
+	const int numNumbers = (upperBound - 1) / 2;
+	char numbers[numNumbers];
+	memset(numbers, 0, numNumbers);
 
 	int upperFactorBound = ceil(sqrt(upperBound));
-	for(int factor = 2; factor <= upperFactorBound; factor++){
-		int multiple = factor * 2;
+	for(int factor = 3; factor <= upperFactorBound; factor += 2){
+		int multiple = factor * 3;
 		while(multiple < upperBound){
-			numbers[multiple] = 1;
-			multiple += factor;
+			numbers[(multiple - 3) / 2] = 1;
+			multiple += factor * 2;
 		}
 	}
 
-	int numPrimes = 0;
-	for(int ind = 2; ind < upperBound; ind++){
+	int numPrimes = 1;
+	for(int ind = 0; ind < numNumbers; ind++){
 		if(numbers[ind] == 0 && ++numPrimes == n){
-			return ind;
+			return (ind * 2) + 3;
 		}
 	}
 	return -1;
