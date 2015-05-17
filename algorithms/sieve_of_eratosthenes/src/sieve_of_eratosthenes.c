@@ -35,12 +35,17 @@ unsigned int findNthPrimeNumber(int n){
 	memset(numbers, 0, numNumbers);
 
 	int upperFactorBound = ceil(sqrt(upperBound));
-	for(int factor = 3; factor <= upperFactorBound; factor += 2){
+	int factor = 3;
+	while(factor <= upperFactorBound){
 		int multiple = factor * 3;
 		while(multiple < upperBound){
 			numbers[(multiple - 3) / 2] = 1;
 			multiple += factor * 2;
 		}
+
+		int factorInd = (factor - 3) / 2;
+		while(numbers[++factorInd] == 1);
+		factor = factorInd * 2 + 3;
 	}
 
 	int numPrimes = 1;
