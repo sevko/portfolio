@@ -58,7 +58,7 @@ static long getMicrotime(){
  * Report the time `findNthPrimeNumber()` took for large n.
  */
 static void test_findNthPrimeNumberSpeed(void){
-	puts("Testing speed:");
+	puts("Testing speed of findNthPrimeNumber(1000000):");
 	unsigned int expectedPrime = 15485863;
 
 	long totalTime = 0;
