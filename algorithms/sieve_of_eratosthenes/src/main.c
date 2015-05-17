@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <sys/time.h>
 
 #include "sieve_of_eratosthenes.h"
 
-void test_findNthPrimeNumber(void){
+static void test_findNthPrimeNumber(void){
 	puts("Testing findNthPrimeNumber() against the first 100 primes.");
 	const int numPrimes = 100;
 	const int primes[] = {
@@ -38,7 +39,42 @@ void test_findNthPrimeNumber(void){
 	}
 }
 
+/**
+ * Returns the current time in microseconds.
+ */
+static long getMicrotime(){
+	struct timeval currentTime;
+	gettimeofday(&currentTime, NULL);
+	return currentTime.tv_sec * (int)1e6 + currentTime.tv_usec;
+}
+
+static void test_findNthPrimeNumberSpeed(void){
+	puts("Testing speed:");
+	unsigned int expectedPrime = 15485863;
+
+	long totalTime = 0;
+	const int numTests = 10;
+	for(int test = 0; test < numTests; test++){
+		long startTime = getMicrotime();
+		unsigned int prime = findNthPrimeNumber(1e6);
+		long deltaTime = getMicrotime() - startTime;
+		if(prime != expectedPrime){
+			fprintf(
+				stderr, "ERROR: actual %d did not match expected %d!\n",
+				prime, expectedPrime
+			);
+		}
+		else {
+			printf("Took: %luus\n", deltaTime);
+		}
+		totalTime += deltaTime;
+	}
+
+	printf("Average time: %luus\n", totalTime / numTests);
+}
+
 int main(){
 	test_findNthPrimeNumber();
+	test_findNthPrimeNumberSpeed();
 	return 0;
 }
