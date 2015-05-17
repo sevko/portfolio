@@ -16,6 +16,13 @@ checkOffFactors sieve factor =
 			else (isPrime && num `mod` factor /= 0, num))
 	sieve
 
+findNthPrimeInSieve :: Int -> Sieve -> Int
+findNthPrimeInSieve _ [] = error "nth prime not found in number search-space.\
+	\ Implementation error."
+findNthPrimeInSieve 0 ((True, num):_) = num
+findNthPrimeInSieve n' ((True, _):sieve) = findNthPrimeInSieve (n' - 1) sieve
+findNthPrimeInSieve n' ((False, _):sieve) = findNthPrimeInSieve n' sieve
+
 findNthPrime :: Int -> Int
 findNthPrime n = let
 	upperBound = upperBoundNthPrime n
@@ -23,13 +30,6 @@ findNthPrime n = let
 	factorUpperBound = ceiling $ sqrt $ fromIntegral upperBound
 	sieve = foldl checkOffFactors numbers [2..factorUpperBound]
 	in findNthPrimeInSieve n sieve
-	where
-
-		findNthPrimeInSieve :: Int -> Sieve -> Int
-		findNthPrimeInSieve _ [] = error "nth prime not found in number search-space. Implementation error."
-		findNthPrimeInSieve 0 ((True, num):_) = num
-		findNthPrimeInSieve n' ((True, _):sieve) = findNthPrimeInSieve (n' - 1) sieve
-		findNthPrimeInSieve n' ((False, _):sieve) = findNthPrimeInSieve n' sieve
 
 main :: IO ()
 main = do
