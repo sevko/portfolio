@@ -7,8 +7,8 @@ all: bin $(EXECUTABLE_PATH)
 run: all
 	bin/sieve_of_eratosthenes
 
-$(EXECUTABLE_PATH): sieve_of_eratosthenes.hs
-	$(CC) $(FLAGS) -hidir bin -odir bin -o $@ $^
+$(EXECUTABLE_PATH): sieve_of_eratosthenes.hs test_sieve.hs
+	$(CC) $(FLAGS) -hidir bin -odir bin -o $@ --make $^
 
 bin:
 	mkdir bin
