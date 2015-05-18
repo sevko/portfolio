@@ -22,11 +22,18 @@ main = do
 				show id',
 				if actual == expected
 					then "success: expected == actual == " ++ show expected
-					else Format.format "failure: expected ({0}) != actual ({1})" [show expected, show actual]
+					else Format.format
+						"failure: expected ({0}) != actual ({1})"
+						[show expected, show actual]
 				]
 
-		actualVsExpected = zip3 [1..] (take 100 SieveOfEratosthenes.primeNumbers) first100Primes
-		numberFailed = length $ filter (\ (_, actual, expected) -> actual /= expected) actualVsExpected
+		actualVsExpected = zip3
+			[1..]
+			(take 100 SieveOfEratosthenes.primeNumbers)
+			first100Primes
+		numberFailed = length $
+			filter (\ (_, actual, expected) -> actual /= expected)
+			actualVsExpected
 
 	mapM_ reviewTestResult actualVsExpected
 	if numberFailed > 0
