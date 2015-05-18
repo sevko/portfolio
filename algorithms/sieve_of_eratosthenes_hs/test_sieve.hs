@@ -1,3 +1,7 @@
+{-
+Functions to test the SieveOfEratosthenes module.
+-}
+
 import qualified Text.Format as Format
 import qualified SieveOfEratosthenes
 

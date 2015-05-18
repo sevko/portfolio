@@ -1,3 +1,7 @@
+{-
+An implementation of the Sieve of Eratosthones.
+-}
+
 module SieveOfEratosthenes where
 
 primeNumbers :: [Int]
