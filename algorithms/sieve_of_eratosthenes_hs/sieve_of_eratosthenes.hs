@@ -1,36 +1,37 @@
-type SieveEntry = (Bool, Int)
-type Sieve = [SieveEntry]
+import qualified Text.Format as Format
 
-upperBoundNthPrime :: Int -> Int
-upperBoundNthPrime n
-	| n >= 7022 = ceiling $ n' * (log n' + log (log n') - 0.9385)
-	| n >= 6 = ceiling $ n' * (log n' + log (log n'))
-	| otherwise = [3, 4, 6, 8, 12] !! (n - 1)
-	where n' = fromIntegral n
-
-checkOffFactors :: Sieve -> Int -> Sieve
-checkOffFactors sieve factor =
-	map (\ entry@(isPrime, num) ->
-		if num <= factor
-			then entry
-			else (isPrime && num `mod` factor /= 0, num))
-	sieve
-
-findNthPrimeInSieve :: Int -> Sieve -> Int
-findNthPrimeInSieve _ [] = error "nth prime not found in number search-space.\
-	\ Implementation error."
-findNthPrimeInSieve 0 ((True, num):_) = num
-findNthPrimeInSieve n' ((True, _):sieve) = findNthPrimeInSieve (n' - 1) sieve
-findNthPrimeInSieve n' ((False, _):sieve) = findNthPrimeInSieve n' sieve
-
-findNthPrime :: Int -> Int
-findNthPrime n = let
-	upperBound = upperBoundNthPrime n
-	numbers = zip (repeat True) [1..upperBound]
-	factorUpperBound = ceiling $ sqrt $ fromIntegral upperBound
-	sieve = foldl checkOffFactors numbers [2..factorUpperBound]
-	in findNthPrimeInSieve n sieve
+primeNumbers :: [Int]
+primeNumbers = 2 : sieve [3, 5..]
+	where
+		sieve (factor:primes) =
+			let sansMultiples = filter (\ num -> num `mod` factor /= 0) primes
+			in factor : sieve sansMultiples
+		sieve _ = error "Implementation error."
 
 main :: IO ()
 main = do
-	print $ findNthPrime 10000
+	let first100Primes = [
+		2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67,
+		71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139,
+		149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223,
+		227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293,
+		307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379, 383,
+		389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449, 457, 461, 463,
+		467, 479, 487, 491, 499, 503, 509, 521, 523, 541
+		]
+	let
+		reviewTestResult (id', actual, expected) =
+			putStrLn $ Format.format "Prime #{0}: {1}" [
+				show id',
+				if actual == expected
+					then "success: expected == actual == " ++ show expected
+					else Format.format "failure: expected ({0}) != actual ({1})" [show expected, show actual]
+				]
+
+		actualVsExpected = zip3 [1..] (take 100 primeNumbers) first100Primes
+		numberFailed = length $ filter (\ (_, actual, expected) -> actual /= expected) actualVsExpected
+
+	mapM_ reviewTestResult actualVsExpected
+	if numberFailed > 0
+		then error "One or more failures!"
+		else putStrLn "All passed!"
