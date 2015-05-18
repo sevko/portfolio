@@ -1,5 +1,5 @@
 EXECUTABLE_PATH = bin/sieve_of_eratosthenes
-FLAGS = -Wall
+FLAGS = -Wall -fno-warn-type-defaults
 CC = ghc
 
 all: bin $(EXECUTABLE_PATH)
