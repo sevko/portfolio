@@ -1,5 +1,7 @@
 {-
-An implementation of the Sieve of Eratosthones.
+An implementation of the Sieve of Eratosthenes, using this article:
+http://en.literateprograms.org/Sieve_of_Eratosthenes_%28Haskell%29 as a
+tutorial.
 -}
 
 module SieveOfEratosthenes where
