@@ -6,6 +6,7 @@ tutorial.
 
 module SieveOfEratosthenes where
 
+{- A naive, slow, but elegant implementation. -}
 primeNumbers :: [Int]
 primeNumbers = 2 : sieve [3, 5..]
 	where
@@ -14,23 +15,28 @@ primeNumbers = 2 : sieve [3, 5..]
 			in factor : sieve sansMultiples
 		sieve _ = error "Implementation error."
 
-mergeInfinite :: (Ord a) => [a] -> [a] -> [a]
-mergeInfinite as@(a:aTail) bs@(b:bTail)
-	| a < b = a : mergeInfinite aTail bs
-	| b < a = b : mergeInfinite as bTail
-	| otherwise = a : mergeInfinite aTail bTail
-mergeInfinite _ _ = error "Impossible."
-
-diffInfinite :: (Ord a) => [a] -> [a] -> [a]
-diffInfinite as@(a:aTail) bs@(b:bTail)
-	| a < b = a : diffInfinite (aTail) bs
-	| a > b = diffInfinite as bTail
-	| otherwise = diffInfinite aTail bTail
-diffInfinite _ _ = error "Impossible."
-
-primeNumbers', nonPrimes :: [Int]
+primeNumbers' :: [Int]
 primeNumbers' = 2 : 3 : 5 : diffInfinite [7, 9..] nonPrimes
-nonPrimes = foldr1 mergeAll $ map generateMultiples $ tail primeNumbers'
 	where
+		nonPrimes = foldr1 mergeAll $ map generateMultiples $ tail primeNumbers'
+
+		mergeAll :: [Int] -> [Int] -> [Int]
 		mergeAll (x:xt) multiples = x : mergeInfinite xt multiples
+		mergeAll _ _ = error "Impossible, the list is infinite."
+
+		generateMultiples :: Int -> [Int]
 		generateMultiples prime = map (\ num -> (prime + num) * prime) [0, 2..]
+
+		diffInfinite :: (Ord a) => [a] -> [a] -> [a]
+		diffInfinite as@(a:aTail) bs@(b:bTail)
+			| a < b = a : diffInfinite (aTail) bs
+			| a > b = diffInfinite as bTail
+			| otherwise = diffInfinite aTail bTail
+		diffInfinite _ _ = error "The lists were not infinite!"
+
+		mergeInfinite :: (Ord a) => [a] -> [a] -> [a]
+		mergeInfinite as@(a:aTail) bs@(b:bTail)
+			| a < b = a : mergeInfinite aTail bs
+			| b < a = b : mergeInfinite as bTail
+			| otherwise = a : mergeInfinite aTail bTail
+		mergeInfinite _ _ = error "The lists were not infinite!"
