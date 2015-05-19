@@ -15,6 +15,7 @@ primeNumbers = 2 : sieve [3, 5..]
 			in factor : sieve sansMultiples
 		sieve _ = error "Implementation error."
 
+{- A significantly faster but infinitely more complex version. -}
 primeNumbers' :: [Int]
 primeNumbers' = 2 : 3 : 5 : diffInfinite [7, 9..] nonPrimes
 	where
@@ -27,6 +28,10 @@ primeNumbers' = 2 : 3 : 5 : diffInfinite [7, 9..] nonPrimes
 		generateMultiples :: Int -> [Int]
 		generateMultiples prime = map (\ num -> (prime + num) * prime) [0, 2..]
 
+		{-
+		 - Remove all of the elements in the second infinite list from the
+		 - first.
+		 -}
 		diffInfinite :: (Ord a) => [a] -> [a] -> [a]
 		diffInfinite as@(a:aTail) bs@(b:bTail)
 			| a < b = a : diffInfinite (aTail) bs
@@ -34,6 +39,7 @@ primeNumbers' = 2 : 3 : 5 : diffInfinite [7, 9..] nonPrimes
 			| otherwise = diffInfinite aTail bTail
 		diffInfinite _ _ = error "The lists were not infinite!"
 
+		{- Merge two infinite ordered lists into one ordered list. -}
 		mergeInfinite :: (Ord a) => [a] -> [a] -> [a]
 		mergeInfinite as@(a:aTail) bs@(b:bTail)
 			| a < b = a : mergeInfinite aTail bs
