@@ -1,3 +1,5 @@
 *.pyc
+*.o
+*.hi
 bin
 compiled_sketch
