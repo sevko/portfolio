@@ -61,5 +61,4 @@ testGcd' = do
 		else putStrLn "All tests passed!"
 
 main :: IO ()
-main = do
-	testGcd'
+main = testGcd'
