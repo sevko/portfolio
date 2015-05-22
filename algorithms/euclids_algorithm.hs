@@ -10,7 +10,6 @@ import qualified Data.List.Split as Split
  - Return the greatest common denominator of a and b using Euclid's Algorithm.
  -}
 gcd' :: Int -> Int -> Int
-gcd' 0 b = abs b
 gcd' a 0 = abs a
 gcd' a b = gcd' b $ a `rem` b
 
