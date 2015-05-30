@@ -15,7 +15,7 @@ FORCE:
 $(EXECUTABLE_PATH): FORCE
 	ghc -Wall -fno-warn-type-defaults \
 		-hidir $(BIN_DIR) -odir $(BIN_DIR) \
-		-o $@ --make test.hs
+		-o $@ --make Test.hs
 
 $(BIN_DIR):
 	mkdir $(BIN_DIR)
