@@ -16,7 +16,6 @@ testFunctions =
 		exp' = 1000000
 		mod' = 497939485920
 		funcs = [
-			("modularPow (recursive)", ModExp.modularPow),
 			("modularPow' (tail-recursive)", ModExp.modularPow'),
 			("modularPow'' (strict foldl')", ModExp.modularPow'')]
 		results = map (\ (name, func) -> (name, func base exp' mod')) funcs
