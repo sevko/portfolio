@@ -13,11 +13,12 @@ testFunctions :: String
 testFunctions =
 	let
 		base = 423123213123123123123131
-		exp' = 1000000
+		exp' = 1000000 :: Integer
 		mod' = 497939485920
 		funcs = [
 			("modularPow' (tail-recursive)", ModExp.modularPow'),
-			("modularPow'' (strict foldl')", ModExp.modularPow'')]
+			("modularPow'' (strict foldl')", ModExp.modularPow''),
+			("modularPow''' (binary exponentiation)", ModExp.modularPow''')]
 		results = map (\ (name, func) -> (name, func base exp' mod')) funcs
 		expected = 67540154401
 		resultStrings = map(\ (name, actual) ->
