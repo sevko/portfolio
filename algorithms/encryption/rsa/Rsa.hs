@@ -1,7 +1,8 @@
+module Rsa where
+
 import qualified ModularExponentiation as ModularExp
 import qualified ExtendedEuclideanAlgorithm as ExtEuclidean
 import qualified Data.List as List
-
 import qualified Text.Format as Format
 
 type PublicKey = Integer
@@ -38,21 +39,3 @@ create p q = let
 			[show e, show totient]
 	d' = if d < 0 then d + totient else d
 	in (n, e, d')
-
-main :: IO ()
-main = do
-	let
-		message = 65
-		(modulus, publicKey, privateKey) = create 61 53
-
-	putStrLn $ Format.format
-		"Using modulus {0}, public key {1}, and private key {2}."
-		[show modulus, show publicKey, show privateKey]
-
-	let
-		encrypted = encrypt modulus publicKey message
-		decrypted = decrypt modulus privateKey encrypted
-
-	putStrLn $ Format.format
-		"Message {0} is {1} when encrypted and {2} when decrypted."
-		[show message, show encrypted, show decrypted]
