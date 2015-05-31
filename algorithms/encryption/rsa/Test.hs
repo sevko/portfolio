@@ -1,23 +1,72 @@
+{-
+ - Unit tests for the functions provided by the `Rsa` module.
+ -}
+
 import qualified Rsa
 import qualified Text.Format as Format
 
-testRsa :: IO ()
-testRsa = do
-	let
-		message = 65
-		(modulus, publicKey, privateKey) = Rsa.create 61 53
+testEncrypt :: IO ()
+testEncrypt = do
+	putStrLn "Testing `Rsa.encrypt`."
+	let testCases = [
+		-- plaintext, public key, modulus, expected ciphertext
+		(65, 17, 3233, 2790),
+		(2, 7, 143, 128),
+		(100, 5, 299, 16)]
+	let evalTestCase (plaintext, publicKey, modulus, expectedCiphertext) =
+		let actualCiphertext = Rsa.encrypt modulus publicKey plaintext
+		in if actualCiphertext == expectedCiphertext
+			then return ()
+			else putStrLn $ Format.format
+				"Failed to encrypt {0} with public key \
+				\{1} and modulus {2}. Got {3}, but expected {4}." $
+				map show [
+					plaintext, publicKey, modulus, actualCiphertext,
+					expectedCiphertext]
+	mapM_ evalTestCase testCases
 
-	putStrLn $ Format.format
-		"Using modulus {0}, public key {1}, and private key {2}."
-		[show modulus, show publicKey, show privateKey]
+testDecrypt :: IO ()
+testDecrypt = do
+	putStrLn "Testing `Rsa.decrypt`."
+	let testCases = [
+		(2790, 2753, 3233, 65),
+		(128, 103, 143, 2),
+		(16, 53, 299, 100)]
 
-	let
-		encrypted = Rsa.encrypt modulus publicKey message
-		decrypted = Rsa.decrypt modulus privateKey encrypted
+	let evalTestCase (ciphertext, privateKey, modulus, expectedPlaintext) = do
+		let actualPlaintext = Rsa.decrypt modulus privateKey ciphertext
+		if actualPlaintext == expectedPlaintext
+			then return ()
+			else putStrLn $ Format.format
+				"Failed to decrypt {0} with private key {1} \
+				\and modulus {2}. Got {3}, but expected {4}." $
+				map show [
+					ciphertext, privateKey, modulus, actualPlaintext,
+					expectedPlaintext]
 
-	putStrLn $ Format.format
-		"Message {0} is {1} when encrypted and {2} when decrypted."
-		[show message, show encrypted, show decrypted]
+	mapM_ evalTestCase testCases
+
+testCreate :: IO ()
+testCreate = do
+	putStrLn "Testing `Rsa.create`."
+	let testCases = [
+		(61, 53, (3233, 7, 1783)),
+		(11, 13, (143, 7, 103)),
+		(13, 23, (299, 5, 53))]
+
+	let evalTestCase (prime1, prime2, expectedKeys) = do
+		let actualKeys = Rsa.create prime1 prime2
+		if actualKeys == expectedKeys
+			then return ()
+			else putStrLn $ Format.format
+				"Failed to create keys for primes {0} and {1}. Got \
+				\{2} but expected {3}."
+				[show prime1, show prime2, show actualKeys, show expectedKeys]
+
+	mapM_ evalTestCase testCases
 
 main :: IO ()
-main = testRsa
+main = do
+	testEncrypt
+	testDecrypt
+	testCreate
