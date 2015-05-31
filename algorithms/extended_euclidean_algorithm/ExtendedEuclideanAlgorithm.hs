@@ -10,7 +10,7 @@ module ExtendedEuclideanAlgorithm where
  - Bezout identity: `a * x + b * y = gcd(a, b)`. Both positive and negative
  - values are accepted. Returns (x, y, gcd(a, b)).
  -}
-bezoutCoefficients :: Int -> Int -> (Int, Int, Int)
+bezoutCoefficients :: Integral a => a -> a -> (a, a, a)
 
 {-
  - Given `b = 0`, we know that `gcd(a, b)` is `abs(a)`, and also that, in the
@@ -28,7 +28,7 @@ bezoutCoefficients a b = let
  - Computes the multiplicative inverse of `num` modulo `modulus`, or the value
  - `inverse` that satisfies `num * inverse = 1 (mod modulus)`.
  -}
-modularInverse :: Int -> Int -> Maybe Int
+modularInverse :: Integral a => a -> a -> Maybe a
 modularInverse num modulus = let
 	(inverse, _, gcd') = bezoutCoefficients num modulus
 	in if gcd' /= 1 then Nothing else Just inverse

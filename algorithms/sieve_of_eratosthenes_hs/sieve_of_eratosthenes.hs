@@ -7,7 +7,7 @@
 module SieveOfEratosthenes where
 
 {- A naive, slow, but elegant implementation. -}
-primeNumbers :: [Int]
+primeNumbers :: Integral a => [a]
 primeNumbers = 2 : sieve [3, 5..]
 	where
 		sieve (factor:primes) =
@@ -16,16 +16,16 @@ primeNumbers = 2 : sieve [3, 5..]
 		sieve _ = error "Implementation error."
 
 {- A significantly faster but infinitely more complex version. -}
-primeNumbers' :: [Int]
+primeNumbers' :: Integral a => [a]
 primeNumbers' = 2 : 3 : 5 : diffInfinite [7, 9..] nonPrimes
 	where
 		nonPrimes = foldr1 mergeAll $ map generateMultiples $ tail primeNumbers'
 
-		mergeAll :: [Int] -> [Int] -> [Int]
+		mergeAll :: Integral a => [a] -> [a] -> [a]
 		mergeAll (x:xt) multiples = x : mergeInfinite xt multiples
 		mergeAll _ _ = error "Impossible, the list is infinite."
 
-		generateMultiples :: Int -> [Int]
+		generateMultiples :: Integral a => a -> [a]
 		generateMultiples prime = map (\ num -> (prime + num) * prime) [0, 2..]
 
 		{-

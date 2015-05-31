@@ -20,7 +20,7 @@ testBezoutCoefficients = do
 		testCases = map (\ [a, b] -> (a, b)) $
 			Split.chunksOf 2 $
 			take (numberOfRandomTests * 2) $
-			Random.randomRs (-100, 100) randomGen
+			(Random.randomRs (-100, 100) randomGen :: [Int])
 
 		testResults = map (\ (a, b) ->
 			let
@@ -71,7 +71,7 @@ testModularInverse = do
 		testCases =
 			Split.chunksOf 2 $
 			take (numberOfRandomTests * 2) $
-			Random.randomRs (-100, 100) randomGen
+			(Random.randomRs (-100, 100) randomGen :: [Int])
 
 		evalTestCase [num, modulus] = do
 			let
