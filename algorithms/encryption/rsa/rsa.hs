@@ -1,6 +1,5 @@
 import qualified ModularExponentiation as ModularExp
 import qualified ExtendedEuclideanAlgorithm as ExtEuclidean
-import qualified SieveOfEratosthenes
 import qualified Data.List as List
 
 import qualified Text.Format as Format
@@ -21,11 +20,8 @@ create :: Integer -> Integer -> (Modulus, PublicKey, PrivateKey)
 create p q = let
 	n = p * q
 	totient = (p - 1) * (q - 1)
-	eCandidatePrimes = List.takeWhile (< totient)
-		SieveOfEratosthenes.primeNumbers'
-	eCandidate = List.find (\ prime -> totient `mod` prime /= 0)
-		eCandidatePrimes
-	e = case eCandidate of
+	eCandidates = [3..totient - 1]
+	e = case List.find (\ num -> totient `mod` num /= 0) eCandidates of
 		Just prime -> prime
 		Nothing -> error $
 			"No prime `p` was found that satisfies the following\

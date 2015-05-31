@@ -15,8 +15,7 @@ $(EXECUTABLE_PATH): FORCE
 		-hidir $(BIN_DIR) -odir $(BIN_DIR) \
 		-o $@ --make rsa.hs \
 		../../modular_exponentiation/ModularExponentiation.hs \
-		../../extended_euclidean_algorithm/ExtendedEuclideanAlgorithm.hs \
-		../../sieve_of_eratosthenes_hs/SieveOfEratosthenes.hs
+		../../extended_euclidean_algorithm/ExtendedEuclideanAlgorithm.hs
 
 $(BIN_DIR):
 	mkdir $(BIN_DIR)
