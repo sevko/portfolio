@@ -2,8 +2,6 @@ module Rsa where
 
 import qualified ModularExponentiation as ModularExp
 import qualified ExtendedEuclideanAlgorithm as ExtEuclidean
-import qualified Data.List as List
-import qualified Text.Format as Format
 
 type PublicKey = Integer
 type PrivateKey = Integer
@@ -21,21 +19,20 @@ create :: Integer -> Integer -> (Modulus, PublicKey, PrivateKey)
 create p q = let
 	n = p * q
 	totient = (p - 1) * (q - 1)
-	eCandidates = [3..totient - 1]
-	e = case List.find (\ num -> totient `mod` num /= 0) eCandidates of
-		Just prime -> prime
-		Nothing -> error $
-			"No prime `p` was found that satisfies the following\
-				\constraints:\n\
-				\  - 1 < p < totient\n\
-				\  - gcd(p, totient) = 1 (ie, `p` and `totient` are coprime)\n\
-				\for totient " ++ show totient ++ "."
 
-	d = case ExtEuclidean.modularInverse e totient of
-		Just inverse -> inverse
-		Nothing -> error $ Format.format
-			"e ({0}) is not coprime with the totient ({1})! This is an \
-				\implementation error."
-			[show e, show totient]
+	findPublicAndPrivateKeys :: [Integer] -> (PublicKey, PrivateKey)
+	findPublicAndPrivateKeys (currCandidate:candidates) =
+		let (modularInverse, _, gcd') =
+			ExtEuclidean.bezoutCoefficients currCandidate totient
+		in if gcd' == 1
+			then (currCandidate, modularInverse)
+			else findPublicAndPrivateKeys candidates
+
+	findPublicAndPrivateKeys [] = error $
+		"No public key `e` could be generated such that `gcd(e, t) = 1`, \
+		\where `t` is the totient (in this case, " ++ show totient ++ ")."
+
+	eCandidates = [3..totient - 1]
+	(e, d) = findPublicAndPrivateKeys eCandidates
 	d' = if d < 0 then d + totient else d
 	in (n, e, d')
