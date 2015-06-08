@@ -3,6 +3,13 @@ module RabinMiller where
 import qualified ModularExponentiation as ModExp
 import qualified System.Random as Random
 
+{-
+ - Test `num` for primality using the probabilistic Rabin-Miller algorithm.
+ - Note that it needs to randomly generate several numbers to do so (hence the
+ - `IO`-wrapped return value); see `isPrimeCore` for a function that implements
+ - the same algorithm, but accepts said numbers as an argument, see
+ - `isPrimeCore` (for which this function is just a wrapper).
+ -}
 isPrime :: Integer -> IO Bool
 isPrime primeCandidate = do
 	randomGen <- Random.getStdGen
@@ -13,6 +20,12 @@ isPrime primeCandidate = do
 
 	return $ isPrimeCore primeCandidate testNumbers
 
+{-
+ - Test `num` for primality with the probabilistic Rabin-Miller algorithm,
+ - using `testNumbers` as the list of test-cases (potential "witnesses" for the
+ - non-primality of `num`). It's unlikely that you'll ever want to specify
+ - these on your own, so see `isPrime`.
+ -}
 isPrimeCore :: Integer -> [Integer] -> Bool
 isPrimeCore 2 _ = True
 isPrimeCore num testNumbers
@@ -30,6 +43,9 @@ isWitness num powerOf2 otherFactor testNum
 		in any (\ power -> power `mod` num == num - 1) powersOf2
 	where baseNumber = ModExp.modularPow testNum otherFactor num
 
+{-
+ - Decompose `num` into the form `(2 ^ m) * n`, returning (m, n).
+ -}
 decomposeToFactorsOf2 num =
 	let (quotient, remainder) = divMod num 2
 	in if remainder == 0
