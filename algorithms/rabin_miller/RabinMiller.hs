@@ -30,18 +30,18 @@ isPrimeCore :: Integer -> [Integer] -> Bool
 isPrimeCore 2 _ = True
 isPrimeCore num testNumbers
 	| num `mod` 2 == 0 || num <= 1 = False
-	| otherwise =
-		let (powerOf2, otherFactor) = decomposeToFactorsOf2 num
-		in all (isWitness num powerOf2 otherFactor) testNumbers
+	| otherwise = all isWitness testNumbers
+	where
+		(powerOf2, otherFactor) = decomposeToFactorsOf2 num
 
-isWitness :: Integer -> Integer -> Integer -> Integer -> Bool
-isWitness num powerOf2 otherFactor testNum
-	| baseNumber == 1 || baseNumber == num + 1 = True
-	| otherwise =
-		let powersOf2 = scanl (\ prevSquare _ -> prevSquare ^ 2) baseNumber
-			[1..powerOf2 - 1]
-		in any (\ power -> power `mod` num == num - 1) powersOf2
-	where baseNumber = ModExp.modularPow testNum otherFactor num
+		isWitness :: Integer -> Bool
+		isWitness testNum
+			| baseNumber == 1 || baseNumber == num + 1 = True
+			| otherwise =
+				let squares = map ((baseNumber ^) . (2 ^)) [0..powerOf2 - 1]
+				in any (\ power -> power `mod` num == num - 1) squares
+			where
+				baseNumber = ModExp.modularPow testNum otherFactor num
 
 {-
  - Decompose `num` into the form `(2 ^ m) * n`, returning (m, n).
