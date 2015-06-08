@@ -13,7 +13,7 @@ FORCE:
 $(EXECUTABLE_PATH): FORCE
 	ghc -O2 -Wall -fno-warn-type-defaults \
 		-hidir $(BIN_DIR) -odir $(BIN_DIR) \
-		-o $@ --make Test.hs
+		-o $@ --make Test.hs ../modular_exponentiation/ModularExponentiation.hs
 
 $(BIN_DIR):
 	mkdir $(BIN_DIR)
