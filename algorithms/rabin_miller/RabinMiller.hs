@@ -22,16 +22,13 @@ isPrimeCore num testNumbers
 		in all (isWitness num powerOf2 otherFactor) testNumbers
 
 isWitness :: Integer -> Integer -> Integer -> Integer -> Bool
-isWitness primeCandidate powerOf2 otherFactor testNum = let
-	baseNumber = ModExp.modularPow testNum otherFactor primeCandidate
-	in if baseNumber == 1 || baseNumber == primeCandidate + 1
-		then True
-		else let
-			powersOf2 = scanl (\ prevSquare _ -> prevSquare ^ 2) baseNumber
-				[1..powerOf2 - 1]
-			in any
-				(\ num -> num `mod` primeCandidate == primeCandidate - 1)
-				powersOf2
+isWitness num powerOf2 otherFactor testNum
+	| baseNumber == 1 || baseNumber == num + 1 = True
+	| otherwise =
+		let powersOf2 = scanl (\ prevSquare _ -> prevSquare ^ 2) baseNumber
+			[1..powerOf2 - 1]
+		in any (\ power -> power `mod` num == num - 1) powersOf2
+	where baseNumber = ModExp.modularPow testNum otherFactor num
 
 decomposeToFactorsOf2 num =
 	let (quotient, remainder) = divMod num 2
