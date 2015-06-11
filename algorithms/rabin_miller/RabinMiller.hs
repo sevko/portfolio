@@ -6,9 +6,9 @@ import qualified System.Random as Random
 {-
  - Test `num` for primality using the probabilistic Rabin-Miller algorithm.
  - Note that it needs to randomly generate several numbers to do so (hence the
- - `IO`-wrapped return value); see `isPrimeCore` for a function that implements
- - the same algorithm, but accepts said numbers as an argument, see
- - `isPrimeCore` (for which this function is just a wrapper).
+ - `IO`-wrapped return value); for a function that implements the same
+ - algorithm, but accepts said numbers as an argument, see `isPrimeCore` (for
+ - which this function is actually just a wrapper).
  -}
 isPrime :: Integer -> IO Bool
 isPrime primeCandidate = do
