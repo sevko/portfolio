@@ -1,3 +1,7 @@
+{-
+ - Tests for the RabinMiller module.
+ -}
+
 import qualified RabinMiller
 import qualified Text.Format as Format
 

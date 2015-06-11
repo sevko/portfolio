@@ -1,3 +1,7 @@
+{-
+ - An implementation of Rabin Miller.
+ -}
+
 module RabinMiller where
 
 import qualified ModularExponentiation as ModExp
