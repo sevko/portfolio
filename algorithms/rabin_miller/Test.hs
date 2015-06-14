@@ -7,6 +7,10 @@ import qualified Text.Format as Format
 
 main :: IO ()
 main = do
+
+	-- Test the output of `isPrime` against the values in the range of the
+	-- first 100 primes; anything not in `first100primes` should be identified
+	-- as composite, and everything in it as prime.
 	let
 		first100primes = [
 			2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61,
@@ -18,13 +22,27 @@ main = do
 			443, 449, 457, 461, 463, 467, 479, 487, 491, 499, 503, 509, 521,
 			523, 541]
 
-		evalIsPrimeResult num = do
-			let isPrime = num `elem` first100primes
-			isPrimeTest <- RabinMiller.isPrime num
-			if isPrimeTest == isPrime
+	testResults <- mapM (\ num -> do
+		let isPrime = num `elem` first100primes
+		isPrimeTest <- RabinMiller.isPrime num
+		return (isPrime == isPrimeTest, isPrime, isPrimeTest, num))
+		[1..last first100primes]
+
+	let
+		(numPass, numFail) = foldl
+			(\ (succ', fail') (passed, _, _, _) ->
+				if passed then (succ' + 1, fail') else (succ', fail' + 1))
+			(0, 0)
+			testResults
+
+		reportResult (passed, isPrime, isPrimeTest, num) = do
+			if passed
 				then return ()
 				else putStrLn $ Format.format
 					"Failed for {0}. Expecting {1}, but got {2}."
 					[show num, show isPrime, show isPrimeTest]
 
-	mapM_ evalIsPrimeResult [1..last first100primes]
+	putStrLn "Running tests. Only failures will be reported."
+	putStrLn $ Format.format "{0} tests: {1} passed, {2} failed." $
+		map show [numPass + numFail, numPass, numFail]
+	mapM_ reportResult testResults
