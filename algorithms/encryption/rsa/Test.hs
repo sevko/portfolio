@@ -46,9 +46,9 @@ testDecrypt = do
 
 	mapM_ evalTestCase testCases
 
-testCreate :: IO ()
-testCreate = do
-	putStrLn "Testing `Rsa.create`."
+testCreateCore :: IO ()
+testCreateCore = do
+	putStrLn "Testing `Rsa.createCore`."
 	let testCases = [
 		(61, 53, (3233, 7, 1783)),
 		(11, 13, (143, 7, 103)),
@@ -69,4 +69,4 @@ main :: IO ()
 main = do
 	testEncrypt
 	testDecrypt
-	testCreate
+	testCreateCore
