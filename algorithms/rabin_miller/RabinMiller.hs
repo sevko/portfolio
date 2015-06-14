@@ -45,7 +45,7 @@ isPrimeCore num testNumbers
 				let squares = map ((baseNumber ^) . (2 ^)) [0..powerOf2 - 1]
 				in any (\ power -> power `mod` num == num - 1) squares
 			where
-				baseNumber = ModExp.modularPow testNum otherFactor num
+				baseNumber = ModExp.modularPow''' testNum otherFactor num
 
 {-
  - Decompose `num` into the form `(2 ^ m) * n`, returning (m, n).
