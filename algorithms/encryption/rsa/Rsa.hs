@@ -63,8 +63,12 @@ createCore p q = let
  -}
 create :: Int -> IO (Modulus, PublicKey, PrivateKey)
 create numBits = do
-	p <- genRandomPrime numBits
-	q <- genRandomPrime numBits
+	-- Numbers of bit-length `numBits / 2`, when multiplied together, will
+	-- yield either a value of `numBits` or `numBits - 1` bits. This will allow
+	-- us to generate `numBits`-bit keys in `createCore`.
+	let bitsPerPrime = numBits `div` 2
+	p <- genRandomPrime bitsPerPrime
+	q <- genRandomPrime bitsPerPrime
 	return $ createCore p q
 
 {-
