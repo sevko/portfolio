@@ -55,7 +55,7 @@ testCreate = do
 		(13, 23, (299, 5, 53))]
 
 	let evalTestCase (prime1, prime2, expectedKeys) = do
-		let actualKeys = Rsa.create prime1 prime2
+		let actualKeys = Rsa.createCore prime1 prime2
 		if actualKeys == expectedKeys
 			then return ()
 			else putStrLn $ Format.format

@@ -11,11 +11,12 @@ run: all
 # delegate all of the build logic to `ghc`.
 FORCE:
 $(EXECUTABLE_PATH): FORCE
-	ghc -Wall -fno-warn-type-defaults \
-		-hidir $(BIN_DIR) -odir $(BIN_DIR) \
+	ghc -Wall -fno-warn-type-defaults -O2 \
+		-hidir $(BIN_DIR) -odir $(BIN_DIR)\
 		-o $@ --make Test.hs \
 		../../modular_exponentiation/ModularExponentiation.hs \
-		../../extended_euclidean_algorithm/ExtendedEuclideanAlgorithm.hs
+		../../extended_euclidean_algorithm/ExtendedEuclideanAlgorithm.hs \
+		../../rabin_miller/RabinMiller.hs
 
 $(BIN_DIR):
 	mkdir $(BIN_DIR)

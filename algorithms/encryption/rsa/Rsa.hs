@@ -2,6 +2,8 @@ module Rsa where
 
 import qualified ModularExponentiation as ModularExp
 import qualified ExtendedEuclideanAlgorithm as ExtEuclidean
+import qualified RabinMiller
+import qualified System.Random as Random
 
 type PublicKey = Integer
 type PrivateKey = Integer
@@ -15,8 +17,8 @@ encrypt :: PublicKey -> Modulus -> Integer -> Integer
 encrypt modulus publicKey plaintext =
 	ModularExp.modularPow''' plaintext publicKey modulus
 
-create :: Integer -> Integer -> (Modulus, PublicKey, PrivateKey)
-create p q = let
+createCore :: Integer -> Integer -> (Modulus, PublicKey, PrivateKey)
+createCore p q = let
 	n = p * q
 	totient = (p - 1) * (q - 1)
 
@@ -36,3 +38,25 @@ create p q = let
 	(e, d) = findPublicAndPrivateKeys eCandidates
 	d' = if d < 0 then d + totient else d
 	in (n, e, d')
+
+create :: Int -> IO (Modulus, PublicKey, PrivateKey)
+create numBits = do
+	p <- genRandomPrime numBits
+	q <- genRandomPrime numBits
+	return $ createCore p q
+
+genRandomPrime :: Int -> IO Integer
+genRandomPrime bitCount = do
+	randomGen <- Random.getStdGen
+	let
+		lowerBound = (2 ^ (bitCount - 2))
+		upperBound = (2 ^ (bitCount - 1) - 1)
+		(baseNum, _) = Random.randomR (lowerBound, upperBound) randomGen
+
+	iterateToPrime (if even baseNum then baseNum + 1 else baseNum)
+	where
+		iterateToPrime num = do
+			isPrime <- RabinMiller.isPrime num
+			if isPrime
+				then return num
+				else iterateToPrime $ num + 2
