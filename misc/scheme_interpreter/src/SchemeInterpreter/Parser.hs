@@ -4,6 +4,8 @@ import qualified System.Environment as Environment
 import qualified Text.ParserCombinators.Parsec as Parsec
 import qualified Data.List as List
 import qualified Control.Applicative as Applicative
+import Control.Applicative ((*>))
+import qualified Control.Monad as Monad
 import Text.ParserCombinators.Parsec ((<|>))
 
 data LispVal =
@@ -22,11 +24,19 @@ symbol = Parsec.oneOf "!#$%&|*+-/:<=>?@^_~"
 spaces :: Parsec.Parser ()
 spaces = Parsec.skipMany1 Parsec.space
 
+parseList :: Parsec.Parser LispVal
+parseList = Monad.liftM List $ Parsec.sepBy parser Parsec.spaces
+
+parseDottedList :: Parsec.Parser LispVal
+parseDottedList = Applicative.liftA2 DottedList
+	(Parsec.endBy parser Parsec.spaces)
+	(Parsec.char '.' *> Parsec.spaces *> parser)
+
 parseExpr :: String -> Either Parsec.ParseError LispVal
 parseExpr = Parsec.parse parser "scheme"
 
 parser :: Parsec.Parser LispVal
-parser = Parsec.choice [parseString, parseNumber, parseAtom]
+parser = Parsec.choice $ map Parsec.try [parseChar, parseString, parseFloat, parseNumber, parseAtom]
 
 parseChar :: Parsec.Parser LispVal
 parseChar = do

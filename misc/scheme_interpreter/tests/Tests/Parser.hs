@@ -77,5 +77,50 @@ testParseFloat = HUnit.TestLabel "parses floats" $
 				(applyParser Parser.parseFloat inputStr))
 			testCases
 
+testParseList = HUnit.TestList tests
+	where
+		testCases = [
+			("#\\a #\\b #\\c", map Parser.Char ['a', 'b', 'c']),
+			("#\\a 9", [Parser.Char 'a', Parser.Number 9]),
+			("\"abc\" #\\a 9 \"def\" #\\e", [
+				Parser.String "abc",
+				Parser.Char 'a',
+				Parser.Number 9,
+				Parser.String "def",
+				Parser.Char 'e']),
+			("9.0", [Parser.Float 9.0])
+			]
+
+		tests = map (\ (inputStr, expectedList) ->
+			HUnit.TestCase $
+			HUnit.assertEqual ""
+				(Right $ Parser.List expectedList)
+				(applyParser Parser.parseList inputStr))
+			testCases
+
+testParseDottedList = HUnit.TestList tests
+	where
+		testCases = [
+			(
+				"#\\a #\\b . #\\c",
+				(map Parser.Char ['a', 'b'], Parser.Char 'c')),
+			("#\\a . 9", ([Parser.Char 'a'], Parser.Number 9)),
+			("\"abc\" #\\a 9 \"def\" . #\\e", ([
+				Parser.String "abc",
+				Parser.Char 'a',
+				Parser.Number 9,
+				Parser.String "def"],
+				Parser.Char 'e')),
+			(". 9.0", ([], Parser.Float 9.0))
+			]
+
+		tests = map (\ (inputStr, (expectedHead, expectedTail)) ->
+			HUnit.TestCase $
+			HUnit.assertEqual ""
+				(Right $ Parser.DottedList expectedHead expectedTail)
+				(applyParser Parser.parseDottedList inputStr))
+			testCases
+
 tests = HUnit.TestList [
-	testParseNumber, testParseString, testParseChar, testParseFloat]
+	testParseNumber, testParseString, testParseChar, testParseFloat,
+	testParseList, testParseDottedList]
