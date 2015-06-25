@@ -8,11 +8,16 @@ import qualified SchemeInterpreter.Parser as Parser
 import qualified Text.ParserCombinators.Parsec as Parsec
 import qualified Test.HUnit as HUnit
 
+{-
+ - Convenience function for applying a certain parser to a string.
+ -}
+applyParser parser = Parsec.parse parser ""
+
 testParseNumber = HUnit.TestLabel "parseNumber" $ HUnit.TestList [
 	HUnit.TestLabel "valid input strings" $ HUnit.TestList validTests,
 	HUnit.TestLabel "invalid input strings" $ HUnit.TestList invalidTests]
 	where
-		parseStr = Parsec.parse Parser.parseNumber ""
+		parseStr = applyParser Parser.parseNumber
 
 		validNumbers = [
 			("#o100", 64),
@@ -35,4 +40,9 @@ testParseNumber = HUnit.TestLabel "parseNumber" $ HUnit.TestList [
 			(HUnit.TestCase . HUnit.assertBool "" . isLeft . parseStr)
 			invalidNumbers
 
-tests = HUnit.TestList [testParseNumber]
+testParseString = HUnit.TestLabel "parses escaped characters" $
+	HUnit.TestCase $ HUnit.assertEqual ""
+		(Right $ Parser.String "a\nb\tc\rd\\e")
+		((applyParser Parser.parseString) "\"a\\nb\\tc\\rd\\\\e\"")
+
+tests = HUnit.TestList [testParseNumber, testParseString]
