@@ -4,7 +4,7 @@ import qualified System.Environment as Environment
 import qualified Text.ParserCombinators.Parsec as Parsec
 import qualified Data.List as List
 import qualified Control.Applicative as Applicative
-import Control.Applicative ((*>))
+import Control.Applicative ((*>), (<*))
 import qualified Control.Monad as Monad
 import Text.ParserCombinators.Parsec ((<|>))
 
@@ -25,12 +25,18 @@ spaces :: Parsec.Parser ()
 spaces = Parsec.skipMany1 Parsec.space
 
 parseList :: Parsec.Parser LispVal
-parseList = Monad.liftM List $ Parsec.sepBy parser Parsec.spaces
+parseList = Monad.liftM List $
+	Parsec.char '(' *> Parsec.sepBy parser Parsec.spaces <* Parsec.char ')'
 
 parseDottedList :: Parsec.Parser LispVal
-parseDottedList = Applicative.liftA2 DottedList
-	(Parsec.endBy parser Parsec.spaces)
-	(Parsec.char '.' *> Parsec.spaces *> parser)
+parseDottedList = do
+	Parsec.char '('
+	listHead <- Parsec.endBy parser Parsec.spaces
+	Parsec.char '.'
+	Parsec.spaces
+	listTail <- parser
+	Parsec.char ')'
+	return $ DottedList listHead listTail
 
 parseExpr :: String -> Either Parsec.ParseError LispVal
 parseExpr = Parsec.parse parser "scheme"
@@ -126,6 +132,11 @@ parseNumber = Parsec.choice [
 		octToInt = strToInt 8 (\ digit -> List.elemIndex digit ['0'..'7'])
 
 (<++>) = Applicative.liftA2 (++)
+
+parseQuoted :: Parsec.Parser LispVal
+parseQuoted = do
+	str <- Parsec.char '\'' *> parser
+	return $ List [Atom "quote", str]
 
 parseFloat :: Parsec.Parser LispVal
 parseFloat =
