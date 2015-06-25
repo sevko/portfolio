@@ -60,35 +60,45 @@ parseNumber = Parsec.choice [
 	parseNumberInBase "#b" (Parsec.oneOf "01") binToInt,
 	(Parsec.optional (Parsec.string "#d") >> (Parsec.many1 Parsec.digit) >>=
 		(return . Number . read))]
-	where parseNumberInBase strPrefix digitParser toIntDecoder = do
-		numStr <- (Parsec.try $ (Parsec.string strPrefix >> (Parsec.many1 digitParser)))
-		return $ Number $ case toIntDecoder numStr of
-			Just num -> num
-			Nothing -> error $
-				"Implementation error: the parser passed a string (" ++
-				numStr ++
-				") containing an invalid digit to an integer decoder."
-
-strToInt :: Int -> (Char -> Maybe Int) -> String -> Maybe Integer
-strToInt base digitToInt =
-	fmap digitsToInt . sequence . map digitToInt
 	where
-		digitsToInt :: [Int] -> Integer
-		digitsToInt digits = sum $ zipWith
-			(\ digit place -> (fromIntegral digit) *
-				(fromIntegral base) ^ place)
-			(reverse digits) [0..]
+		{-
+		 - A convenience function for interpreting a string with a certain
+		 - prefix as a number in a corresponding base. (eg, "#b" -> binary)
+		 -}
+		parseNumberInBase strPrefix digitParser toIntDecoder = do
+			numStr <- (Parsec.try $
+				(Parsec.string strPrefix >> (Parsec.many1 digitParser)))
+			return $ Number $ case toIntDecoder numStr of
+				Just num -> num
+				Nothing -> error $
+					"Implementation error: the parser passed a string (" ++
+					numStr ++
+					") containing an invalid digit to an integer decoder."
 
-binToInt :: String -> Maybe Integer
-binToInt = strToInt 2 binDigitToInt
-	where
-		binDigitToInt '0' = Just 0
-		binDigitToInt '1' = Just 1
-		binDigitToInt _ = Nothing
+		{-
+		 - The following functions concern converting strings representing
+		 - numbers in a certain base to Integers.
+		 -}
+		strToInt :: Int -> (Char -> Maybe Int) -> String -> Maybe Integer
+		strToInt base digitToInt =
+			fmap digitsToInt . sequence . map digitToInt
+			where
+				digitsToInt :: [Int] -> Integer
+				digitsToInt digits = sum $ zipWith
+					(\ digit place -> (fromIntegral digit) *
+						(fromIntegral base) ^ place)
+					(reverse digits) [0..]
 
-hexToInt :: String -> Maybe Integer
-hexToInt = strToInt 16
-	(\ digit -> List.elemIndex digit $ ['0'..'9'] ++ ['a'..'f'])
+		binToInt :: String -> Maybe Integer
+		binToInt = strToInt 2 binDigitToInt
+			where
+				binDigitToInt '0' = Just 0
+				binDigitToInt '1' = Just 1
+				binDigitToInt _ = Nothing
 
-octToInt :: String -> Maybe Integer
-octToInt = strToInt 8 (\ digit -> List.elemIndex digit ['0'..'7'])
+		hexToInt :: String -> Maybe Integer
+		hexToInt = strToInt 16
+			(\ digit -> List.elemIndex digit $ ['0'..'9'] ++ ['a'..'f'])
+
+		octToInt :: String -> Maybe Integer
+		octToInt = strToInt 8 (\ digit -> List.elemIndex digit ['0'..'7'])

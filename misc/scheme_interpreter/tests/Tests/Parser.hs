@@ -1,3 +1,7 @@
+{-
+ - Unit tests for `SchemeInterpreter.Parser`.
+ -}
+
 module Tests.Parser where
 
 import qualified SchemeInterpreter.Parser as Parser
@@ -7,7 +11,6 @@ import qualified Test.HUnit as HUnit
 testParseNumber = HUnit.TestLabel "parseNumber" $ HUnit.TestList [
 	HUnit.TestLabel "valid input strings" $ HUnit.TestList validTests,
 	HUnit.TestLabel "invalid input strings" $ HUnit.TestList invalidTests]
-	{- HUnit.Test $ HUnit.assertEqual "" (Parsec.parse Parser.parseNumber "" "#o100")  validNumbers -}
 	where
 		parseStr = Parsec.parse Parser.parseNumber ""
 
