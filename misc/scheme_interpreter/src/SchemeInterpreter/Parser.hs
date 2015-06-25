@@ -11,6 +11,7 @@ data LispVal =
 	DottedList [LispVal] LispVal |
 	Number Integer |
 	String String |
+	Char Char |
 	Bool Bool deriving (Show, Eq)
 
 symbol :: Parsec.Parser Char
@@ -24,6 +25,15 @@ parseExpr = Parsec.parse parser "scheme"
 
 parser :: Parsec.Parser LispVal
 parser = Parsec.choice [parseString, parseNumber, parseAtom]
+
+parseChar :: Parsec.Parser LispVal
+parseChar = do
+	_ <- Parsec.string "#\\"
+	char <-
+		(Parsec.try $ Parsec.string "newline" >> return '\n') <|>
+		(Parsec.try $ Parsec.string "space" >> return ' ') <|>
+		Parsec.anyChar
+	return $ Char char
 
 parseString :: Parsec.Parser LispVal
 parseString = do
