@@ -46,7 +46,7 @@ testParseString = HUnit.TestLabel "parses escaped characters" $
 		((applyParser Parser.parseString) "\"a\\nb\\tc\\rd\\\\e\"")
 
 testParseChar = HUnit.TestLabel "parses chars correctly" $
-	HUnit.TestList $ charTests
+	HUnit.TestList charTests
 	where
 		charTestCases = [
 			("#\\c", 'c'),
@@ -63,4 +63,19 @@ testParseChar = HUnit.TestLabel "parses chars correctly" $
 				(applyParser Parser.parseChar inputStr))
 			charTestCases
 
-tests = HUnit.TestList [testParseNumber, testParseString, testParseChar]
+testParseFloat = HUnit.TestLabel "parses floats" $
+	HUnit.TestList tests
+	where
+		testCases = [
+			("131.11", 131.11),
+			("131.0", 131.0)]
+
+		tests = map (\ (inputStr, expectedFloat) ->
+			HUnit.TestCase $
+			HUnit.assertEqual ""
+				(Right $ Parser.Float expectedFloat)
+				(applyParser Parser.parseFloat inputStr))
+			testCases
+
+tests = HUnit.TestList [
+	testParseNumber, testParseString, testParseChar, testParseFloat]

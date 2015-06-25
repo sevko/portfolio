@@ -3,6 +3,7 @@ module SchemeInterpreter.Parser where
 import qualified System.Environment as Environment
 import qualified Text.ParserCombinators.Parsec as Parsec
 import qualified Data.List as List
+import qualified Control.Applicative as Applicative
 import Text.ParserCombinators.Parsec ((<|>))
 
 data LispVal =
@@ -10,6 +11,7 @@ data LispVal =
 	List [LispVal] |
 	DottedList [LispVal] LispVal |
 	Number Integer |
+	Float Float |
 	String String |
 	Char Char |
 	Bool Bool deriving (Show, Eq)
@@ -112,3 +114,12 @@ parseNumber = Parsec.choice [
 
 		octToInt :: String -> Maybe Integer
 		octToInt = strToInt 8 (\ digit -> List.elemIndex digit ['0'..'7'])
+
+(<++>) = Applicative.liftA2 (++)
+
+parseFloat :: Parsec.Parser LispVal
+parseFloat =
+	Parsec.many1 Parsec.digit <++>
+	(fmap (:"") $ Parsec.char '.') <++>
+	Parsec.many1 Parsec.digit >>=
+	(return . Float . read)
