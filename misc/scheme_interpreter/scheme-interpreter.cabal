@@ -9,9 +9,11 @@ executable scheme-interpreter
     base == 4.6.*, parsec == 3.*
   hs-source-dirs: src
   default-language: Haskell2010
+  ghc-options: -Wall -fno-warn-unused-do-bind -fno-warn-type-defaults
 test-suite test-scheme-interpreter
   type: exitcode-stdio-1.0
   main-is: Tests.hs
   hs-source-dirs: tests, src
   Build-Depends:
     base == 4.6.*, HUnit == 1.*, parsec == 3.*
+  ghc-options: -Wall -fno-warn-unused-do-bind

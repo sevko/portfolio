@@ -1,6 +1,5 @@
 module SchemeInterpreter.Parser where
 
-import qualified System.Environment as Environment
 import qualified Text.ParserCombinators.Parsec as Parsec
 import qualified Data.List as List
 import qualified Control.Applicative as Applicative
@@ -131,6 +130,7 @@ parseNumber = Parsec.choice [
 		octToInt :: String -> Maybe Integer
 		octToInt = strToInt 8 (\ digit -> List.elemIndex digit ['0'..'7'])
 
+(<++>) :: Applicative.Applicative a => a String -> a String -> a String
 (<++>) = Applicative.liftA2 (++)
 
 parseQuoted :: Parsec.Parser LispVal
