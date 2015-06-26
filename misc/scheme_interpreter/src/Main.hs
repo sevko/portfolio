@@ -1,10 +1,17 @@
 import qualified SchemeInterpreter.Parser as Parser
-import qualified System.Environment as Environment
+import qualified SchemeInterpreter.Interpreter as Interpreter
+import qualified System.IO as IO
+import qualified Control.Monad as Monad
+
+repl :: IO ()
+repl = do
+	IO.hSetBuffering IO.stdout IO.NoBuffering
+	Monad.forever $ do
+		putStr "> "
+		input <- getLine
+		putStrLn $ case Parser.parseExpr input of
+			Right expr -> show $ Interpreter.eval expr
+			Left err -> show $ err
 
 main :: IO ()
-main = do
-	args <- Environment.getArgs
-	case args of
-		[str] -> print $ Parser.parseExpr str
-		_ -> error "Usage: ./parser SCHEME_EXPR"
-	{- print $ Parsec.parse Parser.parseNumber "" "#o100" -}
+main = repl
