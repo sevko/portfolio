@@ -13,6 +13,18 @@ import qualified Test.HUnit as HUnit
  -}
 applyParser parser = Parsec.parse parser ""
 
+{-
+ - Convenience function for creating a list of test-cases from a list of tuples
+ - containing an input string and expected value.
+ -}
+createTestList parser createLispVal testCases =
+	HUnit.TestList $ map (\ (inputStr, expectedVal) ->
+		HUnit.TestCase $
+		HUnit.assertEqual ""
+			(Right $ createLispVal expectedVal)
+			(applyParser parser inputStr)) testCases
+
+testParseNumber :: HUnit.Test
 testParseNumber = HUnit.TestLabel "parseNumber" $ HUnit.TestList [
 	HUnit.TestLabel "valid input strings" $ HUnit.TestList validTests,
 	HUnit.TestLabel "invalid input strings" $ HUnit.TestList invalidTests]
@@ -40,86 +52,52 @@ testParseNumber = HUnit.TestLabel "parseNumber" $ HUnit.TestList [
 			(HUnit.TestCase . HUnit.assertBool "" . isLeft . parseStr)
 			invalidNumbers
 
+testParseString :: HUnit.Test
 testParseString = HUnit.TestLabel "parses escaped characters" $
 	HUnit.TestCase $ HUnit.assertEqual ""
 		(Right $ Parser.String "a\nb\tc\rd\\e")
 		((applyParser Parser.parseString) "\"a\\nb\\tc\\rd\\\\e\"")
 
-testParseChar = HUnit.TestLabel "parses chars correctly" $
-	HUnit.TestList charTests
-	where
-		charTestCases = [
-			("#\\c", 'c'),
-			("#\\n", 'n'),
-			("#\\_", '_'),
-			("#\\ ", ' '),
-			("#\\space", ' '),
-			("#\\newline", '\n')]
+testParseChar :: HUnit.Test
+testParseChar = createTestList Parser.parseChar Parser.Char [
+	("#\\c", 'c'),
+	("#\\n", 'n'),
+	("#\\_", '_'),
+	("#\\ ", ' '),
+	("#\\space", ' '),
+	("#\\newline", '\n')]
 
-		charTests = map (\ (inputStr, expectedChar) ->
-			HUnit.TestCase $
-			HUnit.assertEqual ""
-				(Right $ Parser.Char expectedChar)
-				(applyParser Parser.parseChar inputStr))
-			charTestCases
+testParseFloat :: HUnit.Test
+testParseFloat = createTestList Parser.parseFloat Parser.Float [
+	("131.11", 131.11),
+	("131.0", 131.0)]
 
-testParseFloat = HUnit.TestLabel "parses floats" $
-	HUnit.TestList tests
-	where
-		testCases = [
-			("131.11", 131.11),
-			("131.0", 131.0)]
+testParseList :: HUnit.Test
+testParseList = createTestList Parser.parseList Parser.List [
+	("(#\\a #\\b #\\c)", map Parser.Char ['a', 'b', 'c']),
+	("(#\\a 9)", [Parser.Char 'a', Parser.Number 9]),
+	("(\"abc\" #\\a 9 \"def\" #\\e)", [
+		Parser.String "abc",
+		Parser.Char 'a',
+		Parser.Number 9,
+		Parser.String "def",
+		Parser.Char 'e']),
+	("(9.0)", [Parser.Float 9.0])]
 
-		tests = map (\ (inputStr, expectedFloat) ->
-			HUnit.TestCase $
-			HUnit.assertEqual ""
-				(Right $ Parser.Float expectedFloat)
-				(applyParser Parser.parseFloat inputStr))
-			testCases
-
-testParseList = HUnit.TestList tests
-	where
-		testCases = [
-			("(#\\a #\\b #\\c)", map Parser.Char ['a', 'b', 'c']),
-			("(#\\a 9)", [Parser.Char 'a', Parser.Number 9]),
-			("(\"abc\" #\\a 9 \"def\" #\\e)", [
-				Parser.String "abc",
-				Parser.Char 'a',
-				Parser.Number 9,
-				Parser.String "def",
-				Parser.Char 'e']),
-			("(9.0)", [Parser.Float 9.0])
-			]
-
-		tests = map (\ (inputStr, expectedList) ->
-			HUnit.TestCase $
-			HUnit.assertEqual ""
-				(Right $ Parser.List expectedList)
-				(applyParser Parser.parseList inputStr))
-			testCases
-
-testParseDottedList = HUnit.TestList tests
-	where
-		testCases = [
-			(
-				"(#\\a #\\b . #\\c)",
-				(map Parser.Char ['a', 'b'], Parser.Char 'c')),
-			("(#\\a . 9)", ([Parser.Char 'a'], Parser.Number 9)),
-			("(\"abc\" #\\a 9 \"def\" . #\\e)", ([
-				Parser.String "abc",
-				Parser.Char 'a',
-				Parser.Number 9,
-				Parser.String "def"],
-				Parser.Char 'e')),
-			("(. 9.0)", ([], Parser.Float 9.0))
-			]
-
-		tests = map (\ (inputStr, (expectedHead, expectedTail)) ->
-			HUnit.TestCase $
-			HUnit.assertEqual ""
-				(Right $ Parser.DottedList expectedHead expectedTail)
-				(applyParser Parser.parseDottedList inputStr))
-			testCases
+testParseDottedList :: HUnit.Test
+testParseDottedList = createTestList Parser.parseDottedList
+	(\ (a, b) -> Parser.DottedList a b) [
+		(
+			"(#\\a #\\b . #\\c)",
+			(map Parser.Char ['a', 'b'], Parser.Char 'c')),
+		("(#\\a . 9)", ([Parser.Char 'a'], Parser.Number 9)),
+		("(\"abc\" #\\a 9 \"def\" . #\\e)", ([
+			Parser.String "abc",
+			Parser.Char 'a',
+			Parser.Number 9,
+			Parser.String "def"],
+			Parser.Char 'e')),
+		("(. 9.0)", ([], Parser.Float 9.0))]
 
 tests = HUnit.TestList [
 	testParseNumber, testParseString, testParseChar, testParseFloat,
