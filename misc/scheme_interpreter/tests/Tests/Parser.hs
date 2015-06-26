@@ -5,6 +5,7 @@
 module Tests.Parser where
 
 import qualified SchemeInterpreter.Parser as Parser
+import qualified SchemeInterpreter.Types as Types
 import qualified Text.ParserCombinators.Parsec as Parsec
 import qualified Test.HUnit as HUnit
 
@@ -30,18 +31,18 @@ testShow = HUnit.TestList $
 		HUnit.TestCase $ HUnit.assertEqual "" expectedStr $ show lispVal)
 	testCases
 	where testCases = [
-		(Parser.Atom "foo", "foo"),
-		(Parser.Number 1331, "1331"),
-		(Parser.Float 131.59, "131.59"),
-		(Parser.String "abc", "\"abc\""),
-		(Parser.Char 'a', "'a'"),
-		(Parser.Bool True, "#t"),
-		(Parser.List [
-			Parser.Char 'a', Parser.Number 1, Parser.String "fo"],
+		(Types.Atom "foo", "foo"),
+		(Types.Number 1331, "1331"),
+		(Types.Float 131.59, "131.59"),
+		(Types.String "abc", "\"abc\""),
+		(Types.Char 'a', "'a'"),
+		(Types.Bool True, "#t"),
+		(Types.List [
+			Types.Char 'a', Types.Number 1, Types.String "fo"],
 			"('a' 1 \"fo\")"),
-		(Parser.DottedList
-			[Parser.Float 2.0, Parser.String "exe", Parser.Bool False] $
-			Parser.Atom "bar",
+		(Types.DottedList
+			[Types.Float 2.0, Types.String "exe", Types.Bool False] $
+			Types.Atom "bar",
 			"(2.0 \"exe\" #f . bar)")]
 
 testParseNumber :: HUnit.Test
@@ -61,7 +62,7 @@ testParseNumber = HUnit.TestLabel "parseNumber" $ HUnit.TestList [
 			("939", 939)]
 		validTests = map (\ (str, expectedNum) ->
 			HUnit.TestCase $ HUnit.assertEqual ""
-				(Right $ Parser.Number expectedNum) $ parseStr str)
+				(Right $ Types.Number expectedNum) $ parseStr str)
 			validNumbers
 
 		isLeft (Left _) = True
@@ -75,11 +76,11 @@ testParseNumber = HUnit.TestLabel "parseNumber" $ HUnit.TestList [
 testParseString :: HUnit.Test
 testParseString = HUnit.TestLabel "parses escaped characters" $
 	HUnit.TestCase $ HUnit.assertEqual ""
-		(Right $ Parser.String "a\nb\tc\rd\\e")
+		(Right $ Types.String "a\nb\tc\rd\\e")
 		((applyParser Parser.parseString) "\"a\\nb\\tc\\rd\\\\e\"")
 
 testParseChar :: HUnit.Test
-testParseChar = createTestList Parser.parseChar Parser.Char [
+testParseChar = createTestList Parser.parseChar Types.Char [
 	("#\\c", 'c'),
 	("#\\n", 'n'),
 	("#\\_", '_'),
@@ -88,36 +89,36 @@ testParseChar = createTestList Parser.parseChar Parser.Char [
 	("#\\newline", '\n')]
 
 testParseFloat :: HUnit.Test
-testParseFloat = createTestList Parser.parseFloat Parser.Float [
+testParseFloat = createTestList Parser.parseFloat Types.Float [
 	("131.11", 131.11),
 	("131.0", 131.0)]
 
 testParseList :: HUnit.Test
-testParseList = createTestList Parser.parseList Parser.List [
-	("(#\\a #\\b #\\c)", map Parser.Char ['a', 'b', 'c']),
-	("(#\\a 9)", [Parser.Char 'a', Parser.Number 9]),
+testParseList = createTestList Parser.parseList Types.List [
+	("(#\\a #\\b #\\c)", map Types.Char ['a', 'b', 'c']),
+	("(#\\a 9)", [Types.Char 'a', Types.Number 9]),
 	("(\"abc\" #\\a 9 \"def\" #\\e)", [
-		Parser.String "abc",
-		Parser.Char 'a',
-		Parser.Number 9,
-		Parser.String "def",
-		Parser.Char 'e']),
-	("(9.0)", [Parser.Float 9.0])]
+		Types.String "abc",
+		Types.Char 'a',
+		Types.Number 9,
+		Types.String "def",
+		Types.Char 'e']),
+	("(9.0)", [Types.Float 9.0])]
 
 testParseDottedList :: HUnit.Test
 testParseDottedList = createTestList Parser.parseDottedList
-	(\ (a, b) -> Parser.DottedList a b) [
+	(\ (a, b) -> Types.DottedList a b) [
 		(
 			"(#\\a #\\b . #\\c)",
-			(map Parser.Char ['a', 'b'], Parser.Char 'c')),
-		("(#\\a . 9)", ([Parser.Char 'a'], Parser.Number 9)),
+			(map Types.Char ['a', 'b'], Types.Char 'c')),
+		("(#\\a . 9)", ([Types.Char 'a'], Types.Number 9)),
 		("(\"abc\" #\\a 9 \"def\" . #\\e)", ([
-			Parser.String "abc",
-			Parser.Char 'a',
-			Parser.Number 9,
-			Parser.String "def"],
-			Parser.Char 'e')),
-		("(. 9.0)", ([], Parser.Float 9.0))]
+			Types.String "abc",
+			Types.Char 'a',
+			Types.Number 9,
+			Types.String "def"],
+			Types.Char 'e')),
+		("(. 9.0)", ([], Types.Float 9.0))]
 
 tests = HUnit.TestList [
 	testParseNumber, testParseString, testParseChar, testParseFloat,

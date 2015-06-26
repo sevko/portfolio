@@ -1,35 +1,13 @@
 module SchemeInterpreter.Parser where
 
+import qualified SchemeInterpreter.Types as Types
+
 import qualified Text.ParserCombinators.Parsec as Parsec
 import qualified Data.List as List
 import qualified Control.Applicative as Applicative
 import Control.Applicative ((*>), (<*))
 import qualified Control.Monad as Monad
 import Text.ParserCombinators.Parsec ((<|>))
-import qualified Text.Format as Format
-
-data LispVal =
-	Atom String |
-	Number Integer |
-	Float Float |
-	String String |
-	Char Char |
-	Bool Bool |
-	List [LispVal] |
-	DottedList [LispVal] LispVal
-	deriving (Eq)
-
-instance Show LispVal where
-	show (Atom atom) = atom
-	show (Number number) = show number
-	show (Float float) = show float
-	show (String string) = '"' : string ++ "\""
-	show (Char char) = show char
-	show (Bool True) = "#t"
-	show (Bool False) = "#f"
-	show (List list) = '(' : (unwords $ map show list) ++ ")"
-	show (DottedList head' tail') = Format.format "({0} . {1})"
-		[unwords $ map show head', show tail']
 
 symbol :: Parsec.Parser Char
 symbol = Parsec.oneOf "!#$%&|*+-/:<=>?@^_~"
@@ -37,11 +15,11 @@ symbol = Parsec.oneOf "!#$%&|*+-/:<=>?@^_~"
 spaces :: Parsec.Parser ()
 spaces = Parsec.skipMany1 Parsec.space
 
-parseList :: Parsec.Parser LispVal
-parseList = Monad.liftM List $
+parseList :: Parsec.Parser Types.LispVal
+parseList = Monad.liftM Types.List $
 	Parsec.char '(' *> Parsec.sepBy parser Parsec.spaces <* Parsec.char ')'
 
-parseDottedList :: Parsec.Parser LispVal
+parseDottedList :: Parsec.Parser Types.LispVal
 parseDottedList = do
 	Parsec.char '('
 	listHead <- Parsec.endBy parser Parsec.spaces
@@ -49,29 +27,29 @@ parseDottedList = do
 	Parsec.spaces
 	listTail <- parser
 	Parsec.char ')'
-	return $ DottedList listHead listTail
+	return $ Types.DottedList listHead listTail
 
-parseExpr :: String -> Either Parsec.ParseError LispVal
+parseExpr :: String -> Either Parsec.ParseError Types.LispVal
 parseExpr = Parsec.parse parser "scheme"
 
-parser :: Parsec.Parser LispVal
+parser :: Parsec.Parser Types.LispVal
 parser = Parsec.choice $ map Parsec.try [parseChar, parseString, parseFloat, parseNumber, parseAtom]
 
-parseChar :: Parsec.Parser LispVal
+parseChar :: Parsec.Parser Types.LispVal
 parseChar = do
 	_ <- Parsec.string "#\\"
 	char <-
 		(Parsec.try $ Parsec.string "newline" >> return '\n') <|>
 		(Parsec.try $ Parsec.string "space" >> return ' ') <|>
 		Parsec.anyChar
-	return $ Char char
+	return $ Types.Char char
 
-parseString :: Parsec.Parser LispVal
+parseString :: Parsec.Parser Types.LispVal
 parseString = do
 	_ <- Parsec.char '"'
 	strContents <- Parsec.many $ parseCharSequence
 	_ <- Parsec.char '"'
-	return $ String strContents
+	return $ Types.String strContents
 	where
 		escapableChars = [
 			('n', '\n'),
@@ -84,23 +62,23 @@ parseString = do
 
 		parseCharSequence = parseEscapableChars <|> Parsec.noneOf "\""
 
-parseAtom :: Parsec.Parser LispVal
+parseAtom :: Parsec.Parser Types.LispVal
 parseAtom = do
 	first <- Parsec.letter <|> symbol
 	rest <- Parsec.many (Parsec.letter <|> Parsec.digit <|> symbol)
 	let atom = first : rest
 	return $ case atom of
-		"#t" -> Bool True
-		"#f" -> Bool False
-		_ -> Atom atom
+		"#t" -> Types.Bool True
+		"#f" -> Types.Bool False
+		_ -> Types.Atom atom
 
-parseNumber :: Parsec.Parser LispVal
+parseNumber :: Parsec.Parser Types.LispVal
 parseNumber = Parsec.choice [
 	parseNumberInBase "#o" Parsec.octDigit octToInt,
 	parseNumberInBase "#x" Parsec.hexDigit hexToInt,
 	parseNumberInBase "#b" (Parsec.oneOf "01") binToInt,
 	(Parsec.optional (Parsec.string "#d") >> (Parsec.many1 Parsec.digit) >>=
-		(return . Number . read))]
+		(return . Types.Number . read))]
 	where
 		{-
 		 - A convenience function for interpreting a string with a certain
@@ -109,7 +87,7 @@ parseNumber = Parsec.choice [
 		parseNumberInBase strPrefix digitParser toIntDecoder = do
 			numStr <- (Parsec.try $
 				(Parsec.string strPrefix >> (Parsec.many1 digitParser)))
-			return $ Number $ case toIntDecoder numStr of
+			return $ Types.Number $ case toIntDecoder numStr of
 				Just num -> num
 				Nothing -> error $
 					"Implementation error: the parser passed a string (" ++
@@ -147,14 +125,14 @@ parseNumber = Parsec.choice [
 (<++>) :: Applicative.Applicative a => a String -> a String -> a String
 (<++>) = Applicative.liftA2 (++)
 
-parseQuoted :: Parsec.Parser LispVal
+parseQuoted :: Parsec.Parser Types.LispVal
 parseQuoted = do
 	str <- Parsec.char '\'' *> parser
-	return $ List [Atom "quote", str]
+	return $ Types.List [Types.Atom "quote", str]
 
-parseFloat :: Parsec.Parser LispVal
+parseFloat :: Parsec.Parser Types.LispVal
 parseFloat =
 	Parsec.many1 Parsec.digit <++>
 	(fmap (:"") $ Parsec.char '.') <++>
 	Parsec.many1 Parsec.digit >>=
-	(return . Float . read)
+	(return . Types.Float . read)
