@@ -24,6 +24,26 @@ createTestList parser createLispVal testCases =
 			(Right $ createLispVal expectedVal)
 			(applyParser parser inputStr)) testCases
 
+testShow :: HUnit.Test
+testShow = HUnit.TestList $
+	map (\ (lispVal, expectedStr) ->
+		HUnit.TestCase $ HUnit.assertEqual "" expectedStr $ show lispVal)
+	testCases
+	where testCases = [
+		(Parser.Atom "foo", "foo"),
+		(Parser.Number 1331, "1331"),
+		(Parser.Float 131.59, "131.59"),
+		(Parser.String "abc", "\"abc\""),
+		(Parser.Char 'a', "'a'"),
+		(Parser.Bool True, "#t"),
+		(Parser.List [
+			Parser.Char 'a', Parser.Number 1, Parser.String "fo"],
+			"('a' 1 \"fo\")"),
+		(Parser.DottedList
+			[Parser.Float 2.0, Parser.String "exe", Parser.Bool False] $
+			Parser.Atom "bar",
+			"(2.0 \"exe\" #f . bar)")]
+
 testParseNumber :: HUnit.Test
 testParseNumber = HUnit.TestLabel "parseNumber" $ HUnit.TestList [
 	HUnit.TestLabel "valid input strings" $ HUnit.TestList validTests,
@@ -101,4 +121,4 @@ testParseDottedList = createTestList Parser.parseDottedList
 
 tests = HUnit.TestList [
 	testParseNumber, testParseString, testParseChar, testParseFloat,
-	testParseList, testParseDottedList]
+	testParseList, testParseDottedList, testShow]

@@ -6,17 +6,22 @@ cabal-version: >=1.10
 executable scheme-interpreter
   main-is: Main.hs
   build-depends:
-    base == 4.6.*, parsec == 3.*
+    base == 4.6.*,
+    parsec == 3.*,
+    text-format-simple == 1.*
   hs-source-dirs: src
   default-language: Haskell2010
   ghc-options: -Wall -fno-warn-unused-do-bind -fno-warn-type-defaults
-    -fwarn-missing-signatures
+    -fno-warn-missing-signatures
 test-suite test-scheme-interpreter
   type: exitcode-stdio-1.0
   main-is: Tests.hs
   hs-source-dirs: tests, src
   default-language: Haskell2010
   Build-Depends:
-    base == 4.6.*, HUnit == 1.*, parsec == 3.*
+    base == 4.6.*,
+    HUnit == 1.*,
+    parsec == 3.*,
+    text-format-simple == 1.*
   ghc-options: -Wall -fno-warn-unused-do-bind -fno-warn-type-defaults
-    -fwarn-missing-signatures
+    -fno-warn-missing-signatures
