@@ -24,7 +24,16 @@ primitiveFuncs = [
 	("/", numericBinOp div),
 	("mod", numericBinOp mod),
 	("quotient", numericBinOp quot),
-	("remainder", numericBinOp rem)]
+	("remainder", numericBinOp rem),
+	("number?", isNumber)]
+
+isNumber :: [Types.LispVal] -> Types.LispVal
+isNumber [(Types.Number _)] = Types.Bool True
+isNumber _ = Types.Bool False
+
+isString :: [Types.LispVal] -> Types.LispVal
+isString [(Types.String _)] = Types.Bool True
+isString _ = Types.Bool True
 
 numericBinOp :: (Integer -> Integer -> Integer) -> [Types.LispVal] ->
 	Types.LispVal
