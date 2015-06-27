@@ -1,3 +1,7 @@
+{-
+ - A Parsec parser for Scheme.
+ -}
+
 module SchemeInterpreter.Parser where
 
 import qualified SchemeInterpreter.Types as Types
@@ -33,7 +37,9 @@ parseExpr :: String -> Either Parsec.ParseError Types.LispVal
 parseExpr = Parsec.parse parser "scheme"
 
 parser :: Parsec.Parser Types.LispVal
-parser = Parsec.choice $ map Parsec.try [parseChar, parseString, parseFloat, parseNumber, parseAtom]
+parser = Parsec.choice $ map Parsec.try [
+	parseChar, parseString, parseFloat, parseNumber, parseAtom, parseList,
+	parseDottedList]
 
 parseChar :: Parsec.Parser Types.LispVal
 parseChar = do

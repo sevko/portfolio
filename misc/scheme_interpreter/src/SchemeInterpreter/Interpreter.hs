@@ -1,3 +1,7 @@
+{-
+ - The interpreter that evaluates parsed Scheme code.
+ -}
+
 module SchemeInterpreter.Interpreter where
 
 import qualified SchemeInterpreter.Types as Types

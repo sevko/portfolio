@@ -1,3 +1,7 @@
+{-
+ - Definitions of types to represent Scheme types.
+ -}
+
 module SchemeInterpreter.Types where
 
 import qualified Text.Format as Format
