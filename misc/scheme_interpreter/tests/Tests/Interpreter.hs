@@ -40,25 +40,16 @@ testEval = HUnit.TestList $ map evalTest [
 		Types.Number 1,
 		Types.Number 4],
 		Left $ Error.NumArgs 1 [Types.Number 1, Types.Number 4]),
-	(Types.List [
-		Types.Atom "car",
-		Types.List [Types.Atom "quote", Types.List []]],
+	(Types.List [Types.Atom "car", createList []],
 		Left $ Error.TypeMismatch "list with one or more elements" $
 			Types.List []),
-	(Types.List [
-		Types.Atom "car",
-		Types.List [
-			Types.Atom "quote", Types.List $ map Types.Number [1, 2, 3]]],
+	(Types.List [Types.Atom "car", createList $ map Types.Number [1, 2, 3]],
 		Right $ Types.Number 1),
 	(Types.List [
 		Types.Atom "cdr",
-		Types.List [
-			Types.Atom "quote", Types.List $ map Types.Number [1, 2, 3]]],
+		createList $ map Types.Number [1, 2, 3]],
 		Right $ Types.List [Types.Number 2, Types.Number 3]),
-	(Types.List [
-		Types.Atom "cons",
-		Types.Number 1,
-		Types.List [Types.Atom "quote", Types.List []]],
+	(Types.List [Types.Atom "cons", Types.Number 1, createList []],
 		Right $ Types.List [Types.Number 1]),
 	(Types.List [Types.Atom "cons", createList [], Types.String "foo"],
 		Right $ Types.DottedList [Types.List []] $ Types.String "foo"),
