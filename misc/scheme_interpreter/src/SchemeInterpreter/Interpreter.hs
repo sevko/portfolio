@@ -11,6 +11,7 @@ eval :: Types.LispVal -> Error.ThrowsError Types.LispVal
 eval val@(Types.String _) = return val
 eval val@(Types.Number _) = return val
 eval val@(Types.Bool _) = return val
+eval val@(Types.DottedList _ _) = return val
 eval (Types.List [Types.Atom "quote", val]) = return val
 eval (Types.List [Types.Atom "if", condition, ifClause, thenClause]) = do
 	result <- eval condition
@@ -25,7 +26,7 @@ applyFunc :: String -> [Types.LispVal] -> Error.ThrowsError Types.LispVal
 applyFunc funcName args = case lookup funcName primitiveFuncs of
 	Just func -> func args
 	Nothing -> Error.throwError $
-		Error.NotFunction "Unrecognized primitive function args" funcName
+		Error.NotFunction "Unrecognized primitive function: " funcName
 
 primitiveFuncs ::
 	[(String, [Types.LispVal] -> Error.ThrowsError Types.LispVal)]
@@ -54,7 +55,9 @@ primitiveFuncs = [
 	("string>=?", strBoolBinOp (>=)),
 	("cons", cons),
 	("cdr", cdr),
-	("car", car)]
+	("car", car),
+	("eq?", eqv),
+	("eqv?", eqv)]
 
 boolBinOp ::
 	(Types.LispVal -> Error.ThrowsError a) ->
@@ -126,3 +129,7 @@ cons [item, Types.DottedList items tail'] = return $
 	Types.DottedList (item : items) tail'
 cons [a, b] = return $ Types.DottedList [a] b
 cons wrongNumArgs = Error.throwError $ Error.NumArgs 2 wrongNumArgs
+
+eqv :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
+eqv [a, b] = return $ Types.Bool $ a == b
+eqv badNumArgs = Error.throwError $ Error.NumArgs 2 badNumArgs

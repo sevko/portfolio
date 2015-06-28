@@ -56,7 +56,27 @@ testEval = HUnit.TestList $ map evalTest [
 	(Types.List [
 		Types.Atom "cons", createList [], Types.Number 1, Types.String "foo"],
 		Left $ Error.NumArgs 2 [
-			Types.List [], Types.Number 1, Types.String "foo"])
+			Types.List [], Types.Number 1, Types.String "foo"]),
+	(Types.List [Types.Atom "eqv?", Types.Number 1, Types.Number 1],
+		Right $ Types.Bool $ True),
+	(Types.List [Types.Atom "eqv?", Types.Number 1, Types.Number 5],
+		Right $ Types.Bool $ False),
+	(Types.List [Types.Atom "eq?", createList [], createList [Types.Number 1]],
+		Right $ Types.Bool $ False),
+	(Types.List [
+		Types.Atom "eqv?",
+		createList [Types.String "abc def"],
+		createList [Types.String "abc def"]],
+		Right $ Types.Bool $ True),
+	(Types.List [
+		Types.Atom "eqv?",
+		Types.DottedList
+			[Types.Number 10, Types.String "abc def"] $
+			Types.String "foo",
+		Types.DottedList
+			[Types.Number 10, Types.String "abc def"] $
+			Types.String "foa"],
+		Right $ Types.Bool $ False)
 		]
 	where
 		createIf cond ifClause thenClause = Types.List [
