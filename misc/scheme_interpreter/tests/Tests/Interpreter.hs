@@ -63,18 +63,14 @@ testEval = HUnit.TestList $ map evalTest [
 		Right $ Types.Bool $ False),
 	(Types.List [Types.Atom "eq?", createList [], createList [Types.Number 1]],
 		Right $ Types.Bool $ False),
-	(Types.List [
-		Types.Atom "eqv?",
-		createList [Types.String "abc def"],
-		createList [Types.String "abc def"]],
+	(let list = createList [Types.String "abc def"] in
+		Types.List [Types.Atom "eqv?", list, list],
 		Right $ Types.Bool $ True),
 	(Types.List [
 		Types.Atom "eqv?",
-		Types.DottedList
-			[Types.Number 10, Types.String "abc def"] $
+		Types.DottedList [Types.Number 10, Types.String "abc def"] $
 			Types.String "foo",
-		Types.DottedList
-			[Types.Number 10, Types.String "abc def"] $
+		Types.DottedList [Types.Number 10, Types.String "abc def"] $
 			Types.String "foa"],
 		Right $ Types.Bool $ False)
 		]
