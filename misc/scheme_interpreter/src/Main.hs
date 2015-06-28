@@ -9,9 +9,7 @@ repl = do
 	Monad.forever $ do
 		putStr "> "
 		input <- getLine
-		putStrLn $ case Parser.parseExpr input of
-			Right expr -> show $ Interpreter.eval expr
-			Left err -> show $ err
+		either print print $ Parser.parseExpr input >>= Interpreter.eval
 
 main :: IO ()
 main = repl
