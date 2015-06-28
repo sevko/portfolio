@@ -18,7 +18,7 @@ data LispError =
 	BadSpecialForm String Types.LispVal |
 	NotFunction String String |
 	UnboundVar String String |
-	Default String
+	Default String deriving (Eq)
 
 type ThrowsError = Either LispError
 
