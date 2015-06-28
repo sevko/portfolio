@@ -52,6 +52,7 @@ primitiveFuncs = [
 	("string>?", strBoolBinOp (>)),
 	("string<=?", strBoolBinOp (<=)),
 	("string>=?", strBoolBinOp (>=)),
+	("cdr", cdr),
 	("car", car)]
 
 boolBinOp ::
@@ -109,4 +110,11 @@ car [(Types.List (head':_))] = return head'
 car [badType] = Error.throwError $
 	Error.TypeMismatch "list with one or more elements" badType
 car wrongNumArgs = Error.throwError $
+	Error.NumArgs 1 wrongNumArgs
+
+cdr :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
+cdr [(Types.List (_:tail'))] = return $ Types.List tail'
+cdr [badType] = Error.throwError $
+	Error.TypeMismatch "list with one or more elements" badType
+cdr wrongNumArgs = Error.throwError $
 	Error.NumArgs 1 wrongNumArgs
