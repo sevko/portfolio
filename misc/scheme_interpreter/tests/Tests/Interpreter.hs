@@ -54,10 +54,24 @@ testEval = HUnit.TestList $ map evalTest [
 		Types.Atom "cdr",
 		Types.List [
 			Types.Atom "quote", Types.List $ map Types.Number [1, 2, 3]]],
-		Right $ Types.List [Types.Number 2, Types.Number 3])]
+		Right $ Types.List [Types.Number 2, Types.Number 3]),
+	(Types.List [
+		Types.Atom "cons",
+		Types.Number 1,
+		Types.List [Types.Atom "quote", Types.List []]],
+		Right $ Types.List [Types.Number 1]),
+	(Types.List [Types.Atom "cons", createList [], Types.String "foo"],
+		Right $ Types.DottedList [Types.List []] $ Types.String "foo"),
+	(Types.List [
+		Types.Atom "cons", createList [], Types.Number 1, Types.String "foo"],
+		Left $ Error.NumArgs 2 [
+			Types.List [], Types.Number 1, Types.String "foo"])
+		]
 	where
 		createIf cond ifClause thenClause = Types.List [
 			Types.Atom "if", cond, ifClause, thenClause]
+
+		createList list = Types.List [Types.Atom "quote", Types.List list]
 
 		evalTest (input, expectedOutput) = HUnit.TestCase $
 			HUnit.assertEqual "" expectedOutput $
