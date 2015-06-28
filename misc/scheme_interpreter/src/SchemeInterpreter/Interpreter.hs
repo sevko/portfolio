@@ -51,7 +51,8 @@ primitiveFuncs = [
 	("string<?", strBoolBinOp (<)),
 	("string>?", strBoolBinOp (>)),
 	("string<=?", strBoolBinOp (<=)),
-	("string>=?", strBoolBinOp (>=))]
+	("string>=?", strBoolBinOp (>=)),
+	("car", car)]
 
 boolBinOp ::
 	(Types.LispVal -> Error.ThrowsError a) ->
@@ -102,3 +103,10 @@ coerceStr notStr = Error.throwError $ Error.TypeMismatch "string" notStr
 coerceBool :: Types.LispVal -> Error.ThrowsError Bool
 coerceBool (Types.Bool bool) = return bool
 coerceBool notBool = Error.throwError $ Error.TypeMismatch "boolean" notBool
+
+car :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
+car [(Types.List (head':_))] = return head'
+car [badType] = Error.throwError $
+	Error.TypeMismatch "list with one or more elements" badType
+car wrongNumArgs = Error.throwError $
+	Error.NumArgs 1 wrongNumArgs

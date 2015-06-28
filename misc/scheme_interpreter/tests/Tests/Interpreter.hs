@@ -34,7 +34,18 @@ testEval = HUnit.TestList $ map evalTest [
 		Types.Atom "string?",
 		Types.String "a",
 		Types.String "b"],
-		Left $ Error.NumArgs 1 [Types.String "a", Types.String "b"])]
+		Left $ Error.NumArgs 1 [Types.String "a", Types.String "b"]),
+	(Types.List [
+		Types.Atom "car",
+		Types.Number 1,
+		Types.Number 4],
+		Left $ Error.NumArgs 1 [Types.Number 1, Types.Number 4]),
+	(Types.List [
+		Types.Atom "car",
+		Types.List [Types.Atom "quote", Types.List []]],
+		Left $ Error.TypeMismatch "list with one or more elements" $
+			Types.List [])
+	]
 	where
 		createIf cond ifClause thenClause = Types.List [
 			Types.Atom "if", cond, ifClause, thenClause]
