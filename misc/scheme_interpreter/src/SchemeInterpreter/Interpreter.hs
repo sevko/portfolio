@@ -12,6 +12,11 @@ eval val@(Types.String _) = return val
 eval val@(Types.Number _) = return val
 eval val@(Types.Bool _) = return val
 eval (Types.List [Types.Atom "quote", val]) = return val
+eval (Types.List [Types.Atom "if", condition, ifClause, thenClause]) = do
+	result <- eval condition
+	eval $ case result of
+		Types.Bool False -> thenClause
+		_ -> ifClause
 eval (Types.List (Types.Atom func : args)) = mapM eval args >>= applyFunc func
 eval badForm = Error.throwError $
 	Error.BadSpecialForm "Unrecognized special form" badForm
@@ -33,7 +38,35 @@ primitiveFuncs = [
 	("quotient", numericBinOp quot),
 	("remainder", numericBinOp rem),
 	("number?", isNumber),
-	("string?", isString)]
+	("string?", isString),
+	("=", numBoolBinOp (==)),
+	("<", numBoolBinOp (<)),
+	(">", numBoolBinOp (>)),
+	("/=", numBoolBinOp (/=)),
+	(">=", numBoolBinOp (>=)),
+	("<=", numBoolBinOp (<=)),
+	("&&", boolBoolBinOp (&&)),
+	("||", boolBoolBinOp (||)),
+	("string=?", strBoolBinOp (==)),
+	("string<?", strBoolBinOp (<)),
+	("string>?", strBoolBinOp (>)),
+	("string<=?", strBoolBinOp (<=)),
+	("string>=?", strBoolBinOp (>=))]
+
+boolBinOp ::
+	(Types.LispVal -> Error.ThrowsError a) ->
+	(a -> a -> Bool) ->
+	[Types.LispVal] ->
+	Error.ThrowsError Types.LispVal
+boolBinOp typeCoercer op [a, b] = do
+	a' <- typeCoercer a
+	b' <- typeCoercer b
+	return $ Types.Bool $ op a' b'
+boolBinOp _ _ args = Error.throwError $ Error.NumArgs 2 args
+
+numBoolBinOp = boolBinOp coerceNum
+strBoolBinOp = boolBinOp coerceStr
+boolBoolBinOp = boolBinOp coerceBool
 
 isNumber :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
 isNumber [(Types.Number _)] = return $ Types.Bool True
@@ -59,3 +92,13 @@ coerceNum val@(Types.String str) = case reads str of
 	_ -> Error.throwError $ Error.TypeMismatch "number" $ val
 coerceNum (Types.List [num]) = coerceNum num
 coerceNum notANum = Error.throwError $ Error.TypeMismatch "number" notANum
+
+coerceStr :: Types.LispVal -> Error.ThrowsError String
+coerceStr (Types.String str) = return str
+coerceStr (Types.Number num) = return $ show num
+coerceStr (Types.Bool bool) = return $ show bool
+coerceStr notStr = Error.throwError $ Error.TypeMismatch "string" notStr
+
+coerceBool :: Types.LispVal -> Error.ThrowsError Bool
+coerceBool (Types.Bool bool) = return bool
+coerceBool notBool = Error.throwError $ Error.TypeMismatch "boolean" notBool
