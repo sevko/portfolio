@@ -17,6 +17,9 @@ testEval = HUnit.TestList $ map evalTest [
 		Right $ Types.Number 1),
 	(createIf (Types.Bool False) (Types.Number 1) (Types.Number 2),
 		Right $ Types.Number 2),
+	(createIf (Types.Number 1) (Types.Number 1) (Types.Number 2),
+		Left $ Error.TypeMismatch "if condition must evaluate to a boolean" $
+			Types.Number 1),
 	(Types.List [
 		Types.Atom "+", Types.Number 1, Types.Number 2],
 		Right $ Types.Number 3),

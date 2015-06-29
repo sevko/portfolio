@@ -21,9 +21,13 @@ eval val@(Types.DottedList _ _) = return val
 eval (Types.List [Types.Atom "quote", val]) = return val
 eval (Types.List [Types.Atom "if", condition, ifClause, thenClause]) = do
 	result <- eval condition
-	eval $ case result of
-		Types.Bool False -> thenClause
-		_ -> ifClause
+	case result of
+		Types.Bool False -> eval thenClause
+		Types.Bool True -> eval ifClause
+		_ -> Error.throwError $ Error.TypeMismatch
+			"if condition must evaluate to a boolean"
+			result
+
 eval (Types.List (Types.Atom func : args)) = mapM eval args >>= applyFunc func
 eval badForm = Error.throwError $
 	Error.BadSpecialForm "Unrecognized special form" badForm
