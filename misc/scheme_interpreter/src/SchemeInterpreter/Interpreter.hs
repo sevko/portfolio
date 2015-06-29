@@ -22,11 +22,39 @@ eval (Types.List [Types.Atom "quote", val]) = return val
 eval (Types.List [Types.Atom "if", condition, ifClause, thenClause]) = do
 	result <- eval condition
 	case result of
-		Types.Bool False -> eval thenClause
 		Types.Bool True -> eval ifClause
+		Types.Bool False -> eval thenClause
 		_ -> Error.throwError $ Error.TypeMismatch
 			"if condition must evaluate to a boolean"
 			result
+eval (Types.List ((Types.Atom "cond"):condClauses)) = evalClauses condClauses
+	where
+		evalClauses :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
+		evalClauses (clause:clauses) = do
+			clauseResult <- evalClause clause
+			case clauseResult of
+				Just result -> return result
+				Nothing -> evalClauses clauses
+		evalClauses [] = Error.throwError $ Error.ProgramStructure
+			"All `cond` conditions evaluated to False and no `else` \
+			\clause was provided, so this `cond` expr has no value."
+
+		evalClause :: Types.LispVal -> Error.ThrowsError (Maybe Types.LispVal)
+		evalClause (Types.List ((Types.Atom "else"):exprs)) =
+			fmap (Just . last) $ mapM eval exprs
+		evalClause (Types.List (cond:exprs)) = do
+			result <- eval cond
+			case result of
+				Types.Bool True -> if null exprs
+					then return $ Just result
+					else fmap (Just . last) $ mapM eval exprs
+				Types.Bool False -> return Nothing
+				_ -> Error.throwError $ Error.TypeMismatch
+					"cond condition must evaluate to a boolean"
+					result
+		evalClause badType = Error.throwError $ Error.TypeMismatch
+			"clause with one condition and one or more expressions"
+			badType
 
 eval (Types.List (Types.Atom func : args)) = mapM eval args >>= applyFunc func
 eval badForm = Error.throwError $
@@ -36,7 +64,7 @@ applyFunc :: String -> [Types.LispVal] -> Error.ThrowsError Types.LispVal
 applyFunc funcName args = case lookup funcName primitiveFuncs of
 	Just func -> func args
 	Nothing -> Error.throwError $
-		Error.NotFunction "Unrecognized primitive function: " funcName
+		Error.NotFunction "Unrecognized primitive function" funcName
 
 primitiveFuncs ::
 	[(String, [Types.LispVal] -> Error.ThrowsError Types.LispVal)]

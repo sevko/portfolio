@@ -18,6 +18,7 @@ data LispError =
 	BadSpecialForm String Types.LispVal |
 	NotFunction String String |
 	UnboundVar String String |
+	ProgramStructure String |
 	Default String deriving (Eq)
 
 type ThrowsError = Either LispError
@@ -35,6 +36,7 @@ instance Show LispError where
 	show (TypeMismatch expected got) = Format.format
 		"Expecting type {0}, but got {1}." [expected, show got]
 	show (Parser parseErr) = "Parse error: " ++ show parseErr
+	show (ProgramStructure err) = "Program structure error: " ++ err
 
 instance Error.Error LispError where
 	noMsg = Default "An error has occurred"

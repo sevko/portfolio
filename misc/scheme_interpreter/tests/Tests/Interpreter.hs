@@ -75,7 +75,18 @@ testEval = HUnit.TestList $ map evalTest [
 			Types.String "foo",
 		Types.DottedList [Types.Number 10, Types.String "abc def"] $
 			Types.String "foa"],
-		Right $ Types.Bool $ False)
+		Right $ Types.Bool $ False),
+	(Types.List [
+		Types.Atom "cond",
+		Types.List [Types.Bool False, Types.Number 1, Types.Number 2],
+		Types.List [Types.Bool True, Types.Number 1, Types.Number 3]],
+		Right $ Types.Number 3),
+	(Types.List [
+		Types.Atom "cond",
+		Types.List [Types.Bool False],
+		Types.List [Types.Bool True]],
+		Right $ Types.Bool True),
+	(Types.List [Types.Atom "cond"], defaultProgramStructErr)
 		]
 	where
 		createIf cond ifClause thenClause = Types.List [
@@ -83,9 +94,19 @@ testEval = HUnit.TestList $ map evalTest [
 
 		createList list = Types.List [Types.Atom "quote", Types.List list]
 
+		{-
+		 - The `Error.ProgramStructure` error contains a lengthy, freeform
+		 - explanatory message that doesn't make sense to check for equality
+		 - with the expected error.
+		 - -}
+		defaultProgramStructErr = Left $ Error.ProgramStructure ""
 		evalTest (input, expectedOutput) = HUnit.TestCase $
 			HUnit.assertEqual "" expectedOutput $
-			Interpreter.eval input
+			case Interpreter.eval input of
+				{-
+				 - -}
+				(Left (Error.ProgramStructure _)) -> defaultProgramStructErr
+				result -> result
 
 testCoerceEquals = HUnit.TestList $
 	map (\ (a, b, coercer, expected) -> HUnit.TestCase $
