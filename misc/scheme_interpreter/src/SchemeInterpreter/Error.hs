@@ -41,3 +41,4 @@ instance Error.Error LispError where
 	strMsg = Default
 
 throwError = Error.throwError
+catchError = Error.catchError

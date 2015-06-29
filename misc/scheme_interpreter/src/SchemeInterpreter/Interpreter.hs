@@ -1,3 +1,5 @@
+{-# LANGUAGE ExistentialQuantification #-}
+
 {-
  - The interpreter that evaluates parsed Scheme code.
  -}
@@ -6,6 +8,10 @@ module SchemeInterpreter.Interpreter where
 
 import qualified SchemeInterpreter.Types as Types
 import qualified SchemeInterpreter.Error as Error
+import qualified Control.Applicative as Applicative
+
+data TypeCoercer = forall a. Eq a =>
+	AnyCoercer (Types.LispVal -> Error.ThrowsError a)
 
 eval :: Types.LispVal -> Error.ThrowsError Types.LispVal
 eval val@(Types.String _) = return val
@@ -57,7 +63,8 @@ primitiveFuncs = [
 	("cdr", cdr),
 	("car", car),
 	("eq?", eqv),
-	("eqv?", eqv)]
+	("eqv?", eqv),
+	("equal?", equal)]
 
 boolBinOp ::
 	(Types.LispVal -> Error.ThrowsError a) ->
@@ -109,6 +116,12 @@ coerceBool :: Types.LispVal -> Error.ThrowsError Bool
 coerceBool (Types.Bool bool) = return bool
 coerceBool notBool = Error.throwError $ Error.TypeMismatch "boolean" notBool
 
+coerceEquals :: Types.LispVal -> Types.LispVal -> TypeCoercer ->
+	Error.ThrowsError Bool
+coerceEquals a b (AnyCoercer coerce) = Error.catchError
+	(Applicative.liftA2 (==) (coerce a) $ coerce b)
+	(const $ return False)
+
 car :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
 car [(Types.List (head':_))] = return head'
 car [badType] = Error.throwError $
@@ -133,3 +146,11 @@ cons wrongNumArgs = Error.throwError $ Error.NumArgs 2 wrongNumArgs
 eqv :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
 eqv [a, b] = return $ Types.Bool $ a == b
 eqv badNumArgs = Error.throwError $ Error.NumArgs 2 badNumArgs
+
+equal :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
+equal args@[a, b] = do
+	primitiveEquals <- fmap or $ mapM (coerceEquals a b) [
+		AnyCoercer coerceNum, AnyCoercer coerceStr, AnyCoercer coerceBool]
+	(Types.Bool areEqual) <- eqv args
+	return $ Types.Bool $ primitiveEquals || areEqual
+equal wrongNumArgs = Error.throwError $ Error.NumArgs 2 wrongNumArgs

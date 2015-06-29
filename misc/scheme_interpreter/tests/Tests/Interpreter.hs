@@ -84,4 +84,17 @@ testEval = HUnit.TestList $ map evalTest [
 			HUnit.assertEqual "" expectedOutput $
 			Interpreter.eval input
 
-tests = [testEval]
+testCoerceEquals = HUnit.TestList $
+	map (\ (a, b, coercer, expected) -> HUnit.TestCase $
+		HUnit.assertEqual "" (Right expected) $
+		Interpreter.coerceEquals a b $ coercer) [
+		(Types.Number 10, Types.String "10",
+			Interpreter.AnyCoercer Interpreter.coerceNum, True),
+		(Types.Bool True, Types.Bool True,
+			Interpreter.AnyCoercer Interpreter.coerceStr, True),
+		(Types.Bool True, Types.Bool False,
+			Interpreter.AnyCoercer Interpreter.coerceStr, False),
+		(Types.List [], Types.Atom "foo",
+			Interpreter.AnyCoercer Interpreter.coerceBool, False)]
+
+tests = [testEval, testCoerceEquals]
