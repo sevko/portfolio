@@ -8,28 +8,35 @@ module SchemeInterpreter.Interpreter where
 
 import qualified SchemeInterpreter.Types as Types
 import qualified SchemeInterpreter.Error as Error
+import qualified SchemeInterpreter.State as State
 import qualified Control.Applicative as Applicative
 
 data TypeCoercer = forall a. Eq a =>
 	AnyCoercer (Types.LispVal -> Error.ThrowsError a)
 
-eval :: Types.LispVal -> Error.ThrowsError Types.LispVal
-eval val@(Types.String _) = return val
-eval val@(Types.Number _) = return val
-eval val@(Types.Bool _) = return val
-eval val@(Types.DottedList _ _) = return val
-eval (Types.List [Types.Atom "quote", val]) = return val
-eval (Types.List [Types.Atom "if", condition, ifClause, thenClause]) = do
-	result <- eval condition
+eval :: State.Env -> Types.LispVal -> State.IOThrowsError Types.LispVal
+eval _ val@(Types.String _) = return val
+eval _ val@(Types.Number _) = return val
+eval _ val@(Types.Bool _) = return val
+eval _ val@(Types.DottedList _ _) = return val
+eval env (Types.Atom variable) = State.getVar env variable
+eval env (Types.List [Types.Atom "set!", Types.Atom var, form]) =
+	eval env form >>= State.setVar env var
+eval env (Types.List [Types.Atom "define", Types.Atom var, form]) =
+    eval env form >>= State.defineVar env var
+eval _ (Types.List [Types.Atom "quote", val]) = return val
+eval env (Types.List [Types.Atom "if", condition, ifClause, thenClause]) = do
+	result <- eval env condition
 	case result of
-		Types.Bool True -> eval ifClause
-		Types.Bool False -> eval thenClause
+		Types.Bool True -> eval env ifClause
+		Types.Bool False -> eval env thenClause
 		_ -> Error.throwError $ Error.TypeMismatch
 			"if condition must evaluate to a boolean"
 			result
-eval (Types.List ((Types.Atom "cond"):condClauses)) = evalClauses condClauses
+eval env (Types.List ((Types.Atom "cond"):condClauses)) =
+	evalClauses condClauses
 	where
-		evalClauses :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
+		evalClauses :: [Types.LispVal] -> State.IOThrowsError Types.LispVal
 		evalClauses (clause:clauses) = do
 			clauseResult <- evalClause clause
 			case clauseResult of
@@ -39,15 +46,16 @@ eval (Types.List ((Types.Atom "cond"):condClauses)) = evalClauses condClauses
 			"All `cond` conditions evaluated to False and no `else` \
 			\clause was provided, so this `cond` expr has no value."
 
-		evalClause :: Types.LispVal -> Error.ThrowsError (Maybe Types.LispVal)
+		evalClause :: Types.LispVal ->
+			State.IOThrowsError (Maybe Types.LispVal)
 		evalClause (Types.List ((Types.Atom "else"):exprs)) =
-			fmap (Just . last) $ mapM eval exprs
+			fmap (Just . last) $ mapM (eval env) exprs
 		evalClause (Types.List (cond:exprs)) = do
-			result <- eval cond
+			result <- eval env cond
 			case result of
 				Types.Bool True -> if null exprs
 					then return $ Just result
-					else fmap (Just . last) $ mapM eval exprs
+					else fmap (Just . last) $ mapM (eval env) exprs
 				Types.Bool False -> return Nothing
 				_ -> Error.throwError $ Error.TypeMismatch
 					"cond condition must evaluate to a boolean"
@@ -56,8 +64,9 @@ eval (Types.List ((Types.Atom "cond"):condClauses)) = evalClauses condClauses
 			"clause with one condition and one or more expressions"
 			badType
 
-eval (Types.List (Types.Atom func : args)) = mapM eval args >>= applyFunc func
-eval badForm = Error.throwError $
+eval env (Types.List (Types.Atom func : args)) = mapM (eval env) args >>=
+	State.liftThrows . applyFunc func
+eval _ badForm = Error.throwError $
 	Error.BadSpecialForm "Unrecognized special form" badForm
 
 applyFunc :: String -> [Types.LispVal] -> Error.ThrowsError Types.LispVal
