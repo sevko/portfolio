@@ -15,7 +15,7 @@ runRepl = State.nullEnv >>= repl
 			if input == "quit"
 				then return ()
 				else do
-					evalString env input >>= print
+					evalString env input >>= putStrLn
 					repl env
 
 		evalString env expr = State.runIOThrows $ Monad.liftM show $
