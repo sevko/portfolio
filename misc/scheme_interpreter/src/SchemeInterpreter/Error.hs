@@ -37,6 +37,7 @@ instance Show LispError where
 		"Expecting type {0}, but got {1}." [expected, show got]
 	show (Parser parseErr) = "Parse error: " ++ show parseErr
 	show (ProgramStructure err) = "Program structure error: " ++ err
+	show (Default err) = "Program structure error: " ++ err
 
 instance Error.Error LispError where
 	noMsg = Default "An error has occurred"
