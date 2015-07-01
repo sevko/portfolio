@@ -50,6 +50,11 @@ instance Show LispVal where
 	show (List list) = '(' : (unwords $ map show list) ++ ")"
 	show (DottedList head' tail') = Format.format "({0} . {1})"
 		[unwords $ map show head', show tail']
+	show (PrimitiveFunc _) = "<primitive>"
+	{- show (Func {params = params, varargs = varargs, body = body, closure = closure}) = -}
+		{- "(lambda (" ++ unwords $ map show params ++ (case varargs of -}
+			{- Just arg -> " . " ++ arg -}
+			{- Nothing -> "") ++ ") ...)" -}
 
 data LispError =
 	NumArgs Integer [LispVal] |
@@ -84,6 +89,3 @@ instance MonadError.Error LispError where
 type ThrowsError = Either LispError
 type Env = IORef.IORef [(String, IORef.IORef LispVal)]
 type IOThrowsError = MonadError.ErrorT LispError IO
-
-throwError = MonadError.throwError
-catchError = MonadError.catchError

@@ -5,10 +5,9 @@
 module Tests.Interpreter where
 
 import qualified SchemeInterpreter.Interpreter as Interpreter
-import qualified SchemeInterpreter.Types as Error
 import qualified SchemeInterpreter.Types as Types
 import qualified SchemeInterpreter.State as State
-import qualified Control.Monad.Error as MonadError
+import qualified Control.Monad.Error as Error
 import qualified Test.HUnit as HUnit
 
 testEval :: HUnit.Test
@@ -20,7 +19,7 @@ testEval = HUnit.TestList $ map evalTest [
 	(createIf (Types.Bool False) (Types.Number 1) (Types.Number 2),
 		return $ Types.Number 2),
 	(createIf (Types.Number 1) (Types.Number 1) (Types.Number 2),
-		Error.throwError $ Error.TypeMismatch "if condition must evaluate to a boolean" $
+		Error.throwError $ Types.TypeMismatch "if condition must evaluate to a boolean" $
 			Types.Number 1),
 	(Types.List [
 		Types.Atom "+", Types.Number 1, Types.Number 2],
@@ -34,19 +33,19 @@ testEval = HUnit.TestList $ map evalTest [
 	(Types.List [
 		Types.Atom "+",
 		Types.Number 3],
-		Error.throwError $ Error.NumArgs 2 [Types.Number 3]),
+		Error.throwError $ Types.NumArgs 2 [Types.Number 3]),
 	(Types.List [
 		Types.Atom "string?",
 		Types.String "a",
 		Types.String "b"],
-		Error.throwError $ Error.NumArgs 1 [Types.String "a", Types.String "b"]),
+		Error.throwError $ Types.NumArgs 1 [Types.String "a", Types.String "b"]),
 	(Types.List [
 		Types.Atom "car",
 		Types.Number 1,
 		Types.Number 4],
-		Error.throwError $ Error.NumArgs 1 [Types.Number 1, Types.Number 4]),
+		Error.throwError $ Types.NumArgs 1 [Types.Number 1, Types.Number 4]),
 	(Types.List [Types.Atom "car", createList []],
-		Error.throwError $ Error.TypeMismatch "list with one or more elements" $
+		Error.throwError $ Types.TypeMismatch "list with one or more elements" $
 			Types.List []),
 	(Types.List [Types.Atom "car", createList $ map Types.Number [1, 2, 3]],
 		return $ Types.Number 1),
@@ -60,7 +59,7 @@ testEval = HUnit.TestList $ map evalTest [
 		return $ Types.DottedList [Types.List []] $ Types.String "foo"),
 	(Types.List [
 		Types.Atom "cons", createList [], Types.Number 1, Types.String "foo"],
-		Error.throwError $ Error.NumArgs 2 [
+		Error.throwError $ Types.NumArgs 2 [
 			Types.List [], Types.Number 1, Types.String "foo"]),
 	(Types.List [Types.Atom "eqv?", Types.Number 1, Types.Number 1],
 		return $ Types.Bool $ True),
@@ -101,12 +100,12 @@ testEval = HUnit.TestList $ map evalTest [
 		 - explanatory message that doesn't make sense to check for equality
 		 - with the expected error.
 		 - -}
-		defaultProgramStructErr = Error.throwError $ Error.ProgramStructure ""
+		defaultProgramStructErr = Error.throwError $ Types.ProgramStructure ""
 		evalTest (input, expectedOutput) = HUnit.TestCase $ do
 			env <- State.nullEnv
-			res <- MonadError.runErrorT $ Interpreter.eval env input
+			res <- Error.runErrorT $ Interpreter.eval env input
 			HUnit.assertEqual "" expectedOutput $ case res of
-				(Left (Error.ProgramStructure _)) -> defaultProgramStructErr
+				(Left (Types.ProgramStructure _)) -> defaultProgramStructErr
 				result -> result
 
 testCoerceEquals = HUnit.TestList $

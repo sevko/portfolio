@@ -5,13 +5,13 @@
 module SchemeInterpreter.Parser where
 
 import qualified SchemeInterpreter.Types as Types
-import qualified SchemeInterpreter.Types as Error
 
 import qualified Text.ParserCombinators.Parsec as Parsec
 import qualified Data.List as List
 import qualified Control.Applicative as Applicative
 import Control.Applicative ((*>), (<*))
 import qualified Control.Monad as Monad
+import qualified Control.Monad.Error as Error
 import Text.ParserCombinators.Parsec ((<|>))
 
 symbol :: Parsec.Parser Char
@@ -34,9 +34,9 @@ parseDottedList = do
 	Parsec.char ')'
 	return $ Types.DottedList listHead listTail
 
-parseExpr :: String -> Error.ThrowsError Types.LispVal
+parseExpr :: String -> Types.ThrowsError Types.LispVal
 parseExpr str = case Parsec.parse parser "scheme" str of
-	Left err -> Error.throwError $ Error.Parser err
+	Left err -> Error.throwError $ Types.Parser err
 	Right val -> return val
 
 parser :: Parsec.Parser Types.LispVal

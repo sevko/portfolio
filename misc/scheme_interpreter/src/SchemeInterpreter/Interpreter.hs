@@ -7,12 +7,12 @@
 module SchemeInterpreter.Interpreter where
 
 import qualified SchemeInterpreter.Types as Types
-import qualified SchemeInterpreter.Types as Error
 import qualified SchemeInterpreter.State as State
+import qualified Control.Monad.Error as Error
 import qualified Control.Applicative as Applicative
 
 data TypeCoercer = forall a. Eq a =>
-	AnyCoercer (Types.LispVal -> Error.ThrowsError a)
+	AnyCoercer (Types.LispVal -> Types.ThrowsError a)
 
 eval :: Types.Env -> Types.LispVal -> Types.IOThrowsError Types.LispVal
 eval _ val@(Types.String _) = return val
@@ -30,7 +30,7 @@ eval env (Types.List [Types.Atom "if", condition, ifClause, thenClause]) = do
 	case result of
 		Types.Bool True -> eval env ifClause
 		Types.Bool False -> eval env thenClause
-		_ -> Error.throwError $ Error.TypeMismatch
+		_ -> Error.throwError $ Types.TypeMismatch
 			"if condition must evaluate to a boolean"
 			result
 eval env (Types.List ((Types.Atom "cond"):condClauses)) =
@@ -42,7 +42,7 @@ eval env (Types.List ((Types.Atom "cond"):condClauses)) =
 			case clauseResult of
 				Just result -> return result
 				Nothing -> evalClauses clauses
-		evalClauses [] = Error.throwError $ Error.ProgramStructure
+		evalClauses [] = Error.throwError $ Types.ProgramStructure
 			"All `cond` conditions evaluated to False and no `else` \
 			\clause was provided, so this `cond` expr has no value."
 
@@ -57,26 +57,26 @@ eval env (Types.List ((Types.Atom "cond"):condClauses)) =
 					then return $ Just result
 					else fmap (Just . last) $ mapM (eval env) exprs
 				Types.Bool False -> return Nothing
-				_ -> Error.throwError $ Error.TypeMismatch
+				_ -> Error.throwError $ Types.TypeMismatch
 					"cond condition must evaluate to a boolean"
 					result
-		evalClause badType = Error.throwError $ Error.TypeMismatch
+		evalClause badType = Error.throwError $ Types.TypeMismatch
 			"clause with one condition and one or more expressions"
 			badType
 
 eval env (Types.List (Types.Atom func : args)) = mapM (eval env) args >>=
 	State.liftThrows . applyFunc func
 eval _ badForm = Error.throwError $
-	Error.BadSpecialForm "Unrecognized special form" badForm
+	Types.BadSpecialForm "Unrecognized special form" badForm
 
-applyFunc :: String -> [Types.LispVal] -> Error.ThrowsError Types.LispVal
+applyFunc :: String -> [Types.LispVal] -> Types.ThrowsError Types.LispVal
 applyFunc funcName args = case lookup funcName primitiveFuncs of
 	Just func -> func args
 	Nothing -> Error.throwError $
-		Error.NotFunction "Unrecognized primitive function" funcName
+		Types.NotFunction "Unrecognized primitive function" funcName
 
 primitiveFuncs ::
-	[(String, [Types.LispVal] -> Error.ThrowsError Types.LispVal)]
+	[(String, [Types.LispVal] -> Types.ThrowsError Types.LispVal)]
 primitiveFuncs = [
 	("+", numericBinOp (+)),
 	("-", numericBinOp (-)),
@@ -108,90 +108,90 @@ primitiveFuncs = [
 	("equal?", equal)]
 
 boolBinOp ::
-	(Types.LispVal -> Error.ThrowsError a) ->
+	(Types.LispVal -> Types.ThrowsError a) ->
 	(a -> a -> Bool) ->
 	[Types.LispVal] ->
-	Error.ThrowsError Types.LispVal
+	Types.ThrowsError Types.LispVal
 boolBinOp typeCoercer op [a, b] = do
 	a' <- typeCoercer a
 	b' <- typeCoercer b
 	return $ Types.Bool $ op a' b'
-boolBinOp _ _ args = Error.throwError $ Error.NumArgs 2 args
+boolBinOp _ _ args = Error.throwError $ Types.NumArgs 2 args
 
 numBoolBinOp = boolBinOp coerceNum
 strBoolBinOp = boolBinOp coerceStr
 boolBoolBinOp = boolBinOp coerceBool
 
-isNumber :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
+isNumber :: [Types.LispVal] -> Types.ThrowsError Types.LispVal
 isNumber [(Types.Number _)] = return $ Types.Bool True
 isNumber [_] = return $ Types.Bool False
-isNumber args = Error.throwError $ Error.NumArgs 1 args
+isNumber args = Error.throwError $ Types.NumArgs 1 args
 
-isString :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
+isString :: [Types.LispVal] -> Types.ThrowsError Types.LispVal
 isString [(Types.String _)] = return $ Types.Bool True
 isString [_] = return $ Types.Bool False
-isString args = Error.throwError $ Error.NumArgs 1 args
+isString args = Error.throwError $ Types.NumArgs 1 args
 
 numericBinOp :: (Integer -> Integer -> Integer) -> [Types.LispVal] ->
-	Error.ThrowsError Types.LispVal
+	Types.ThrowsError Types.LispVal
 numericBinOp op args
-	| length args <= 1 = Error.throwError $ Error.NumArgs 2 args
+	| length args <= 1 = Error.throwError $ Types.NumArgs 2 args
 	| otherwise = fmap (Types.Number . foldl1 op) $
 		sequence $ map coerceNum args
 
-coerceNum :: Types.LispVal -> Error.ThrowsError Integer
+coerceNum :: Types.LispVal -> Types.ThrowsError Integer
 coerceNum (Types.Number num) = return num
 coerceNum val@(Types.String str) = case reads str of
 	(num, _):_ -> return num
-	_ -> Error.throwError $ Error.TypeMismatch "number" $ val
+	_ -> Error.throwError $ Types.TypeMismatch "number" $ val
 coerceNum (Types.List [num]) = coerceNum num
-coerceNum notANum = Error.throwError $ Error.TypeMismatch "number" notANum
+coerceNum notANum = Error.throwError $ Types.TypeMismatch "number" notANum
 
-coerceStr :: Types.LispVal -> Error.ThrowsError String
+coerceStr :: Types.LispVal -> Types.ThrowsError String
 coerceStr (Types.String str) = return str
 coerceStr (Types.Number num) = return $ show num
 coerceStr (Types.Bool bool) = return $ show bool
-coerceStr notStr = Error.throwError $ Error.TypeMismatch "string" notStr
+coerceStr notStr = Error.throwError $ Types.TypeMismatch "string" notStr
 
-coerceBool :: Types.LispVal -> Error.ThrowsError Bool
+coerceBool :: Types.LispVal -> Types.ThrowsError Bool
 coerceBool (Types.Bool bool) = return bool
-coerceBool notBool = Error.throwError $ Error.TypeMismatch "boolean" notBool
+coerceBool notBool = Error.throwError $ Types.TypeMismatch "boolean" notBool
 
 coerceEquals :: Types.LispVal -> Types.LispVal -> TypeCoercer ->
-	Error.ThrowsError Bool
+	Types.ThrowsError Bool
 coerceEquals a b (AnyCoercer coerce) = Error.catchError
 	(Applicative.liftA2 (==) (coerce a) $ coerce b)
 	(const $ return False)
 
-car :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
+car :: [Types.LispVal] -> Types.ThrowsError Types.LispVal
 car [(Types.List (head':_))] = return head'
 car [badType] = Error.throwError $
-	Error.TypeMismatch "list with one or more elements" badType
+	Types.TypeMismatch "list with one or more elements" badType
 car wrongNumArgs = Error.throwError $
-	Error.NumArgs 1 wrongNumArgs
+	Types.NumArgs 1 wrongNumArgs
 
-cdr :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
+cdr :: [Types.LispVal] -> Types.ThrowsError Types.LispVal
 cdr [(Types.List (_:tail'))] = return $ Types.List tail'
 cdr [badType] = Error.throwError $
-	Error.TypeMismatch "list with one or more elements" badType
+	Types.TypeMismatch "list with one or more elements" badType
 cdr wrongNumArgs = Error.throwError $
-	Error.NumArgs 1 wrongNumArgs
+	Types.NumArgs 1 wrongNumArgs
 
-cons :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
+cons :: [Types.LispVal] -> Types.ThrowsError Types.LispVal
 cons [item, Types.List items] = return $ Types.List $ item : items
 cons [item, Types.DottedList items tail'] = return $
 	Types.DottedList (item : items) tail'
 cons [a, b] = return $ Types.DottedList [a] b
-cons wrongNumArgs = Error.throwError $ Error.NumArgs 2 wrongNumArgs
+cons wrongNumArgs = Error.throwError $ Types.NumArgs 2 wrongNumArgs
 
-eqv :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
+eqv :: [Types.LispVal] -> Types.ThrowsError Types.LispVal
 eqv [a, b] = return $ Types.Bool $ a == b
-eqv badNumArgs = Error.throwError $ Error.NumArgs 2 badNumArgs
+eqv badNumArgs = Error.throwError $ Types.NumArgs 2 badNumArgs
 
-equal :: [Types.LispVal] -> Error.ThrowsError Types.LispVal
+equal :: [Types.LispVal] -> Types.ThrowsError Types.LispVal
 equal args@[a, b] = do
 	primitiveEquals <- fmap or $ mapM (coerceEquals a b) [
 		AnyCoercer coerceNum, AnyCoercer coerceStr, AnyCoercer coerceBool]
 	(Types.Bool areEqual) <- eqv args
 	return $ Types.Bool $ primitiveEquals || areEqual
-equal wrongNumArgs = Error.throwError $ Error.NumArgs 2 wrongNumArgs
+equal wrongNumArgs = Error.throwError $ Types.NumArgs 2 wrongNumArgs
