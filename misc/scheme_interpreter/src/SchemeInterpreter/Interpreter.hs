@@ -7,14 +7,14 @@
 module SchemeInterpreter.Interpreter where
 
 import qualified SchemeInterpreter.Types as Types
-import qualified SchemeInterpreter.Error as Error
+import qualified SchemeInterpreter.Types as Error
 import qualified SchemeInterpreter.State as State
 import qualified Control.Applicative as Applicative
 
 data TypeCoercer = forall a. Eq a =>
 	AnyCoercer (Types.LispVal -> Error.ThrowsError a)
 
-eval :: State.Env -> Types.LispVal -> State.IOThrowsError Types.LispVal
+eval :: Types.Env -> Types.LispVal -> Types.IOThrowsError Types.LispVal
 eval _ val@(Types.String _) = return val
 eval _ val@(Types.Number _) = return val
 eval _ val@(Types.Bool _) = return val
@@ -36,7 +36,7 @@ eval env (Types.List [Types.Atom "if", condition, ifClause, thenClause]) = do
 eval env (Types.List ((Types.Atom "cond"):condClauses)) =
 	evalClauses condClauses
 	where
-		evalClauses :: [Types.LispVal] -> State.IOThrowsError Types.LispVal
+		evalClauses :: [Types.LispVal] -> Types.IOThrowsError Types.LispVal
 		evalClauses (clause:clauses) = do
 			clauseResult <- evalClause clause
 			case clauseResult of
@@ -47,7 +47,7 @@ eval env (Types.List ((Types.Atom "cond"):condClauses)) =
 			\clause was provided, so this `cond` expr has no value."
 
 		evalClause :: Types.LispVal ->
-			State.IOThrowsError (Maybe Types.LispVal)
+			Types.IOThrowsError (Maybe Types.LispVal)
 		evalClause (Types.List ((Types.Atom "else"):exprs)) =
 			fmap (Just . last) $ mapM (eval env) exprs
 		evalClause (Types.List (cond:exprs)) = do

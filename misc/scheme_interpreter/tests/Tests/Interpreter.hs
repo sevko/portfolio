@@ -5,7 +5,7 @@
 module Tests.Interpreter where
 
 import qualified SchemeInterpreter.Interpreter as Interpreter
-import qualified SchemeInterpreter.Error as Error
+import qualified SchemeInterpreter.Types as Error
 import qualified SchemeInterpreter.Types as Types
 import qualified SchemeInterpreter.State as State
 import qualified Control.Monad.Error as MonadError

@@ -5,7 +5,7 @@
 module SchemeInterpreter.Parser where
 
 import qualified SchemeInterpreter.Types as Types
-import qualified SchemeInterpreter.Error as Error
+import qualified SchemeInterpreter.Types as Error
 
 import qualified Text.ParserCombinators.Parsec as Parsec
 import qualified Data.List as List
