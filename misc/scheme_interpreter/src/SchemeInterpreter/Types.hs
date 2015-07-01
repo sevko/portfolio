@@ -1,4 +1,5 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE NamedFieldPuns #-}
 
 {-
  - Definitions of types to represent Scheme types.
@@ -51,10 +52,10 @@ instance Show LispVal where
 	show (DottedList head' tail') = Format.format "({0} . {1})"
 		[unwords $ map show head', show tail']
 	show (PrimitiveFunc _) = "<primitive>"
-	{- show (Func {params = params, varargs = varargs, body = body, closure = closure}) = -}
-		{- "(lambda (" ++ unwords $ map show params ++ (case varargs of -}
-			{- Just arg -> " . " ++ arg -}
-			{- Nothing -> "") ++ ") ...)" -}
+	show (Func {params, varargs}) =
+		"(lambda (" ++ (unwords params) ++ (case varargs of
+			Just arg -> " . " ++ arg
+			Nothing -> "") ++ ") ...)"
 
 data LispError =
 	NumArgs Integer [LispVal] |

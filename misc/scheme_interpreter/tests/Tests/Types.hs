@@ -25,6 +25,21 @@ testShow = HUnit.TestList $
 		(Types.DottedList
 			[Types.Float 2.0, Types.String "exe", Types.Bool False] $
 			Types.Atom "bar",
-			"(2.0 \"exe\" #f . bar)")]
+			"(2.0 \"exe\" #f . bar)"),
+		(Types.DottedList
+			[Types.Float 2.0, Types.String "exe", Types.Bool False] $
+			Types.Atom "bar",
+			"(2.0 \"exe\" #f . bar)"),
+		(Types.Func {
+			Types.params=["a", "b", "c"],
+			Types.varargs=Just "varArgs",
+			Types.body=[],
+
+			-- No point in dropping into the IO monad just to create a real Env
+			-- that won't get used, so use `undefined`.
+			Types.closure=undefined},
+			"(lambda (a b c . varArgs) ...)"),
+		(Types.PrimitiveFunc undefined, "<primitive>")
+			]
 
 tests = [testShow]
