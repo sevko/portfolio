@@ -1,4 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE NamedFieldPuns #-}
 
 {-
  - The interpreter that evaluates parsed Scheme code.
@@ -9,6 +10,7 @@ module SchemeInterpreter.Interpreter where
 import qualified SchemeInterpreter.Types as Types
 import qualified SchemeInterpreter.State as State
 import qualified Control.Monad.Error as Error
+import qualified Control.Monad as Monad
 import qualified Control.Applicative as Applicative
 
 data TypeCoercer = forall a. Eq a =>
@@ -63,17 +65,73 @@ eval env (Types.List ((Types.Atom "cond"):condClauses)) =
 		evalClause badType = Error.throwError $ Types.TypeMismatch
 			"clause with one condition and one or more expressions"
 			badType
-
-eval env (Types.List (Types.Atom func : args)) = mapM (eval env) args >>=
-	State.liftThrows . applyFunc func
+eval env (Types.List (Types.Atom "define" : defineArg1 : body)) =
+	case defineArg1 of
+		Types.List (Types.Atom funcName : params) ->
+			bindFunc funcName $ Types.Func {
+				Types.params = map show params,
+				Types.varargs = Nothing,
+				Types.body = body,
+				Types.closure = env
+			}
+		Types.DottedList (Types.Atom funcName : params) varArgs ->
+			case varArgs of
+				(Types.Atom varArgName) -> bindFunc funcName $
+					Types.Func {
+						Types.params = map show params,
+						Types.varargs = Just $ varArgName,
+						Types.body = body,
+						Types.closure = env
+					}
+				_ -> Error.throwError $ Types.TypeMismatch "atom" varArgs
+		_ -> Error.throwError $
+			Types.TypeMismatch "list or dotted list" defineArg1
+	where bindFunc = State.defineVar env
+eval env (Types.List (Types.Atom "lambda" : lambdaArg1 : body)) =
+	return $ case lambdaArg1 of
+		Types.List params -> createFunc params Nothing
+		Types.DottedList params varargs ->
+			createFunc params (Just $ show varargs)
+		varargs@(Types.Atom _) ->
+			createFunc ([] :: [Types.LispVal]) (Just $ show varargs)
+	where createFunc params varargs = Types.Func {
+		Types.params = map show params,
+		Types.varargs = varargs,
+		Types.body = body,
+		Types.closure = env
+	}
+eval env (Types.List (function : args)) = do
+	 eval'dFunc <- eval env function
+	 eval'dArgs <- mapM (eval env) args
+	 applyFunc eval'dFunc eval'dArgs
 eval _ badForm = Error.throwError $
 	Types.BadSpecialForm "Unrecognized special form" badForm
 
-applyFunc :: String -> [Types.LispVal] -> Types.ThrowsError Types.LispVal
-applyFunc funcName args = case lookup funcName primitiveFuncs of
-	Just func -> func args
-	Nothing -> Error.throwError $
-		Types.NotFunction "Unrecognized primitive function" funcName
+applyFunc :: Types.LispVal -> [Types.LispVal] ->
+	Types.IOThrowsError Types.LispVal
+applyFunc (Types.PrimitiveFunc func) args = State.liftThrows $ func args
+applyFunc (Types.Func {
+	Types.params, Types.varargs, Types.body, Types.closure}) args = do
+	let numParams = length params
+	if length args /= numParams && varargs == Nothing
+		then Error.throwError $ Types.NumArgs (fromIntegral numParams) args
+		else let varArgs = drop (length params) args in
+			(Error.liftIO $ State.defineVars closure $ zip params args) >>=
+			defineVarArgs varArgs >>=
+			evalBody
+	where
+		defineVarArgs varArgList env = case varargs of
+			Just varArgName -> Error.liftIO $ State.defineVars env $
+				[(varArgName, Types.List varArgList)]
+			Nothing -> return env
+
+		evalBody env = Monad.liftM last $ mapM (eval env) body
+applyFunc notAFunc _ = Error.throwError $
+	Types.TypeMismatch "expected function" notAFunc
+
+primitiveEnv :: IO Types.Env
+primitiveEnv = State.nullEnv >>= (flip State.defineVars $ map
+	(\ (varName, func) -> (varName, Types.PrimitiveFunc func)) primitiveFuncs)
 
 primitiveFuncs ::
 	[(String, [Types.LispVal] -> Types.ThrowsError Types.LispVal)]

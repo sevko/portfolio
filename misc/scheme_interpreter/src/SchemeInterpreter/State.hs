@@ -57,8 +57,8 @@ defineVar envRef varName value = do
 			IORef.writeIORef envRef ((varName, valueRef) : envVars)
 			return value
 
-bindVars :: Types.Env -> [(String, Types.LispVal)] -> IO Types.Env
-bindVars envRef varDefs = IORef.readIORef envRef >>= extendEnv >>=
+defineVars :: Types.Env -> [(String, Types.LispVal)] -> IO Types.Env
+defineVars envRef varDefs = IORef.readIORef envRef >>= extendEnv >>=
 	IORef.newIORef
 	where
 		extendEnv env = Monad.liftM (++ env) $ mapM addBinding varDefs

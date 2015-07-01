@@ -6,7 +6,7 @@ import qualified System.IO as IO
 import qualified Control.Monad as Monad
 
 runRepl :: IO ()
-runRepl = State.nullEnv >>= repl
+runRepl = Interpreter.primitiveEnv >>= repl
 	where
 		repl env = do
 			putStr "> "
