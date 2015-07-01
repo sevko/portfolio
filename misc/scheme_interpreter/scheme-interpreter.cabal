@@ -14,6 +14,11 @@ executable scheme-interpreter
   default-language: Haskell2010
   ghc-options: -Wall -fno-warn-unused-do-bind -fno-warn-type-defaults
     -fno-warn-missing-signatures
+
+    -- The Scheme Interpreter tutorial uses the `Control.Monad.Error` module,
+    -- which appears to be deprecated, so silence deprecation warnings (until
+    -- it's removed) to prevent them from flooding out more critical warnings.
+    -fno-warn-warnings-deprecations
 test-suite test-scheme-interpreter
   type: exitcode-stdio-1.0
   main-is: Tests.hs
@@ -27,3 +32,4 @@ test-suite test-scheme-interpreter
     mtl == 2.*
   ghc-options: -Wall -fno-warn-unused-do-bind -fno-warn-type-defaults
     -fno-warn-missing-signatures
+    -fno-warn-warnings-deprecations
