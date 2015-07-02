@@ -109,6 +109,7 @@ eval _ badForm = Error.throwError $
 
 applyFunc :: Types.LispVal -> [Types.LispVal] ->
 	Types.IOThrowsError Types.LispVal
+applyFunc (Types.IOFunc func) args = func args
 applyFunc (Types.PrimitiveFunc func) args = State.liftThrows $ func args
 applyFunc (Types.Func {
 	Types.params, Types.varargs, Types.body, Types.closure}) args = do
@@ -130,8 +131,10 @@ applyFunc notAFunc _ = Error.throwError $
 	Types.TypeMismatch "expected function" notAFunc
 
 primitiveEnv :: IO Types.Env
-primitiveEnv = State.nullEnv >>= (flip State.defineVars $ map
-	(\ (varName, func) -> (varName, Types.PrimitiveFunc func)) primitiveFuncs)
+primitiveEnv = State.nullEnv >>= (flip State.defineVars $
+	map (makeFunc Types.PrimitiveFunc) primitiveFuncs ++
+	map (makeFunc Types.IOFunc) primitiveIOFuncs)
+	where makeFunc constructor (funcName, func) = (funcName, constructor func)
 
 primitiveFuncs ::
 	[(String, [Types.LispVal] -> Types.ThrowsError Types.LispVal)]

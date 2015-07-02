@@ -10,6 +10,7 @@ module SchemeInterpreter.Types where
 import qualified Text.Format as Format
 import qualified Control.Monad.Error as MonadError
 import qualified Data.IORef as IORef
+import qualified System.IO as IO
 import qualified Text.ParserCombinators.Parsec as Parsec
 
 data LispVal =
@@ -27,7 +28,9 @@ data LispVal =
 		varargs :: Maybe String,
 		body :: [LispVal],
 		closure :: Env
-	}
+	} |
+	IOFunc ([LispVal] -> IOThrowsError LispVal) |
+	Port IO.Handle
 
 instance Eq LispVal where
 	(Atom a) == (Atom b) = a == b
@@ -56,6 +59,8 @@ instance Show LispVal where
 		"(lambda (" ++ (unwords params) ++ (case varargs of
 			Just arg -> " . " ++ arg
 			Nothing -> "") ++ ") ...)"
+	show (Port _)   = "<IO port>"
+	show (IOFunc _) = "<IO primitive>"
 
 data LispError =
 	NumArgs Integer [LispVal] |
