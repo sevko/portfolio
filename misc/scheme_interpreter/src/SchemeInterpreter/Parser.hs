@@ -58,7 +58,11 @@ parseExpr :: String -> Types.ThrowsError Types.LispVal
 parseExpr = parseExprWithParser parser
 
 parseExprList :: String -> Types.ThrowsError [Types.LispVal]
-parseExprList = parseExprWithParser (Parsec.endBy parser commentOrSpace)
+parseExprList = parseExprWithParser $
+	parseComment *>
+	commentOrSpace *>
+	Parsec.endBy parser commentOrSpace <*
+	Parsec.eof
 
 parser :: Parsec.Parser Types.LispVal
 parser = Parsec.choice $ map Parsec.try [
