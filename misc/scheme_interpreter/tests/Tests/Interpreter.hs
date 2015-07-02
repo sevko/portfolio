@@ -6,7 +6,6 @@ module Tests.Interpreter where
 
 import qualified SchemeInterpreter.Interpreter as Interpreter
 import qualified SchemeInterpreter.Types as Types
-import qualified SchemeInterpreter.State as State
 import qualified Control.Monad.Error as Error
 import qualified Test.HUnit as HUnit
 
@@ -87,8 +86,7 @@ testEval = HUnit.TestList $ map evalTest [
 		Types.List [Types.Bool False],
 		Types.List [Types.Bool True]],
 		return $ Types.Bool True),
-	(Types.List [Types.Atom "cond"], defaultProgramStructErr)
-		]
+	(Types.List [Types.Atom "cond"], defaultProgramStructErr)]
 	where
 		createIf cond ifClause thenClause = Types.List [
 			Types.Atom "if", cond, ifClause, thenClause]
@@ -102,7 +100,7 @@ testEval = HUnit.TestList $ map evalTest [
 		 - -}
 		defaultProgramStructErr = Error.throwError $ Types.ProgramStructure ""
 		evalTest (input, expectedOutput) = HUnit.TestCase $ do
-			env <- State.nullEnv
+			env <- Interpreter.primitiveEnv
 			res <- Error.runErrorT $ Interpreter.eval env input
 			HUnit.assertEqual "" expectedOutput $ case res of
 				(Left (Types.ProgramStructure _)) -> defaultProgramStructErr
