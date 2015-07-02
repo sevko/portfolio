@@ -11,7 +11,6 @@ import qualified Text.Parsec.Char as Parsec.Char
 import qualified Data.List as List
 import qualified Control.Applicative as Applicative
 import Control.Applicative ((*>), (<*))
-import qualified Control.Monad as Monad
 import qualified Control.Monad.Error as Error
 import Text.ParserCombinators.Parsec ((<|>))
 
@@ -50,7 +49,7 @@ parseDottedList = do
 	return $ Types.DottedList listHead listTail
 
 parseExprWithParser :: Parsec.Parser a -> String -> Types.ThrowsError a
-parseExprWithParser parser str = case Parsec.parse parser "scheme" str of
+parseExprWithParser parser' str = case Parsec.parse parser' "scheme" str of
 	Left err -> Error.throwError $ Types.Parser err
 	Right val -> return val
 

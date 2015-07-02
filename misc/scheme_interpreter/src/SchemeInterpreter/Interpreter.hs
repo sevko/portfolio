@@ -90,12 +90,13 @@ eval env (Types.List (Types.Atom "define" : defineArg1 : body)) =
 			Types.TypeMismatch "list or dotted list" defineArg1
 	where bindFunc = State.defineVar env
 eval env (Types.List (Types.Atom "lambda" : lambdaArg1 : body)) =
-	return $ case lambdaArg1 of
-		Types.List params -> createFunc params Nothing
+	case lambdaArg1 of
+		Types.List params -> return $ createFunc params Nothing
 		Types.DottedList params varargs ->
-			createFunc params (Just $ show varargs)
+			return $ createFunc params (Just $ show varargs)
 		varargs@(Types.Atom _) ->
-			createFunc ([] :: [Types.LispVal]) (Just $ show varargs)
+			return $ createFunc ([] :: [Types.LispVal]) (Just $ show varargs)
+		badType -> Error.throwError $ Types.TypeMismatch "list or atom" badType
 	where createFunc params varargs = Types.Func {
 		Types.params = map show params,
 		Types.varargs = varargs,
