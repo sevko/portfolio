@@ -34,10 +34,16 @@ parseDottedList = do
 	Parsec.char ')'
 	return $ Types.DottedList listHead listTail
 
-parseExpr :: String -> Types.ThrowsError Types.LispVal
-parseExpr str = case Parsec.parse parser "scheme" str of
+parseExprWithParser :: Parsec.Parser a -> String -> Types.ThrowsError a
+parseExprWithParser parser str = case Parsec.parse parser "scheme" str of
 	Left err -> Error.throwError $ Types.Parser err
 	Right val -> return val
+
+parseExpr :: String -> Types.ThrowsError Types.LispVal
+parseExpr = parseExprWithParser parser
+
+parseExprList :: String -> Types.ThrowsError [Types.LispVal]
+parseExprList = parseExprWithParser (Parsec.endBy parser Parsec.spaces)
 
 parser :: Parsec.Parser Types.LispVal
 parser = Parsec.choice $ map Parsec.try [

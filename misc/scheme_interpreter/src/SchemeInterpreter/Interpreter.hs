@@ -9,9 +9,11 @@ module SchemeInterpreter.Interpreter where
 
 import qualified SchemeInterpreter.Types as Types
 import qualified SchemeInterpreter.State as State
+import qualified SchemeInterpreter.Parser as Parser
 import qualified Control.Monad.Error as Error
 import qualified Control.Monad as Monad
 import qualified Control.Applicative as Applicative
+import qualified System.IO as IO
 
 data TypeCoercer = forall a. Eq a =>
 	AnyCoercer (Types.LispVal -> Types.ThrowsError a)
@@ -100,6 +102,8 @@ eval env (Types.List (Types.Atom "lambda" : lambdaArg1 : body)) =
 		Types.body = body,
 		Types.closure = env
 	}
+eval env (Types.List [Types.Atom "load", Types.String filename]) =
+     load filename >>= fmap last . mapM (eval env)
 eval env (Types.List (function : args)) = do
 	 eval'dFunc <- eval env function
 	 eval'dArgs <- mapM (eval env) args
@@ -167,6 +171,64 @@ primitiveFuncs = [
 	("eq?", eqv),
 	("eqv?", eqv),
 	("equal?", equal)]
+
+primitiveIOFuncs ::
+	[(String, [Types.LispVal] -> Types.IOThrowsError Types.LispVal)]
+primitiveIOFuncs = [
+	("apply", applyProc),
+	("open-output-file", makePort IO.WriteMode),
+	("close-input-port", closePort),
+	("close-output-port", closePort),
+	("read", readProc),
+	("write", writeProc),
+	("read-contents", readContents),
+	("read-all", readAll)
+	]
+
+applyProc :: [Types.LispVal] -> Types.IOThrowsError Types.LispVal
+applyProc [func, Types.List args] = applyFunc func args
+applyProc (func : args) = applyFunc func args
+applyProc args = Error.throwError $ Types.NumArgs 2 args
+
+makePort :: IO.IOMode -> [Types.LispVal] -> Types.IOThrowsError Types.LispVal
+makePort mode [Types.String filename] = fmap Types.Port $
+	Error.liftIO $ IO.openFile filename mode
+makePort _ [badType] = Error.throwError $ Types.TypeMismatch "string" badType
+makePort _ badNumArgs = Error.throwError $ Types.NumArgs 1 badNumArgs
+
+closePort :: [Types.LispVal] -> Types.IOThrowsError Types.LispVal
+closePort [Types.Port port] = Error.liftIO $
+	IO.hClose port >> (return $ Types.Bool True)
+closePort _ = return $ Types.Bool False
+
+readProc :: [Types.LispVal] -> Types.IOThrowsError Types.LispVal
+readProc [] = readProc [Types.Port IO.stdin]
+readProc [Types.Port port] = (Error.liftIO $ IO.hGetLine port) >>=
+	State.liftThrows . Parser.parseExpr
+readProc [badType] = Error.throwError $ Types.TypeMismatch "port" badType
+readProc badNumArgs = Error.throwError $ Types.NumArgs 1 badNumArgs
+
+writeProc :: [Types.LispVal] -> Types.IOThrowsError Types.LispVal
+writeProc [obj] = writeProc [obj, Types.Port IO.stdout]
+writeProc [obj, Types.Port port] = Error.liftIO $ IO.hPrint port obj >>
+	(return $ Types.Bool True)
+writeProc [_, badType] = Error.throwError $ Types.TypeMismatch "port" badType
+writeProc badNumArgs = Error.throwError $ Types.NumArgs 2 badNumArgs
+
+readContents :: [Types.LispVal] -> Types.IOThrowsError Types.LispVal
+readContents [Types.String filename] = Monad.liftM Types.String $
+	Error.liftIO $ readFile filename
+readContents [badType] = Error.throwError $ Types.TypeMismatch "string" badType
+readContents badNumArgs = Error.throwError $ Types.NumArgs 1 badNumArgs
+
+load :: String -> Types.IOThrowsError [Types.LispVal]
+load filename = (Error.liftIO $ readFile filename) >>=
+	State.liftThrows . Parser.parseExprList
+
+readAll :: [Types.LispVal] -> Types.IOThrowsError Types.LispVal
+readAll [Types.String filename] = fmap Types.List $ load filename
+readAll [badType] = Error.throwError $ Types.TypeMismatch "string" badType
+readAll badNumArgs = Error.throwError $ Types.NumArgs 1 badNumArgs
 
 boolBinOp ::
 	(Types.LispVal -> Types.ThrowsError a) ->
