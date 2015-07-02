@@ -7,6 +7,7 @@ module SchemeInterpreter.Parser where
 import qualified SchemeInterpreter.Types as Types
 
 import qualified Text.ParserCombinators.Parsec as Parsec
+import qualified Text.Parsec.Char as Parsec.Char
 import qualified Data.List as List
 import qualified Control.Applicative as Applicative
 import Control.Applicative ((*>), (<*))
@@ -17,19 +18,33 @@ import Text.ParserCombinators.Parsec ((<|>))
 symbol :: Parsec.Parser Char
 symbol = Parsec.oneOf "!#$%&|*+-/:<=>?@^_~"
 
-spaces :: Parsec.Parser ()
-spaces = Parsec.skipMany1 Parsec.space
-
 parseList :: Parsec.Parser Types.LispVal
-parseList = Monad.liftM Types.List $
-	Parsec.char '(' *> Parsec.sepBy parser Parsec.spaces <* Parsec.char ')'
+parseList = do
+	quote <- Parsec.optionMaybe $ Parsec.char '\''
+	Parsec.char '('
+	list <- fmap Types.List $ Parsec.sepBy parser commentOrSpace
+	Parsec.char ')'
+	return $ case quote of
+		Just _ -> Types.List [Types.Atom "quote", list]
+		Nothing -> list
+
+parseComment :: Parsec.Parser ()
+parseComment = do
+	Parsec.char ';'
+	Parsec.manyTill Parsec.anyChar Parsec.Char.endOfLine
+	return ()
+
+commentOrSpace :: Parsec.Parser ()
+commentOrSpace = do
+	Parsec.space
+	Parsec.skipMany $ (Parsec.space *> return ()) <|> parseComment
 
 parseDottedList :: Parsec.Parser Types.LispVal
 parseDottedList = do
 	Parsec.char '('
-	listHead <- Parsec.endBy parser Parsec.spaces
+	listHead <- Parsec.endBy parser commentOrSpace
 	Parsec.char '.'
-	Parsec.spaces
+	commentOrSpace
 	listTail <- parser
 	Parsec.char ')'
 	return $ Types.DottedList listHead listTail
@@ -43,7 +58,7 @@ parseExpr :: String -> Types.ThrowsError Types.LispVal
 parseExpr = parseExprWithParser parser
 
 parseExprList :: String -> Types.ThrowsError [Types.LispVal]
-parseExprList = parseExprWithParser (Parsec.endBy parser Parsec.spaces)
+parseExprList = parseExprWithParser (Parsec.endBy parser commentOrSpace)
 
 parser :: Parsec.Parser Types.LispVal
 parser = Parsec.choice $ map Parsec.try [

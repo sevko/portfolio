@@ -83,6 +83,8 @@ testParseList = createTestList Parser.parseList Types.List [
 		Types.Number 9,
 		Types.String "def",
 		Types.Char 'e']),
+	("'(1 2 3 4)", [
+		Types.Atom "quote", Types.List $ map Types.Number [1, 2, 3, 4]]),
 	("(9.0)", [Types.Float 9.0])]
 
 testParseDottedList :: HUnit.Test
@@ -92,13 +94,13 @@ testParseDottedList = createTestList Parser.parseDottedList
 			"(#\\a #\\b . #\\c)",
 			(map Types.Char ['a', 'b'], Types.Char 'c')),
 		("(#\\a . 9)", ([Types.Char 'a'], Types.Number 9)),
-		("(\"abc\" #\\a 9 \"def\" . #\\e)", ([
+		("(\"abc\" ;foobar \n \n#\\a 9 \"def\" . #\\e)", ([
 			Types.String "abc",
 			Types.Char 'a',
 			Types.Number 9,
 			Types.String "def"],
 			Types.Char 'e')),
-		("(. 9.0)", ([], Types.Float 9.0))]
+		("(. \n;foobar\n9.0)", ([], Types.Float 9.0))]
 
 tests = [
 	testParseNumber, testParseString, testParseChar, testParseFloat,
