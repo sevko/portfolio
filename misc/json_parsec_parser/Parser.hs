@@ -15,7 +15,18 @@ data JsonVal =
 	JsonArray [JsonVal] |
 	JsonBool Bool |
 	JsonNull
-	deriving (Show)
+
+instance Show JsonVal where
+	show (JsonString str) = show str
+	show (JsonInt int) = show int
+	show (JsonFloat float) = show float
+	show (JsonObject keyValPairs) = '{' :
+		(List.intercalate "," $ map pairToStr keyValPairs) ++ "}"
+		where pairToStr (key, val) = Printf.printf "\"%s\":%s" key $ show val
+	show (JsonArray vals) = '[' : (List.intercalate "," $ map show vals) ++ "]"
+	show (JsonBool True) = "true"
+	show (JsonBool False) = "false"
+	show JsonNull = "null"
 
 parseValue :: Parsec.String.Parser JsonVal
 parseValue = Parsec.choice [
