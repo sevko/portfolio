@@ -4,7 +4,6 @@ import Text.Parsec ((<|>))
 import Control.Applicative ((<$), (*>), (<*))
 import qualified Control.Applicative as Applicative
 import qualified Data.List as List
-import qualified System.Environment as Environment
 import qualified Data.Char as Char
 import qualified Text.Printf as Printf
 
@@ -25,8 +24,7 @@ parseValue = Parsec.choice [
 	parseObject,
 	parseArray,
 	parseBool,
-	parseNull
-	]
+	parseNull]
 
 parseString :: Parsec.String.Parser JsonVal
 parseString = fmap JsonString $
@@ -55,7 +53,7 @@ parseString = fmap JsonString $
 							"`%c` is not an escapable character" escapedChar
 
 		charParser =
-			(Parsec.char '\\' >> Parsec.anyChar >>= replaceEscapedChar) <|>
+			(Parsec.char '\\' *> Parsec.anyChar >>= replaceEscapedChar) <|>
 			Parsec.noneOf "\""
 
 parseNumber :: Parsec.String.Parser JsonVal
@@ -85,7 +83,7 @@ parseObject = do
 	vals <- Parsec.sepBy
 		(Applicative.liftA2 (,) parseJsonString $
 			Parsec.spaces *> Parsec.char ':' *> Parsec.spaces *> parseValue)
-		(Parsec.spaces >> Parsec.char ',' >> Parsec.spaces)
+		(Parsec.try $ Parsec.spaces *> Parsec.char ',' *> Parsec.spaces)
 	Parsec.spaces
 	Parsec.char '}'
 	return $ JsonObject vals
@@ -93,7 +91,7 @@ parseObject = do
 		parseJsonString = fmap
 			(\ jsonVal -> case jsonVal of
 				JsonString str -> str
-				_ -> error "Programmer error: failed to extract JsonString\
+				_ -> error "Programmer error: failed to extract JsonString \
 					\from parseString.")
 			parseString
 
@@ -102,7 +100,7 @@ parseArray = do
 	Parsec.char '['
 	Parsec.spaces
 	values <- Parsec.sepBy parseValue $
-		Parsec.spaces *> Parsec.char ',' *> Parsec.spaces
+		Parsec.try $ Parsec.spaces *> Parsec.char ',' *> Parsec.spaces
 	Parsec.spaces
 	Parsec.char ']'
 	return $ JsonArray values
@@ -116,10 +114,4 @@ parseNull :: Parsec.String.Parser JsonVal
 parseNull = JsonNull <$ Parsec.string "null"
 
 main :: IO ()
-main = do
-	{- let [(a, _)] = Char.readLitChar "\\0394" -}
-	{- putStrLn $ a : "" -}
-	{- putStrLn $ (Char.chr 394) : "" -}
-	{-  "-" -}
-	[expr] <- Environment.getArgs
-	print $ Parsec.parse parseValue "" expr
+main = getContents >>= print . Parsec.parse parseValue "stdin"
