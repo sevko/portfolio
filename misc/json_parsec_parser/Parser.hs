@@ -32,7 +32,12 @@ prettyPrint (JsonObject keyValPairs) =
 prettyPrint (JsonArray []) = "[]"
 prettyPrint (JsonArray vals) = Printf.printf "[\n%s\n]" $
 	indent $ joinComma $ map prettyPrint vals
-prettyPrint val = show val
+prettyPrint (JsonString str) = show str
+prettyPrint (JsonInt int) = show int
+prettyPrint (JsonFloat float) = show float
+prettyPrint (JsonBool True) = "true"
+prettyPrint (JsonBool False) = "false"
+prettyPrint JsonNull = "null"
 
 parseValue :: Parser JsonVal
 parseValue = Parsec.choice [
