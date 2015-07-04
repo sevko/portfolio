@@ -125,4 +125,8 @@ parseNull :: Parsec.String.Parser JsonVal
 parseNull = JsonNull <$ Parsec.string "null"
 
 main :: IO ()
-main = getContents >>= print . Parsec.parse parseValue "stdin"
+main = do
+	input <- getContents
+	putStrLn $ case Parsec.parse parseValue "stdin" input of
+		Right parsed -> show parsed
+		Left err -> show err
