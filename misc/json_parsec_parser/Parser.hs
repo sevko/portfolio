@@ -1,5 +1,4 @@
 import qualified Text.Parsec as Parsec
-import qualified Text.Parsec.String as Parsec.String
 import Text.Parsec ((<|>))
 import Control.Applicative ((<$), (*>), (<*))
 import qualified Control.Applicative as Applicative
@@ -7,6 +6,7 @@ import qualified Data.List as List
 import qualified Data.Char as Char
 import qualified Text.Printf as Printf
 
+type Parser = Parsec.Parsec String ()
 data JsonVal =
 	JsonString String |
 	JsonInt Int |
@@ -34,7 +34,7 @@ prettyPrint (JsonArray vals) = Printf.printf "[\n%s\n]" $
 	indent $ joinComma $ map prettyPrint vals
 prettyPrint val = show val
 
-parseValue :: Parsec.String.Parser JsonVal
+parseValue :: Parser JsonVal
 parseValue = Parsec.choice [
 	parseString,
 	parseNumber,
@@ -43,7 +43,7 @@ parseValue = Parsec.choice [
 	parseBool,
 	parseNull]
 
-parseString :: Parsec.String.Parser JsonVal
+parseString :: Parser JsonVal
 parseString = fmap JsonString $
 	Parsec.char '"' *> Parsec.many charParser <* Parsec.char '"'
 	where
@@ -73,7 +73,7 @@ parseString = fmap JsonString $
 			(Parsec.char '\\' *> Parsec.anyChar >>= replaceEscapedChar) <|>
 			Parsec.noneOf "\""
 
-parseNumber :: Parsec.String.Parser JsonVal
+parseNumber :: Parser JsonVal
 parseNumber = do
 	baseNumStr <- Applicative.liftA2 (++)
 		(Parsec.option "" $ Parsec.string "-") parseDigits
@@ -93,7 +93,7 @@ parseNumber = do
 	where
 		parseDigits = Parsec.many1 Parsec.digit
 
-parseObject :: Parsec.String.Parser JsonVal
+parseObject :: Parser JsonVal
 parseObject = do
 	Parsec.char '{'
 	Parsec.spaces
@@ -112,7 +112,7 @@ parseObject = do
 					\from parseString.")
 			parseString
 
-parseArray :: Parsec.String.Parser JsonVal
+parseArray :: Parser JsonVal
 parseArray = do
 	Parsec.char '['
 	Parsec.spaces
@@ -122,12 +122,12 @@ parseArray = do
 	Parsec.char ']'
 	return $ JsonArray values
 
-parseBool :: Parsec.String.Parser JsonVal
+parseBool :: Parser JsonVal
 parseBool = fmap JsonBool $
 	False <$ Parsec.string "false" <|>
 	True <$ Parsec.string "true"
 
-parseNull :: Parsec.String.Parser JsonVal
+parseNull :: Parser JsonVal
 parseNull = JsonNull <$ Parsec.string "null"
 
 main :: IO ()
