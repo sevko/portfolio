@@ -10,7 +10,8 @@ import qualified Text.Printf as Printf
 
 data JsonVal =
 	JsonString String |
-	JsonNumber Int |
+	JsonInt Int |
+	JsonFloat Float |
 	JsonObject [(String, JsonVal)] |
 	JsonArray [JsonVal] |
 	JsonBool Bool |
@@ -58,7 +59,24 @@ parseString = fmap JsonString $
 			Parsec.noneOf "\""
 
 parseNumber :: Parsec.String.Parser JsonVal
-parseNumber = fmap (JsonNumber . read) $ Parsec.many1 Parsec.digit
+parseNumber = do
+	baseNumStr <- Applicative.liftA2 (++)
+		(Parsec.option "" $ Parsec.string "-") parseDigits
+	decimalStr <- Parsec.optionMaybe $ Parsec.char '.' *> parseDigits
+	expStr <- Parsec.optionMaybe $ Parsec.oneOf "eE" *>
+		((Applicative.liftA2 (:) (Parsec.char '-') parseDigits) <|>
+		((Parsec.optional $ Parsec.char '+') *> parseDigits))
+	let
+		expNumMaybe = fmap read expStr
+		applyExponent num = case expNumMaybe of
+			Just expNum -> num * 10 ^ expNum
+			Nothing -> num
+	return $ case decimalStr of
+		Just str -> JsonFloat $ applyExponent $ read $
+			baseNumStr ++ ('.' : str)
+		Nothing -> JsonInt $ applyExponent $ read baseNumStr
+	where
+		parseDigits = Parsec.many1 Parsec.digit
 
 parseObject :: Parsec.String.Parser JsonVal
 parseObject = do
