@@ -94,18 +94,16 @@ parseNumber = do
 		parseDigits = Parsec.many1 Parsec.digit
 
 parseObject :: Parser JsonVal
-parseObject = do
-	Parsec.char '{'
-	Parsec.spaces
-	vals <- Parsec.sepBy
-		(Applicative.liftA2 (,) parseJsonString $
-			Parsec.spaces *> Parsec.char ':' *> Parsec.spaces *> parseValue)
-		(Parsec.try $ Parsec.spaces *> Parsec.char ',' *> Parsec.spaces)
-	Parsec.spaces
-	Parsec.char '}'
-	return $ JsonObject vals
+parseObject = fmap JsonObject $ Parsec.char '{' *> Parsec.spaces *>
+	parsePairs <* Parsec.spaces <* Parsec.char '}'
 	where
-		parseJsonString = fmap
+		parsePairs = Parsec.sepBy
+			(Applicative.liftA2 (,) parseKey $
+				Parsec.spaces *> Parsec.char ':' *> Parsec.spaces *>
+				parseValue)
+			(Parsec.try $ Parsec.spaces *> Parsec.char ',' *> Parsec.spaces)
+
+		parseKey = fmap
 			(\ jsonVal -> case jsonVal of
 				JsonString str -> str
 				_ -> error "Programmer error: failed to extract JsonString \
@@ -113,14 +111,10 @@ parseObject = do
 			parseString
 
 parseArray :: Parser JsonVal
-parseArray = do
-	Parsec.char '['
-	Parsec.spaces
-	values <- Parsec.sepBy parseValue $
+parseArray = fmap JsonArray $ Parsec.char '[' *> Parsec.spaces *>
+	parseValues <* Parsec.spaces <* Parsec.char ']'
+	where parseValues = Parsec.sepBy parseValue $
 		Parsec.try $ Parsec.spaces *> Parsec.char ',' *> Parsec.spaces
-	Parsec.spaces
-	Parsec.char ']'
-	return $ JsonArray values
 
 parseBool :: Parser JsonVal
 parseBool = fmap JsonBool $
