@@ -15,18 +15,24 @@ data JsonVal =
 	JsonArray [JsonVal] |
 	JsonBool Bool |
 	JsonNull
+	deriving (Show)
 
-instance Show JsonVal where
-	show (JsonString str) = show str
-	show (JsonInt int) = show int
-	show (JsonFloat float) = show float
-	show (JsonObject keyValPairs) = '{' :
-		(List.intercalate "," $ map pairToStr keyValPairs) ++ "}"
-		where pairToStr (key, val) = Printf.printf "\"%s\":%s" key $ show val
-	show (JsonArray vals) = '[' : (List.intercalate "," $ map show vals) ++ "]"
-	show (JsonBool True) = "true"
-	show (JsonBool False) = "false"
-	show JsonNull = "null"
+indent :: String -> String
+indent = List.intercalate "\n" . map ('\t' :) . lines
+
+joinComma :: [String] -> String
+joinComma = List.intercalate ",\n"
+
+prettyPrint :: JsonVal -> String
+prettyPrint (JsonObject []) = "{}"
+prettyPrint (JsonObject keyValPairs) =
+	Printf.printf "{\n%s\n}" $ indent $ joinComma $ map pairToStr keyValPairs
+	where pairToStr (key, val) = Printf.printf "\"%s\": %s" key $
+		prettyPrint val
+prettyPrint (JsonArray []) = "[]"
+prettyPrint (JsonArray vals) = Printf.printf "[\n%s\n]" $
+	indent $ joinComma $ map prettyPrint vals
+prettyPrint val = show val
 
 parseValue :: Parsec.String.Parser JsonVal
 parseValue = Parsec.choice [
@@ -128,5 +134,5 @@ main :: IO ()
 main = do
 	input <- getContents
 	putStrLn $ case Parsec.parse parseValue "stdin" input of
-		Right parsed -> show parsed
+		Right parsed -> prettyPrint parsed
 		Left err -> show err
