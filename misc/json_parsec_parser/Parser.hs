@@ -25,28 +25,9 @@ data JsonVal =
 	JsonNull
 	deriving (Show)
 
-indent :: String -> String
-indent = List.intercalate "\n" . map ('\t' :) . lines
-
-joinComma :: [String] -> String
-joinComma = List.intercalate ",\n"
-
-prettyPrint :: JsonVal -> String
-prettyPrint (JsonObject []) = "{}"
-prettyPrint (JsonObject keyValPairs) =
-	Printf.printf "{\n%s\n}" $ indent $ joinComma $ map pairToStr keyValPairs
-	where pairToStr (key, val) = Printf.printf "\"%s\": %s" key $
-		prettyPrint val
-prettyPrint (JsonArray []) = "[]"
-prettyPrint (JsonArray vals) = Printf.printf "[\n%s\n]" $
-	indent $ joinComma $ map prettyPrint vals
-prettyPrint (JsonString str) = show str
-prettyPrint (JsonInt int) = show int
-prettyPrint (JsonFloat float) = show float
-prettyPrint (JsonBool True) = "true"
-prettyPrint (JsonBool False) = "false"
-prettyPrint JsonNull = "null"
-
+{-
+ - The main parser definition.
+ -}
 parseValue :: Parser JsonVal
 parseValue = Parsec.spaces *>
 	Parsec.choice [
@@ -210,6 +191,32 @@ formatError inputStr err = let
 			in if parsecColAccum' == parsecCol
 				then newColAccum'
 				else getNewColNum restOfLn newColAccum' parsecColAccum' parsecCol
+
+{-
+ - Recursively convert a `JsonVal` into a string, with list and object members
+ - indented.
+ -}
+prettyPrint :: JsonVal -> String
+prettyPrint (JsonObject []) = "{}"
+prettyPrint (JsonObject keyValPairs) =
+	Printf.printf "{\n%s\n}" $ indent $ joinComma $ map pairToStr keyValPairs
+	where pairToStr (key, val) = Printf.printf "\"%s\": %s" key $
+		prettyPrint val
+prettyPrint (JsonArray []) = "[]"
+prettyPrint (JsonArray vals) = Printf.printf "[\n%s\n]" $
+	indent $ joinComma $ map prettyPrint vals
+prettyPrint (JsonString str) = show str
+prettyPrint (JsonInt int) = show int
+prettyPrint (JsonFloat float) = show float
+prettyPrint (JsonBool True) = "true"
+prettyPrint (JsonBool False) = "false"
+prettyPrint JsonNull = "null"
+
+indent :: String -> String
+indent = List.intercalate "\n" . map ('\t' :) . lines
+
+joinComma :: [String] -> String
+joinComma = List.intercalate ",\n"
 
 main :: IO ()
 main = do
