@@ -180,7 +180,7 @@ formatError inputStr err = let
 		 - column where the parse error occurred (this is a bit tricky because
 		 - Parsec counts tabs as 8 characters).
 		 -}
-		getNewColNum "" a b c = error $ Printf.printf "%d %d %d" a b c
+		getNewColNum "" newColAccum _ _ = newColAccum + 1
 		getNewColNum (char:restOfLn) newColAccum parsecColAccum parsecCol =
 			let
 				isTab = char == '\t'
