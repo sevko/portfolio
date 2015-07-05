@@ -1,5 +1,6 @@
 import qualified Text.Parsec as Parsec
-import Text.Parsec ((<|>))
+import qualified Text.Parsec.Error as Parsec.Error
+import Text.Parsec ((<|>), (<?>))
 import Control.Applicative ((<$), (*>), (<*))
 import qualified Control.Applicative as Applicative
 import qualified Data.List as List
@@ -129,9 +130,25 @@ parseBool = fmap JsonBool $
 parseNull :: Parser JsonVal
 parseNull = JsonNull <$ Parsec.string "null"
 
+formatError :: String -> Parsec.ParseError -> String
+formatError inputStr err = let
+	sourcePos = Parsec.errorPos err
+	lineNum = Parsec.sourceLine sourcePos
+	colNum = Parsec.sourceColumn sourcePos
+	numContextLines = 5
+	contextLines = unlines $ map ('\t':) $ take numContextLines $
+		drop (lineNum - numContextLines) $ lines inputStr
+	colPointerLine = '\t' : (replicate (colNum - 1) ' ') ++ "^"
+	errMsg = Parsec.Error.showErrorMessages
+		"or" "unknown parse error" "expecting" "unexpected"
+		"end of input" $ Parsec.Error.errorMessages err
+	in Printf.printf
+		"Parser error on line %d, column %d:\n\n%s%s\nError:%s"
+		lineNum colNum contextLines colPointerLine errMsg
+
 main :: IO ()
 main = do
 	input <- getContents
 	putStrLn $ case Parsec.parse parseValue "stdin" input of
 		Right parsed -> prettyPrint parsed
-		Left err -> show err
+		Left err -> formatError input err
