@@ -1,3 +1,7 @@
+{-
+ - A JSON parser written with Parsec.
+ -}
+
 import qualified Text.Parsec as Parsec
 import qualified Text.Parsec.Error as Parsec.Error
 import Text.Parsec ((<|>), (<?>))
@@ -6,8 +10,11 @@ import qualified Control.Applicative as Applicative
 import qualified Data.List as List
 import qualified Data.Char as Char
 import qualified Text.Printf as Printf
+import qualified System.Environment as Environment
 
 type Parser = Parsec.Parsec String ()
+
+-- A type to represent all of the basic JSON types.
 data JsonVal =
 	JsonString String |
 	JsonInt Int |
@@ -41,14 +48,15 @@ prettyPrint (JsonBool False) = "false"
 prettyPrint JsonNull = "null"
 
 parseValue :: Parser JsonVal
-parseValue = Parsec.choice [
-	parseString,
-	parseNumber,
-	parseObject,
-	parseArray,
-	parseBool,
-	parseNull] <?> "JSON value (string, number, \
-		\dictionary, array, boolean, or null)"
+parseValue = Parsec.spaces *>
+	Parsec.choice [
+		parseString,
+		parseNumber,
+		parseObject,
+		parseArray,
+		parseBool,
+		parseNull] <?> "JSON value (string, number, \
+			\dictionary, array, boolean, or null)"
 
 parseString :: Parser JsonVal
 parseString = fmap JsonString $
@@ -205,7 +213,14 @@ formatError inputStr err = let
 
 main :: IO ()
 main = do
-	input <- getContents
-	putStrLn $ case Parsec.parse parseValue "stdin" input of
-		Right parsed -> prettyPrint parsed
-		Left err -> formatError input err
+	let usageMsg = "`json_parser file.json` or `json_parser < file.json`."
+	args <- Environment.getArgs
+	case args of
+		[] -> putStrLn "Enter JSON below:" >> getContents >>= parseJsonString
+		["--help"] -> putStrLn usageMsg
+		[filePath] -> readFile filePath >>= parseJsonString
+		_ -> error $ "Invalid args! " ++ usageMsg
+	where parseJsonString str = putStrLn $
+		case Parsec.parse parseValue "stdin" str of
+			Right parsed -> "Successfully parsed: " ++ prettyPrint parsed
+			Left err -> formatError str err
