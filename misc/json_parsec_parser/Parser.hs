@@ -141,7 +141,7 @@ formatError inputStr err = let
 
 	-- Prepend each line with its line number.
 	lineNumLen = length $ show lineNum
-	lnFormatStr = "\t%" ++ show lineNumLen ++ "d |%s"
+	lnFormatStr = "  %" ++ show lineNumLen ++ "d |%s"
 	lnNumbers = [lineNum - length contextLines + 1..]
 
 	-- Format the context lines, replacing all tabs used for indentation with
@@ -153,7 +153,7 @@ formatError inputStr err = let
 
 	-- Recompute the column number, since we've replaced tabs with spaces.
 	newColNum = (getNewColNum (last contextLines) 0 0 colNum) + lineNumLen + 2
-	colPointerLine = '\t' : (replicate (newColNum - 1) ' ') ++ "^"
+	colPointerLine = "  " ++ (replicate (newColNum - 1) ' ') ++ "^"
 
 	-- The following was taken straight from Parsec's source code.
 	errMsg = Parsec.Error.showErrorMessages
