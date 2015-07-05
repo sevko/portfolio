@@ -131,21 +131,77 @@ parseBool = fmap JsonBool $
 parseNull :: Parser JsonVal
 parseNull = JsonNull <$ Parsec.string "null"
 
+{-
+ - Converts a Parsec error into a fairly pretty string, which contains the
+ - useful diagnostic information that Parsec provides and also a visual
+ - representation of the location of the error (that is, the line on which the
+ - error occurred as well as several lines before it to provide context), and
+ - other goodies.
+ -}
 formatError :: String -> Parsec.ParseError -> String
 formatError inputStr err = let
 	sourcePos = Parsec.errorPos err
 	lineNum = Parsec.sourceLine sourcePos
 	colNum = Parsec.sourceColumn sourcePos
+
+	-- Grab the line on which the error occurred, as well as several lines
+	-- preceding it to provide sufficient context for the user.
 	numContextLines = 5
-	contextLines = unlines $ map ('\t':) $ take (min numContextLines lineNum) $
+	contextLines = take (min numContextLines lineNum) $
 		drop (lineNum - numContextLines) $ lines inputStr
-	colPointerLine = '\t' : (replicate (colNum - 1) ' ') ++ "^"
+
+	-- Prepend each line with its line number.
+	lineNumLen = length $ show lineNum
+	lnFormatStr = "\t%" ++ show lineNumLen ++ "d |%s"
+	lnNumbers = [lineNum - length contextLines + 1..]
+
+	-- Format the context lines, replacing all tabs used for indentation with
+	-- spaces for the reasons listed in the documentation comment for
+	-- `replaceTabsWithSpaces`.
+	contextLinesStr = unlines $
+		zipWith (Printf.printf lnFormatStr) lnNumbers $
+		map replaceTabsWithSpaces contextLines
+
+	-- Recompute the column number, since we've replaced tabs with spaces.
+	newColNum = (getNewColNum (last contextLines) 0 0 colNum) + lineNumLen + 2
+	colPointerLine = '\t' : (replicate (newColNum - 1) ' ') ++ "^"
+
+	-- The following was taken straight from Parsec's source code.
 	errMsg = Parsec.Error.showErrorMessages
 		"or" "unknown parse error" "expecting" "unexpected"
 		"end of input" $ Parsec.Error.errorMessages err
 	in Printf.printf
 		"Parser error on line %d, column %d:\n\n%s%s\nError:%s"
-		lineNum colNum contextLines colPointerLine errMsg
+		lineNum colNum contextLinesStr colPointerLine errMsg
+	where
+		tabSpaces = "    "
+		tabSpacesLength = length tabSpaces
+
+		{-
+		 - Since the context lines are both indented and prefixed with
+		 - the line number, any tabs in one such line might not take up a full
+		 - 8 characters when printed. Thus, for proper formatting, we convert
+		 - tabs to spaces.
+		 -}
+		replaceTabsWithSpaces = concat .
+			map (\ chr -> if chr == '\t' then tabSpaces else chr : "")
+
+		{-
+		 - Since we convert tabs to spaces, we need to recompute the character
+		 - column where the parse error occurred (this is a bit tricky because
+		 - Parsec counts tabs as 8 characters).
+		 -}
+		getNewColNum "" a b c = error $ Printf.printf "%d %d %d" a b c
+		getNewColNum (char:restOfLn) newColAccum parsecColAccum parsecCol =
+			let
+				isTab = char == '\t'
+				parsecColAccum' = parsecColAccum +
+					(if isTab then 8 - (mod parsecColAccum 8) else 1)
+				newColAccum' = newColAccum +
+					(if isTab then tabSpacesLength else 1)
+			in if parsecColAccum' == parsecCol
+				then newColAccum'
+				else getNewColNum restOfLn newColAccum' parsecColAccum' parsecCol
 
 main :: IO ()
 main = do
