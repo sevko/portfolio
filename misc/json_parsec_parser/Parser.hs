@@ -47,7 +47,8 @@ parseValue = Parsec.choice [
 	parseObject,
 	parseArray,
 	parseBool,
-	parseNull]
+	parseNull] <?> "JSON value (string, number, \
+		\dictionary, array, boolean, or null)"
 
 parseString :: Parser JsonVal
 parseString = fmap JsonString $
@@ -136,7 +137,7 @@ formatError inputStr err = let
 	lineNum = Parsec.sourceLine sourcePos
 	colNum = Parsec.sourceColumn sourcePos
 	numContextLines = 5
-	contextLines = unlines $ map ('\t':) $ take numContextLines $
+	contextLines = unlines $ map ('\t':) $ take (min numContextLines lineNum) $
 		drop (lineNum - numContextLines) $ lines inputStr
 	colPointerLine = '\t' : (replicate (colNum - 1) ' ') ++ "^"
 	errMsg = Parsec.Error.showErrorMessages
