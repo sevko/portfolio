@@ -1,9 +1,26 @@
+"""
+A simple recursive-descent JSON parser, implemented according to the JSON spec
+at http://json.org/.
+"""
+
 import sys
 
 class JsonParserException(Exception):
+	"""
+	The exception thrown by `JsonParser`'s methods.
+	"""
+
 	pass
 
 class JsonParser(object):
+	"""
+	A JSON parser, bundled into a class because it needs to maintain some
+	internal state (like current index in the input string, column/line number,
+	etc.). To top-level parsing method is `parse_value()`, so sample usage
+	might look like:
+
+	>>> JsonParser("my json string").parse_value()
+	"""
 
 	def __init__(self, string):
 		self.string = string
@@ -12,6 +29,10 @@ class JsonParser(object):
 		self.ln_num = 1
 
 	def parse_value(self):
+		"""
+		The top-level parser.
+		"""
+
 		peeked_char = self.peek()
 
 		if peeked_char == '"':
@@ -35,6 +56,11 @@ class JsonParser(object):
 		self.error("Failed to parse value.")
 
 	def parse_object(self):
+		"""
+		Parse any number of space-delimited key-value pairs, enclosed in
+		curly braces. Return the pairs in a dictionary.
+		"""
+
 		self.get("{")
 		if self.peek() == "}":
 			self.get("}")
@@ -49,12 +75,21 @@ class JsonParser(object):
 		return dict(fields)
 
 	def parse_field(self):
+		"""
+		Parse a colon-separated key-value pair, returning `(key, value)`.
+		"""
+
 		key = self.parse_string()
 		self.get(":")
 		value = self.parse_value()
 		return key, value
 
 	def parse_array(self):
+		"""
+		Parse any number of comma-separated values enclosed in square brackets.
+		Return a list of the values.
+		"""
+
 		self.get("[")
 		if self.peek() == "]":
 			self.get("]")
@@ -75,6 +110,13 @@ class JsonParser(object):
 		return self.get("null")
 
 	def parse_number(self):
+		"""
+		Parse a number, which can optionally:
+			* be negated
+			* have a decimal component
+			* have an exponent component (optionally negated)
+		"""
+
 		negate = self.peek() == "-"
 		if negate:
 			self.get("-")
@@ -102,6 +144,10 @@ class JsonParser(object):
 		return -num if negate else num
 
 	def parse_digits(self):
+		"""
+		Parse one or more digits.
+		"""
+
 		peeked_char = self.peek()
 		if not peeked_char.isdigit():
 			self.error("Expecting 0-9, but got: `{}`".format(peeked_char))
@@ -113,6 +159,11 @@ class JsonParser(object):
 		return "".join(digits)
 
 	def parse_string(self):
+		"""
+		Parse a string enclosed in double quotes, handling escaped and
+		hex-encoded unicode characters. Return the string.
+		"""
+
 		escapable_chars = {
 			'"': '"',
 			"\\": "\\",
@@ -156,6 +207,15 @@ class JsonParser(object):
 		return "".join(chars)
 
 	def get(self, expected_str=None, skip_whitespace=True):
+		"""
+		Advance the parser along the input string, skipping any preceding
+		whitespace if `skip_whitespace` is True. If `expected_str` is not None,
+		a string of the same length will be read from the input string and
+		compared against it for equality; if they don't match, a
+		`JsonParserException` will be raised. Otherwise, read just 1 character.
+		On successful completion, the read character(s) will be returned.
+		"""
+
 		if skip_whitespace:
 			self.skip_whitespace()
 
@@ -177,11 +237,21 @@ class JsonParser(object):
 						expected_str, curr_str))
 
 	def peek(self, skip_whitespace=True):
+		"""
+		Peek at the next character in the input string without actually
+		advancing the parser. Skips any whitespace if `skip_whitespace` is
+		True.
+		"""
+
 		if skip_whitespace:
 			self.skip_whitespace()
 		return self.string[self.string_ind]
 
 	def skip_whitespace(self):
+		"""
+		Advance the parser past any immediate whitespace in the input string.
+		"""
+
 		while True:
 			curr_char = self.string[self.string_ind]
 			if curr_char not in [" ", "\n", "\t"]:
@@ -200,6 +270,12 @@ class JsonParser(object):
 			self.string_ind += 1
 
 	def error(self, err_msg):
+		"""
+		Raise a `JsonParserException` with the `err_msg` message, adding a
+		bunch of useful context to it (like the current line number, a visual
+		illustration of where the error occured in the input string, etc.).
+		"""
+
 		num_context_lines = 5
 		start_ln_ind = 0 if self.ln_num < num_context_lines \
 			else self.ln_num - 5
