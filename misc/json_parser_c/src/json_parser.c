@@ -31,7 +31,7 @@ typedef struct {
 
 typedef struct {
 	int length;
-	JsonVal_t *vals;
+	JsonVal_t *values;
 } JsonArray_t;
 
 typedef bool JsonBool_t;
@@ -60,6 +60,52 @@ typedef struct {
 	bool failedParse;
 	char *errMsg;
 } JsonParser_t;
+
+/**
+ * Recursively print a string representation of `*val`; intended primarily for
+ * debbuging.
+ */
+char *JsonVal_print(JsonVal_t *val){
+	fflush(stdout);
+
+	switch(val->type){
+		case JSON_STRING:
+			printf("\"%s\"\n", val->value.string);
+			break;
+
+		case JSON_INT:
+			printf("%d\n", val->value.intNum);
+			break;
+
+		case JSON_FLOAT:
+			printf("%f\n", val->value.floatNum);
+			break;
+
+		case JSON_OBJECT:
+			putchar('{');
+			for(int ind = 0; ind < val->value.object.length; ind++){
+				JsonVal_print(&val->value.object.keys[ind]);
+				putchar(':');
+				JsonVal_print(&val->value.object.values[ind]);
+			}
+			putchar('}');
+			break;
+
+		case JSON_ARRAY:
+			putchar('[');
+			for(int ind = 0; ind < val->value.array.length; ind++){
+				JsonVal_print(&val->value.array.values[ind]);
+			}
+			putchar(']');
+			break;
+
+		case JSON_BOOL:
+			break;
+
+		case JSON_NULL:
+			break;
+	}
+}
 
 static char JsonParser_peek(JsonParser_t *state){
 	return state->inputStr[state->stringInd];
