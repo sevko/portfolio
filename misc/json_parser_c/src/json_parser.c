@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #include "json_parser.h"
+#include "src/stretchy_buffer.h"
 
 typedef enum {
 	JSON_STRING,
@@ -156,13 +157,13 @@ static bool isCharDigit(char c){
 	return '0' <= c && c <= '9';
 }
 
-JsonString_t JsonParser_String(JsonParser_t *state){
+static JsonString_t JsonParser_parseString(JsonParser_t *state){
 }
 
-JsonInt_t JsonParser_IntNum(JsonParser_t *state){
+static JsonInt_t JsonParser_parseIntNum(JsonParser_t *state){
 }
 
-JsonFloat_t JsonParser_FloatNum(JsonParser_t *state){
+static JsonFloat_t JsonParser_parseFloatNum(JsonParser_t *state){
 }
 
 static JsonObject_t JsonParser_parseObject(JsonParser_t *state){
@@ -253,12 +254,11 @@ static JsonArray_t JsonParser_parseArray(JsonParser_t *state){
 	};
 }
 
-JsonBool_t JsonParser_Boolean(JsonParser_t *state){
+static JsonBool_t JsonParser_parseBoolean(JsonParser_t *state){
 }
 
-JsonNull_t JsonParser_Null(JsonParser_t *state){
+static JsonNull_t JsonParser_parseNull(JsonParser_t *state){
 }
-
 
 static JsonVal_t JsonParser_parseValue(JsonParser_t *state){
 	char peekedChar = JsonParser_peek(state);
