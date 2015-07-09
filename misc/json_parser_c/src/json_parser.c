@@ -5,6 +5,17 @@
 #include "json_parser.h"
 #include "src/stretchy_buffer.h"
 
+#define EXPECT(expected) \
+	JsonParser_expect(state, expected); \
+	if(state->failedParse){ \
+		return; \
+	}
+
+#define RETURN_IF_PARSE_FAILED \
+	if(state->failedParse){ \
+		return; \
+	}
+
 typedef enum {
 	JSON_STRING,
 	JSON_INT,
@@ -145,7 +156,7 @@ static void JsonParser_skipWhitespace(JsonParser_t *state){
 }
 
 static char JsonParser_expect(JsonParser_t *state, char expected){
-	char c = state->inputStr[state->stringInd++];
+	char c = JsonParser_next(state);
 	if(c == expected){
 		return c;
 	}
@@ -163,6 +174,17 @@ static bool isCharDigit(char c){
 }
 
 static JsonString_t JsonParser_parseString(JsonParser_t *state){
+	EXPECT('"');
+	char *str = NULL;
+	while(JsonParser_peek(state) != '"'){
+		char chr = JsonParser_next(state);
+		sb_push(str, chr);
+	}
+	EXPECT('"');
+	return (JsonString_t){
+		.length = sb_count(str),
+		.str = str
+	};
 }
 
 static JsonInt_t JsonParser_parseIntNum(JsonParser_t *state){
@@ -172,10 +194,7 @@ static JsonFloat_t JsonParser_parseFloatNum(JsonParser_t *state){
 }
 
 static JsonObject_t JsonParser_parseObject(JsonParser_t *state){
-	JsonParser_expect(state, '{');
-	if(state->failedParse){
-		return;
-	}
+	EXPECT('{');
 
 	JsonParser_skipWhitespace(state);
 	if(JsonParser_peek(state) == '}'){
@@ -189,29 +208,23 @@ static JsonObject_t JsonParser_parseObject(JsonParser_t *state){
 
 	JsonString_t *keys = NULL;
 	JsonVal_t *values = NULL;
+
 	do {
 		JsonParser_skipWhitespace(state);
 		JsonString_t key = JsonParser_parseString(state);
-		if(state->failedParse){
-			return;
-		}
+		RETURN_IF_PARSE_FAILED;
 		sb_push(keys, key);
 
 		JsonParser_skipWhitespace(state);
-		JsonParser_expect(state, ':');
-		if(state->failedParse){
-			return;
-		}
+		EXPECT(':');
 		JsonParser_skipWhitespace(state);
 
 		JsonVal_t value = JsonParser_parseValue(state);
-		if(state->failedParse){
-			return;
-		}
+		RETURN_IF_PARSE_FAILED;
 		sb_push(values, value);
-		JsonParser_skipWhitespace(state);
-	} while(0);
+	} while(JsonParser_nextIfChr(state, ','));
 
+	EXPECT('}');
 	return (JsonObject_t){
 		.length = sb_count(keys),
 		.keys = keys,
@@ -220,10 +233,7 @@ static JsonObject_t JsonParser_parseObject(JsonParser_t *state){
 }
 
 static JsonArray_t JsonParser_parseArray(JsonParser_t *state){
-	JsonParser_expect(state, '[');
-	if(state->failedParse){
-		return;
-	}
+	EXPECT('[');
 
 	JsonParser_skipWhitespace(state);
 	if(JsonParser_peek(state) == ']'){
@@ -235,24 +245,16 @@ static JsonArray_t JsonParser_parseArray(JsonParser_t *state){
 	}
 
 	JsonVal_t *values = NULL;
-	JsonVal_t val = JsonParser_parseValue(state);
-	sb_push(values, val);
-	JsonParser_skipWhitespace(state);
-
-	while(JsonParser_peek(state) == ','){
-		JsonParser_next(state);
-		if(state->failedParse){
-			return;
-		}
-		val = JsonParser_parseValue(state);
+	do {
+		JsonParser_skipWhitespace(state);
+		JsonVal_t val = JsonParser_parseValue(state);
+		RETURN_IF_PARSE_FAILED;
 		sb_push(values, val);
 		JsonParser_skipWhitespace(state);
-	}
+	} while(JsonParser_nextIfChr(state, ','));
 
-	JsonParser_expect(state, ']');
-	if(state->failedParse){
-		return;
-	}
+	EXPECT(']');
+
 	return (JsonArray_t){
 		.length = sb_count(values),
 		.values = values
@@ -269,25 +271,26 @@ static JsonVal_t JsonParser_parseValue(JsonParser_t *state){
 	char peekedChar = JsonParser_peek(state);
 	JsonVal_t val;
 
-	if(JsonParser_peek(state) == '['){
+	if(peekedChar == '['){
 		val.type = JSON_ARRAY;
 		val.value.array = JsonParser_parseArray(state);
-		if(state->failedParse){
-			return;
-		}
-		return val;
 	}
 
-	else if(JsonParser_peek(state) == '{'){
+	else if(peekedChar == '{'){
 		val.type = JSON_OBJECT;
 		val.value.object = JsonParser_parseObject(state);
-		if(state->failedParse){
-			return;
-		}
-		return val;
 	}
 
-	JsonParser_error(state, "Couldn't parse a value.\n");
+	else if(peekedChar == '"'){
+		val.type = JSON_STRING;
+		val.value.string = JsonParser_parseString(state);
+	}
+
+	else {
+		JsonParser_error(state, "Couldn't parse a value.\n");
+	}
+
+	return val;
 }
 
 JsonVal_t parse(char *src, bool *failed, char **errMsg){
@@ -316,4 +319,11 @@ int main(){
 	}
 	JsonVal_print(&parsed);
 	return EXIT_SUCCESS;
+}
+static bool JsonParser_nextIfChr(JsonParser_t *state, char c){
+	bool matches = JsonParser_peek(state) == c;
+	if(matches){
+		JsonParser_next(state);
+	}
+	return matches;
 }
