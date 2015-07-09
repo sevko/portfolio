@@ -68,28 +68,30 @@ static JsonVal_t JsonParser_parseValue(JsonParser_t *state);
  * Recursively print a string representation of `*val`; intended primarily for
  * debbuging.
  */
-char *JsonVal_print(JsonVal_t *val){
-	fflush(stdout);
-
+void JsonVal_print(JsonVal_t *val){
 	switch(val->type){
 		case JSON_STRING:
-			printf("\"%s\"\n", val->value.string);
+			printf("\"%.*s\"", val->value.string.length, val->value.string.str);
 			break;
 
 		case JSON_INT:
-			printf("%d\n", val->value.intNum);
+			printf("%d", val->value.intNum);
 			break;
 
 		case JSON_FLOAT:
-			printf("%f\n", val->value.floatNum);
+			printf("%f", val->value.floatNum);
 			break;
 
 		case JSON_OBJECT:
 			putchar('{');
 			for(int ind = 0; ind < val->value.object.length; ind++){
-				JsonVal_print(&val->value.object.keys[ind]);
+				JsonString_t *key = &val->value.object.keys[ind];
+				printf("\"%.*s\"", key->length, key->str);
 				putchar(':');
 				JsonVal_print(&val->value.object.values[ind]);
+				if(ind < val->value.object.length - 1){
+					putchar(',');
+				}
 			}
 			putchar('}');
 			break;
@@ -98,6 +100,9 @@ char *JsonVal_print(JsonVal_t *val){
 			putchar('[');
 			for(int ind = 0; ind < val->value.array.length; ind++){
 				JsonVal_print(&val->value.array.values[ind]);
+				if(ind < val->value.array.length - 1){
+					putchar(',');
+				}
 			}
 			putchar(']');
 			break;
