@@ -126,6 +126,11 @@ void JsonVal_print(JsonVal_t *val){
 	}
 }
 
+/**
+ * Raise en error in `state`, setting its error message to `errMsg` with some
+ * additional, helpful context (like the line and column numbers of where it
+ * occurred).
+ */
 static void JsonParser_error(JsonParser_t *state, const char *errMsg){
 	state->failedParse = true;
 	asprintf(
@@ -137,10 +142,38 @@ static char JsonParser_peek(JsonParser_t *state){
 	return state->inputStr[state->stringInd];
 }
 
-static void JsonParser_next(JsonParser_t *state){
-	state->stringInd++;
+/**
+ * Advance the parser to the next character.
+ */
+static char JsonParser_next(JsonParser_t *state){
+	char chr = state->inputStr[state->stringInd++];
+	if(chr == '\n'){
+		state->lineNum++;
+		state->colNum = 1;
+	}
+	else {
+		state->colNum++;
+	}
+	return chr;
 }
 
+/**
+ * A convenience function for advancing the parser *only* if the next character
+ * is `c`. This makes the definitions of `JsonParser_parseArray()` and
+ * `JsonParser_parseObject()` cleaner than they otherwise would be when it
+ * comes to parsing comma-delimited values.
+ */
+static bool JsonParser_nextIfChr(JsonParser_t *state, char c){
+	bool matches = JsonParser_peek(state) == c;
+	if(matches){
+		JsonParser_next(state);
+	}
+	return matches;
+}
+
+/**
+ * Advance the parser past any whitespace.
+ */
 static void JsonParser_skipWhitespace(JsonParser_t *state){
 	char c = state->inputStr[state->stringInd];
 	while(c == ' ' || c == '\t' || c == '\n'){
@@ -224,6 +257,7 @@ static JsonObject_t JsonParser_parseObject(JsonParser_t *state){
 		sb_push(values, value);
 	} while(JsonParser_nextIfChr(state, ','));
 
+	JsonParser_skipWhitespace(state);
 	EXPECT('}');
 	return (JsonObject_t){
 		.length = sb_count(keys),
@@ -319,11 +353,4 @@ int main(){
 	}
 	JsonVal_print(&parsed);
 	return EXIT_SUCCESS;
-}
-static bool JsonParser_nextIfChr(JsonParser_t *state, char c){
-	bool matches = JsonParser_peek(state) == c;
-	if(matches){
-		JsonParser_next(state);
-	}
-	return matches;
 }
