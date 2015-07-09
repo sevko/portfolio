@@ -119,9 +119,12 @@ void JsonVal_print(JsonVal_t *val){
 			break;
 
 		case JSON_BOOL:
+			// Use `fputs()` instead of `puts()` to avoid newline.
+			fputs(val->value.boolean ? "true" : "false", stdout);
 			break;
 
 		case JSON_NULL:
+			fputs("null", stdout);
 			break;
 	}
 }
@@ -296,9 +299,33 @@ static JsonArray_t JsonParser_parseArray(JsonParser_t *state){
 }
 
 static JsonBool_t JsonParser_parseBoolean(JsonParser_t *state){
+	switch(JsonParser_peek(state)){
+		case 't':
+			EXPECT('t');
+			EXPECT('r');
+			EXPECT('u');
+			EXPECT('e');
+			break;
+
+		case 'f':
+			EXPECT('f');
+			EXPECT('a');
+			EXPECT('l');
+			EXPECT('s');
+			EXPECT('e');
+			break;
+
+		default:
+			JsonParser_error(state, "Expecting `t` or `f`.");
+	}
 }
 
 static JsonNull_t JsonParser_parseNull(JsonParser_t *state){
+	EXPECT('n');
+	EXPECT('u');
+	EXPECT('l');
+	EXPECT('l');
+	return NULL;
 }
 
 static JsonVal_t JsonParser_parseValue(JsonParser_t *state){
@@ -318,6 +345,16 @@ static JsonVal_t JsonParser_parseValue(JsonParser_t *state){
 	else if(peekedChar == '"'){
 		val.type = JSON_STRING;
 		val.value.string = JsonParser_parseString(state);
+	}
+
+	else if(peekedChar == 'f' || peekedChar == 't'){
+		val.type = JSON_BOOL;
+		val.value.boolean = JsonParser_parseBoolean(state);
+	}
+
+	else if(peekedChar == 'n'){
+		val.type = JSON_NULL;
+		val.value.null = JsonParser_parseNull(state);
 	}
 
 	else {
