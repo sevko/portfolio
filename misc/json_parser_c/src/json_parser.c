@@ -61,6 +61,8 @@ typedef struct {
 	char *errMsg;
 } JsonParser_t;
 
+static JsonVal_t JsonParser_parseValue(JsonParser_t *state);
+
 /**
  * Recursively print a string representation of `*val`; intended primarily for
  * debbuging.
@@ -107,6 +109,13 @@ char *JsonVal_print(JsonVal_t *val){
 	}
 }
 
+static void JsonParser_error(JsonParser_t *state, const char *errMsg){
+	state->failedParse = true;
+	asprintf(
+		&state->errMsg, "Parse error on line %d, column %d:\n%s",
+		state->lineNum, state->colNum, errMsg);
+}
+
 static char JsonParser_peek(JsonParser_t *state){
 	return state->inputStr[state->stringInd];
 }
@@ -130,13 +139,15 @@ static void JsonParser_skipWhitespace(JsonParser_t *state){
 }
 
 static char JsonParser_expect(JsonParser_t *state, char expected){
-	JsonParser_skipWhitespace(state);
 	char c = state->inputStr[state->stringInd++];
 	if(c == expected){
 		return c;
 	}
 	else {
-		state->failedParse = true;
+		char *errMsg;
+		asprintf(&errMsg, "Expecting `%c`, but got `%c`.", expected, c);
+		JsonParser_error(state, errMsg);
+		free(errMsg);
 		return -1;
 	}
 }
@@ -154,10 +165,92 @@ JsonInt_t JsonParser_IntNum(JsonParser_t *state){
 JsonFloat_t JsonParser_FloatNum(JsonParser_t *state){
 }
 
-JsonObject_t JsonParser_Object(JsonParser_t *state){
+static JsonObject_t JsonParser_parseObject(JsonParser_t *state){
+	JsonParser_expect(state, '{');
+	if(state->failedParse){
+		return;
+	}
+
+	JsonParser_skipWhitespace(state);
+	if(JsonParser_peek(state) == '}'){
+		JsonParser_next(state);
+		return (JsonObject_t){
+			.length = 0,
+			.keys = NULL,
+			.values = NULL
+		};
+	}
+
+	JsonString_t *keys = NULL;
+	JsonVal_t *values = NULL;
+	do {
+		JsonParser_skipWhitespace(state);
+		JsonString_t key = JsonParser_parseString(state);
+		if(state->failedParse){
+			return;
+		}
+		sb_push(keys, key);
+
+		JsonParser_skipWhitespace(state);
+		JsonParser_expect(state, ':');
+		if(state->failedParse){
+			return;
+		}
+		JsonParser_skipWhitespace(state);
+
+		JsonVal_t value = JsonParser_parseValue(state);
+		if(state->failedParse){
+			return;
+		}
+		sb_push(values, value);
+		JsonParser_skipWhitespace(state);
+	} while(0);
+
+	return (JsonObject_t){
+		.length = sb_count(keys),
+		.keys = keys,
+		.values = values
+	};
 }
 
-JsonArray_t JsonParser_Array(JsonParser_t *state){
+static JsonArray_t JsonParser_parseArray(JsonParser_t *state){
+	JsonParser_expect(state, '[');
+	if(state->failedParse){
+		return;
+	}
+
+	JsonParser_skipWhitespace(state);
+	if(JsonParser_peek(state) == ']'){
+		JsonParser_next(state);
+		return (JsonArray_t){
+			.length = 0,
+			.values = NULL
+		};
+	}
+
+	JsonVal_t *values = NULL;
+	JsonVal_t val = JsonParser_parseValue(state);
+	sb_push(values, val);
+	JsonParser_skipWhitespace(state);
+
+	while(JsonParser_peek(state) == ','){
+		JsonParser_next(state);
+		if(state->failedParse){
+			return;
+		}
+		val = JsonParser_parseValue(state);
+		sb_push(values, val);
+		JsonParser_skipWhitespace(state);
+	}
+
+	JsonParser_expect(state, ']');
+	if(state->failedParse){
+		return;
+	}
+	return (JsonArray_t){
+		.length = sb_count(values),
+		.values = values
+	};
 }
 
 JsonBool_t JsonParser_Boolean(JsonParser_t *state){
@@ -167,13 +260,55 @@ JsonNull_t JsonParser_Null(JsonParser_t *state){
 }
 
 
-JsonVal_t *JsonParser_parseValue(JsonParser_t *state){
+static JsonVal_t JsonParser_parseValue(JsonParser_t *state){
 	char peekedChar = JsonParser_peek(state);
-	JsonVal_t *val = malloc(sizeof(JsonVal_t));
-	return val;
+	JsonVal_t val;
+
+	if(JsonParser_peek(state) == '['){
+		val.type = JSON_ARRAY;
+		val.value.array = JsonParser_parseArray(state);
+		if(state->failedParse){
+			return;
+		}
+		return val;
+	}
+
+	else if(JsonParser_peek(state) == '{'){
+		val.type = JSON_OBJECT;
+		val.value.object = JsonParser_parseObject(state);
+		if(state->failedParse){
+			return;
+		}
+		return val;
+	}
+
+	JsonParser_error(state, "Couldn't parse a value.\n");
+}
+
+JsonVal_t parse(char *src, bool *failed, char **errMsg){
+	JsonParser_t state = (JsonParser_t){
+		.colNum = 1,
+		.lineNum = 1,
+		.stringInd = 0,
+		.inputStr = src,
+		.failedParse = false,
+		.errMsg = NULL
+	};
+
+	JsonVal_t parsedVal = JsonParser_parseValue(&state);
+	*failed = state.failedParse;
+	*errMsg = state.errMsg;
+	return parsedVal;
 }
 
 int main(){
-	puts("Hello world.");
+	bool parseFailed;
+	char *parseErrMsg;
+	JsonVal_t parsed = parse("[{},{},[[[[]]]]]", &parseFailed, &parseErrMsg);
+	if(parseFailed){
+		fputs(parseErrMsg, stderr);
+		exit(1);
+	}
+	JsonVal_print(&parsed);
 	return EXIT_SUCCESS;
 }
