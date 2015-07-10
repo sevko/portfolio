@@ -81,6 +81,41 @@ typedef struct {
 static JsonVal_t JsonParser_parseValue(JsonParser_t *state);
 
 /**
+ * Recursively deallocate the members of `*val`. `val` itself will NOT be
+ * `free()`'d.
+ */
+void JsonVal_free(JsonVal_t *val){
+	switch(val->type){
+		case JSON_STRING:
+			sb_free(val->value.string.str);
+			break;
+
+		case JSON_OBJECT:{
+			JsonObject_t obj = val->value.object;
+			for(int pair = 0; pair < val->value.object.length; pair++){
+				sb_free(obj.keys[pair].str);
+				JsonVal_free(&obj.values[pair]);
+			}
+			sb_free(obj.keys);
+			sb_free(obj.values);
+			break;
+		}
+
+		case JSON_ARRAY:{
+			JsonArray_t arr = val->value.array;
+			for(int ind = 0; ind < val->value.array.length; ind++){
+				JsonVal_free(&arr.values[ind]);
+			}
+			sb_free(arr.values);
+			break;
+		}
+
+		default:
+			return;
+	}
+}
+
+/**
  * Recursively print a string representation of `*val`; intended primarily for
  * debbuging.
  */
