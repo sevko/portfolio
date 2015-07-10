@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #include "json_parser.h"
 #include "src/stretchy_buffer.h"
@@ -15,6 +16,10 @@
 	if(state->failedParse){ \
 		return; \
 	}
+
+#define ERROR(msg) \
+	JsonParser_error(state, msg); \
+	return
 
 typedef enum {
 	JSON_STRING,
@@ -137,7 +142,7 @@ void JsonVal_print(JsonVal_t *val){
 static void JsonParser_error(JsonParser_t *state, const char *errMsg){
 	state->failedParse = true;
 	asprintf(
-		&state->errMsg, "Parse error on line %d, column %d:\n%s",
+		&state->errMsg, "Parse error on line %d, column %d:\n%s\n",
 		state->lineNum, state->colNum, errMsg);
 }
 
@@ -209,12 +214,102 @@ static bool isCharDigit(char c){
 	return '0' <= c && c <= '9';
 }
 
+/**
+ * Write a UTF8 representation of `codePoint` to `dest`, storing the number of
+ * bytes it occupies (anywhere between 1 and 4 inclusive) in `*numBytes`.
+ */
+static void encodeUtf8CodePoint(int codePoint, int *numBytes, char *dest){
+	#define SIX_BIT_BLOCK(chrInt) (((chrInt) | (1 << 7)) & ~(1 << 6))
+
+	if(0x0000 <= codePoint && codePoint <= 0x007F){
+		*numBytes = 1;
+		dest[0] = codePoint;
+	}
+
+	else if(0x0080 <= codePoint && codePoint <= 0x07FF){
+		*numBytes = 2;
+		dest[0] = ((codePoint >> 6) | (3 << 6)) & ~(1 << 5);
+		dest[1] = SIX_BIT_BLOCK(codePoint);
+	}
+
+	else if(0x0800 <= codePoint && codePoint <= 0xFFFF){
+		*numBytes = 3;
+		dest[0] = ((codePoint >> 12) | (7 << 5)) & ~(1 << 4);
+		dest[1] = SIX_BIT_BLOCK(codePoint >> 6);
+		dest[2] = SIX_BIT_BLOCK(codePoint);
+	}
+
+	else if(0x10000 <= codePoint && codePoint <= 0x1FFFFF){
+		*numBytes = 4;
+		dest[0] = ((codePoint >> 18) | (7 << 5)) & ~(1 << 4);
+		dest[1] = SIX_BIT_BLOCK(codePoint >> 12);
+		dest[2] = SIX_BIT_BLOCK(codePoint >> 6);
+		dest[3] = SIX_BIT_BLOCK(codePoint);
+	}
+
+	return dest;
+}
+
 static JsonString_t JsonParser_parseString(JsonParser_t *state){
 	EXPECT('"');
 	char *str = NULL;
 	while(JsonParser_peek(state) != '"'){
 		char chr = JsonParser_next(state);
-		sb_push(str, chr);
+		if(chr == '\\'){
+			bool escapedCntrlChr = true;
+			char escapedChar = JsonParser_next(state);
+			char replacementChar;
+
+			// For brevity.
+			#define ESCAPED_REPLACEMENT(escaped, replacement) \
+				case escaped: \
+					replacementChar = replacement; \
+					break
+
+			switch(escapedChar){
+				ESCAPED_REPLACEMENT('"', '"');
+				ESCAPED_REPLACEMENT('\\', '\\');
+				ESCAPED_REPLACEMENT('/', '/');
+				ESCAPED_REPLACEMENT('b', '\b');
+				ESCAPED_REPLACEMENT('f', '\f');
+				ESCAPED_REPLACEMENT('n', '\n');
+				ESCAPED_REPLACEMENT('r', '\r');
+				ESCAPED_REPLACEMENT('t', '\t');
+
+				default:
+					escapedCntrlChr = false;
+					break;
+			}
+
+			if(escapedCntrlChr){
+				sb_push(str, replacementChar);
+			}
+
+			else if(escapedChar == 'u'){
+				int unicodeCodePoint;
+				char *inputStrPtr = &state->inputStr[state->stringInd];
+				if(sscanf(inputStrPtr, "%4x", &unicodeCodePoint) != 1){
+					ERROR("Failed to read 4 hexadecimal characters");
+				}
+				state->stringInd += 4;
+
+				char unicodeChr[4];
+				int numBytes;
+				encodeUtf8CodePoint(unicodeCodePoint, &numBytes, unicodeChr);
+				for(int byte = 0; byte < numBytes; byte++){
+					sb_push(str, unicodeChr[byte]);
+				}
+			}
+			else {
+				ERROR("Invalid escaped character.");
+			}
+		}
+		else if(iscntrl(chr)){
+			ERROR("Control characters inside strings are invalid.");
+		}
+		else {
+			sb_push(str, chr);
+		}
 	}
 	EXPECT('"');
 	return (JsonString_t){
