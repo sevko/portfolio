@@ -318,10 +318,64 @@ static JsonString_t JsonParser_parseString(JsonParser_t *state){
 	};
 }
 
-static JsonInt_t JsonParser_parseIntNum(JsonParser_t *state){
+static unsigned int JsonParser_parseDigits(JsonParser_t *state){
+	unsigned int val;
+	int numCharsRead;
+	char *srcStr = &state->inputStr[state->stringInd];
+	if(sscanf(srcStr, "%d%n", &val, &numCharsRead) != 1){
+		ERROR("Failed to read one or more digits.");
+	}
+	state->stringInd += numCharsRead;
+	return val;
 }
 
-static JsonFloat_t JsonParser_parseFloatNum(JsonParser_t *state){
+static void JsonParser_parseNumber(JsonParser_t *state, JsonVal_t *val){
+	bool negate = JsonParser_nextIfChr(state, '-');
+	int baseNum = JsonParser_parseDigits(state);
+
+	bool hasFraction = JsonParser_nextIfChr(state, '.');
+	int fractionNum;
+	if(hasFraction){
+		fractionNum = JsonParser_parseDigits(state);
+	}
+
+	bool hasExp = JsonParser_nextIfChr(state, 'e') ||
+		JsonParser_nextIfChr(state, 'E');
+	int expPart;
+	if(hasExp){
+		bool negateExp = !JsonParser_nextIfChr(state, '+') &&
+			JsonParser_nextIfChr(state, '-');
+		expPart = JsonParser_parseDigits(state);
+		if(negateExp){
+			expPart = -expPart;
+		}
+	}
+
+	#define APPLY_EXP(numVar) \
+		if(hasExp){ \
+			for(int power = 0; power < expPart; power++){ \
+				numVar *= 10; \
+			} \
+		}
+
+	#define APPLY_NEGATION(numVar) \
+		if(negate){ \
+			numVar = -numVar; \
+		}
+
+	if(hasFraction){
+		float floatVal = baseNum + fractionNum / 100.0;
+		APPLY_EXP(floatVal);
+		APPLY_NEGATION(floatVal);
+		val->type = JSON_FLOAT;
+		val->value.floatNum = floatVal;
+	}
+	else {
+		APPLY_EXP(baseNum);
+		APPLY_NEGATION(baseNum);
+		val->type = JSON_INT;
+		val->value.intNum = baseNum;
+	}
 }
 
 static JsonObject_t JsonParser_parseObject(JsonParser_t *state){
@@ -450,6 +504,10 @@ static JsonVal_t JsonParser_parseValue(JsonParser_t *state){
 	else if(peekedChar == 'n'){
 		val.type = JSON_NULL;
 		val.value.null = JsonParser_parseNull(state);
+	}
+
+	else if(peekedChar == '-' || isdigit(peekedChar)){
+		JsonParser_parseNumber(state, &val);
 	}
 
 	else {
