@@ -287,8 +287,12 @@ static JsonString_t JsonParser_parseString(JsonParser_t *state){
 
 			else if(escapedChar == 'u'){
 				int unicodeCodePoint;
+
 				char *inputStrPtr = &state->inputStr[state->stringInd];
-				if(sscanf(inputStrPtr, "%4x", &unicodeCodePoint) != 1){
+				int numCharsRead;
+				int numItemsMatched = sscanf(
+					inputStrPtr, "%4x%n", &unicodeCodePoint, &numCharsRead);
+				if(numItemsMatched != 1 || numCharsRead != 4){
 					ERROR("Failed to read 4 hexadecimal characters");
 				}
 				state->stringInd += 4;
