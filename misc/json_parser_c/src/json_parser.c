@@ -245,10 +245,6 @@ static char JsonParser_expect(JsonParser_t *state, char expected){
 	}
 }
 
-static bool isCharDigit(char c){
-	return '0' <= c && c <= '9';
-}
-
 /**
  * Write a UTF8 representation of `codePoint` to `dest`, storing the number of
  * bytes it occupies (anywhere between 1 and 4 inclusive) in `*numBytes`.
