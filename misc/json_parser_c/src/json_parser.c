@@ -8,8 +8,6 @@
 #include "json_parser.h"
 #include "src/stretchy_buffer.h"
 
-#define EXPECT(expected) JsonParser_expect(state, expected);
-
 #define ERROR(msg) \
 	JsonParser_error(state, msg); \
 	return
@@ -281,7 +279,7 @@ static void encodeUtf8CodePoint(int codePoint, int *numBytes, char *dest){
 }
 
 static JsonString_t JsonParser_parseString(JsonParser_t *state){
-	EXPECT('"');
+	JsonParser_expect(state, '"');
 	char *str = NULL;
 
 	jmp_buf prevErrorTrap;
@@ -349,7 +347,7 @@ static JsonString_t JsonParser_parseString(JsonParser_t *state){
 				sb_push(str, chr);
 			}
 		}
-		EXPECT('"');
+		JsonParser_expect(state, '"');
 		copyJmpBuf(state->errorTrap, prevErrorTrap);
 		return (JsonString_t){
 			.length = sb_count(str),
@@ -423,7 +421,7 @@ static void JsonParser_parseNumber(JsonParser_t *state, JsonVal_t *val){
 }
 
 static JsonObject_t JsonParser_parseObject(JsonParser_t *state){
-	EXPECT('{');
+	JsonParser_expect(state, '{');
 
 	JsonParser_skipWhitespace(state);
 	if(JsonParser_peek(state) == '}'){
@@ -442,14 +440,13 @@ static JsonObject_t JsonParser_parseObject(JsonParser_t *state){
 	copyJmpBuf(prevErrorTrap, state->errorTrap);
 
 	if(!setjmp(state->errorTrap)){
-		puts("try");
 		do {
 			JsonParser_skipWhitespace(state);
 			JsonString_t key = JsonParser_parseString(state);
 			sb_push(keys, key);
 
 			JsonParser_skipWhitespace(state);
-			EXPECT(':');
+			JsonParser_expect(state, ':');
 			JsonParser_skipWhitespace(state);
 
 			JsonVal_t value = JsonParser_parseValue(state);
@@ -457,7 +454,7 @@ static JsonObject_t JsonParser_parseObject(JsonParser_t *state){
 		} while(JsonParser_nextIfChr(state, ','));
 
 		JsonParser_skipWhitespace(state);
-		EXPECT('}');
+		JsonParser_expect(state, '}');
 		copyJmpBuf(state->errorTrap, prevErrorTrap);
 		return (JsonObject_t){
 			.length = sb_count(keys),
@@ -483,7 +480,7 @@ static JsonObject_t JsonParser_parseObject(JsonParser_t *state){
 }
 
 static JsonArray_t JsonParser_parseArray(JsonParser_t *state){
-	EXPECT('[');
+	JsonParser_expect(state, '[');
 
 	JsonParser_skipWhitespace(state);
 	if(JsonParser_peek(state) == ']'){
@@ -506,7 +503,7 @@ static JsonArray_t JsonParser_parseArray(JsonParser_t *state){
 			JsonParser_skipWhitespace(state);
 		} while(JsonParser_nextIfChr(state, ','));
 
-		EXPECT(']');
+		JsonParser_expect(state, ']');
 		copyJmpBuf(state->errorTrap, prevErrorTrap);
 		return (JsonArray_t){
 			.length = sb_count(values),
@@ -525,19 +522,19 @@ static JsonArray_t JsonParser_parseArray(JsonParser_t *state){
 static JsonBool_t JsonParser_parseBoolean(JsonParser_t *state){
 	switch(JsonParser_peek(state)){
 		case 't':
-			EXPECT('t');
-			EXPECT('r');
-			EXPECT('u');
-			EXPECT('e');
+			JsonParser_expect(state, 't');
+			JsonParser_expect(state, 'r');
+			JsonParser_expect(state, 'u');
+			JsonParser_expect(state, 'e');
 			return true;
 			break;
 
 		case 'f':
-			EXPECT('f');
-			EXPECT('a');
-			EXPECT('l');
-			EXPECT('s');
-			EXPECT('e');
+			JsonParser_expect(state, 'f');
+			JsonParser_expect(state, 'a');
+			JsonParser_expect(state, 'l');
+			JsonParser_expect(state, 's');
+			JsonParser_expect(state, 'e');
 			return false;
 			break;
 
@@ -548,10 +545,10 @@ static JsonBool_t JsonParser_parseBoolean(JsonParser_t *state){
 }
 
 static JsonNull_t JsonParser_parseNull(JsonParser_t *state){
-	EXPECT('n');
-	EXPECT('u');
-	EXPECT('l');
-	EXPECT('l');
+	JsonParser_expect(state, 'n');
+	JsonParser_expect(state, 'u');
+	JsonParser_expect(state, 'l');
+	JsonParser_expect(state, 'l');
 	return 0;
 }
 
