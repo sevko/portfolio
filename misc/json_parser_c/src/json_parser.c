@@ -489,6 +489,7 @@ static JsonBool_t JsonParser_parseBoolean(JsonParser_t *state){
 			EXPECT('r');
 			EXPECT('u');
 			EXPECT('e');
+			return true;
 			break;
 
 		case 'f':
@@ -497,6 +498,7 @@ static JsonBool_t JsonParser_parseBoolean(JsonParser_t *state){
 			EXPECT('l');
 			EXPECT('s');
 			EXPECT('e');
+			return false;
 			break;
 
 		default:
@@ -509,7 +511,7 @@ static JsonNull_t JsonParser_parseNull(JsonParser_t *state){
 	EXPECT('u');
 	EXPECT('l');
 	EXPECT('l');
-	return NULL;
+	return 0;
 }
 
 static JsonVal_t JsonParser_parseValue(JsonParser_t *state){
