@@ -2,20 +2,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <setjmp.h>
+#include <string.h>
 
 #include "json_parser.h"
 #include "src/stretchy_buffer.h"
 
-#define EXPECT(expected) \
-	JsonParser_expect(state, expected); \
-	if(state->failedParse){ \
-		return; \
-	}
-
-#define RETURN_IF_PARSE_FAILED \
-	if(state->failedParse){ \
-		return; \
-	}
+#define EXPECT(expected) JsonParser_expect(state, expected);
 
 #define ERROR(msg) \
 	JsonParser_error(state, msg); \
@@ -76,9 +69,15 @@ typedef struct {
 
 	bool failedParse;
 	char *errMsg;
+
+	jmp_buf errorTrap;
 } JsonParser_t;
 
 static JsonVal_t JsonParser_parseValue(JsonParser_t *state);
+
+void *copyJmpBuf(jmp_buf dest, const jmp_buf src){
+	return memcpy(dest, src, sizeof(jmp_buf));
+}
 
 /**
  * Recursively deallocate the members of `*val`. `val` itself will NOT be
@@ -241,7 +240,7 @@ static char JsonParser_expect(JsonParser_t *state, char expected){
 		asprintf(&errMsg, "Expecting `%c`, but got `%c`.", expected, c);
 		JsonParser_error(state, errMsg);
 		free(errMsg);
-		return -1;
+		longjmp(state->errorTrap, 1);
 	}
 }
 
@@ -284,73 +283,83 @@ static void encodeUtf8CodePoint(int codePoint, int *numBytes, char *dest){
 static JsonString_t JsonParser_parseString(JsonParser_t *state){
 	EXPECT('"');
 	char *str = NULL;
-	while(JsonParser_peek(state) != '"'){
-		char chr = JsonParser_next(state);
-		if(chr == '\\'){
-			bool escapedCntrlChr = true;
-			char escapedChar = JsonParser_next(state);
-			char replacementChar;
 
-			// For brevity.
-			#define ESCAPED_REPLACEMENT(escaped, replacement) \
-				case escaped: \
-					replacementChar = replacement; \
-					break
+	jmp_buf prevErrorTrap;
+	copyJmpBuf(prevErrorTrap, state->errorTrap);
+	if(!setjmp(state->errorTrap)){
+		while(JsonParser_peek(state) != '"'){
+			char chr = JsonParser_next(state);
+			if(chr == '\\'){
+				bool escapedCntrlChr = true;
+				char escapedChar = JsonParser_next(state);
+				char replacementChar;
 
-			switch(escapedChar){
-				ESCAPED_REPLACEMENT('"', '"');
-				ESCAPED_REPLACEMENT('\\', '\\');
-				ESCAPED_REPLACEMENT('/', '/');
-				ESCAPED_REPLACEMENT('b', '\b');
-				ESCAPED_REPLACEMENT('f', '\f');
-				ESCAPED_REPLACEMENT('n', '\n');
-				ESCAPED_REPLACEMENT('r', '\r');
-				ESCAPED_REPLACEMENT('t', '\t');
+				// For brevity.
+				#define ESCAPED_REPLACEMENT(escaped, replacement) \
+					case escaped: \
+						replacementChar = replacement; \
+						break
 
-				default:
-					escapedCntrlChr = false;
-					break;
-			}
+				switch(escapedChar){
+					ESCAPED_REPLACEMENT('"', '"');
+					ESCAPED_REPLACEMENT('\\', '\\');
+					ESCAPED_REPLACEMENT('/', '/');
+					ESCAPED_REPLACEMENT('b', '\b');
+					ESCAPED_REPLACEMENT('f', '\f');
+					ESCAPED_REPLACEMENT('n', '\n');
+					ESCAPED_REPLACEMENT('r', '\r');
+					ESCAPED_REPLACEMENT('t', '\t');
 
-			if(escapedCntrlChr){
-				sb_push(str, replacementChar);
-			}
-
-			else if(escapedChar == 'u'){
-				int unicodeCodePoint;
-
-				char *inputStrPtr = &state->inputStr[state->stringInd];
-				int numCharsRead;
-				int numItemsMatched = sscanf(
-					inputStrPtr, "%4x%n", &unicodeCodePoint, &numCharsRead);
-				if(numItemsMatched != 1 || numCharsRead != 4){
-					ERROR("Failed to read 4 hexadecimal characters");
+					default:
+						escapedCntrlChr = false;
+						break;
 				}
-				state->stringInd += 4;
 
-				char unicodeChr[4];
-				int numBytes;
-				encodeUtf8CodePoint(unicodeCodePoint, &numBytes, unicodeChr);
-				for(int byte = 0; byte < numBytes; byte++){
-					sb_push(str, unicodeChr[byte]);
+				if(escapedCntrlChr){
+					sb_push(str, replacementChar);
 				}
+
+				else if(escapedChar == 'u'){
+					int unicodeCodePoint;
+
+					char *inputStrPtr = &state->inputStr[state->stringInd];
+					int numCharsRead;
+					int numItemsMatched = sscanf(
+						inputStrPtr, "%4x%n", &unicodeCodePoint, &numCharsRead);
+					if(numItemsMatched != 1 || numCharsRead != 4){
+						ERROR("Failed to read 4 hexadecimal characters");
+					}
+					state->stringInd += 4;
+
+					char unicodeChr[4];
+					int numBytes = 0;
+					encodeUtf8CodePoint(unicodeCodePoint, &numBytes, unicodeChr);
+					for(int byte = 0; byte < numBytes; byte++){
+						sb_push(str, unicodeChr[byte]);
+					}
+				}
+				else {
+					ERROR("Invalid escaped character.");
+				}
+			}
+			else if(iscntrl(chr)){
+				ERROR("Control characters inside strings are invalid.");
 			}
 			else {
-				ERROR("Invalid escaped character.");
+				sb_push(str, chr);
 			}
 		}
-		else if(iscntrl(chr)){
-			ERROR("Control characters inside strings are invalid.");
-		}
-		else {
-			sb_push(str, chr);
-		}
+		EXPECT('"');
+		copyJmpBuf(state->errorTrap, prevErrorTrap);
+		return (JsonString_t){
+			.length = sb_count(str),
+			.str = str
+		};
 	}
-	EXPECT('"');
-	return (JsonString_t){
-		.length = sb_count(str),
-		.str = str
-	};
+	else {
+		sb_free(str);
+		longjmp(prevErrorTrap, 1);
+	}
 }
 
 static unsigned int JsonParser_parseDigits(JsonParser_t *state){
@@ -426,31 +435,51 @@ static JsonObject_t JsonParser_parseObject(JsonParser_t *state){
 		};
 	}
 
-	JsonString_t *keys = NULL;
-	JsonVal_t *values = NULL;
+	JsonString_t *volatile keys = NULL;
+	JsonVal_t *volatile values = NULL;
 
-	do {
+	jmp_buf prevErrorTrap;
+	copyJmpBuf(prevErrorTrap, state->errorTrap);
+
+	if(!setjmp(state->errorTrap)){
+		puts("try");
+		do {
+			JsonParser_skipWhitespace(state);
+			JsonString_t key = JsonParser_parseString(state);
+			sb_push(keys, key);
+
+			JsonParser_skipWhitespace(state);
+			EXPECT(':');
+			JsonParser_skipWhitespace(state);
+
+			JsonVal_t value = JsonParser_parseValue(state);
+			sb_push(values, value);
+		} while(JsonParser_nextIfChr(state, ','));
+
 		JsonParser_skipWhitespace(state);
-		JsonString_t key = JsonParser_parseString(state);
-		RETURN_IF_PARSE_FAILED;
-		sb_push(keys, key);
+		EXPECT('}');
+		copyJmpBuf(state->errorTrap, prevErrorTrap);
+		return (JsonObject_t){
+			.length = sb_count(keys),
+			.keys = keys,
+			.values = values
+		};
+	}
+	else {
+		// We iterate over `keys` and `values` separately since the number of
+		// keys and values might differ by 1 if, for a given key-value pair, a
+		// key was successfully parsed but the value parse failed.
+		for(int pair = 0; pair < sb_count(keys); pair++){
+			sb_free(keys[pair].str);
+		}
 
-		JsonParser_skipWhitespace(state);
-		EXPECT(':');
-		JsonParser_skipWhitespace(state);
-
-		JsonVal_t value = JsonParser_parseValue(state);
-		RETURN_IF_PARSE_FAILED;
-		sb_push(values, value);
-	} while(JsonParser_nextIfChr(state, ','));
-
-	JsonParser_skipWhitespace(state);
-	EXPECT('}');
-	return (JsonObject_t){
-		.length = sb_count(keys),
-		.keys = keys,
-		.values = values
-	};
+		for(int pair = 0; pair < sb_count(values); pair++){
+			JsonVal_free(&values[pair]);
+		}
+		sb_free(keys);
+		sb_free(values);
+		longjmp(prevErrorTrap, 1);
+	}
 }
 
 static JsonArray_t JsonParser_parseArray(JsonParser_t *state){
@@ -465,21 +494,32 @@ static JsonArray_t JsonParser_parseArray(JsonParser_t *state){
 		};
 	}
 
-	JsonVal_t *values = NULL;
-	do {
-		JsonParser_skipWhitespace(state);
-		JsonVal_t val = JsonParser_parseValue(state);
-		RETURN_IF_PARSE_FAILED;
-		sb_push(values, val);
-		JsonParser_skipWhitespace(state);
-	} while(JsonParser_nextIfChr(state, ','));
+	jmp_buf prevErrorTrap;
+	copyJmpBuf(prevErrorTrap, state->errorTrap);
 
-	EXPECT(']');
+	JsonVal_t *volatile values = NULL;
+	if(!setjmp(state->errorTrap)){
+		do {
+			JsonParser_skipWhitespace(state);
+			JsonVal_t val = JsonParser_parseValue(state);
+			sb_push(values, val);
+			JsonParser_skipWhitespace(state);
+		} while(JsonParser_nextIfChr(state, ','));
 
-	return (JsonArray_t){
-		.length = sb_count(values),
-		.values = values
-	};
+		EXPECT(']');
+		copyJmpBuf(state->errorTrap, prevErrorTrap);
+		return (JsonArray_t){
+			.length = sb_count(values),
+			.values = values
+		};
+	}
+	else {
+		for(int ind = 0; ind < sb_count(values); ind++){
+			JsonVal_free(&values[ind]);
+		}
+		sb_free(values);
+		longjmp(prevErrorTrap, 1);
+	}
 }
 
 static JsonBool_t JsonParser_parseBoolean(JsonParser_t *state){
@@ -503,6 +543,7 @@ static JsonBool_t JsonParser_parseBoolean(JsonParser_t *state){
 
 		default:
 			JsonParser_error(state, "Expecting `t` or `f`.");
+			longjmp(state->errorTrap, 1);
 	}
 }
 
@@ -564,7 +605,10 @@ JsonVal_t parse(char *src, bool *failed, char **errMsg){
 		.errMsg = NULL
 	};
 
-	JsonVal_t parsedVal = JsonParser_parseValue(&state);
+	JsonVal_t parsedVal;
+	if(!setjmp(state.errorTrap)){
+		parsedVal = JsonParser_parseValue(&state);
+	}
 	*failed = state.failedParse;
 	*errMsg = state.errMsg;
 	return parsedVal;
