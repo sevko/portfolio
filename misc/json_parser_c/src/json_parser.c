@@ -252,7 +252,7 @@ static void encodeUtf8CodePoint(int codePoint, int *numBytes, char *dest){
 
 static JsonString_t JsonParser_parseString(JsonParser_t *state){
 	JsonParser_expect(state, '"');
-	char *str = NULL;
+	char *volatile str = NULL;
 
 	jmp_buf prevErrorTrap;
 	copyJmpBuf(prevErrorTrap, state->errorTrap);
@@ -321,10 +321,10 @@ static JsonString_t JsonParser_parseString(JsonParser_t *state){
 				JsonParser_error(
 					state, "Control characters inside strings are invalid.",
 					false);
+				goto error;
 			}
 			else {
 				sb_push(str, chr);
-				goto error;
 			}
 		}
 		JsonParser_expect(state, '"');
@@ -333,9 +333,6 @@ static JsonString_t JsonParser_parseString(JsonParser_t *state){
 			.length = sb_count(str),
 			.str = str
 		};
-	}
-	else {
-		goto error;
 	}
 
 error:
