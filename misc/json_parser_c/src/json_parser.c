@@ -12,7 +12,7 @@
 #include "src/stretchy_buffer.h"
 
 typedef struct {
-	char *inputStr;
+	const char *inputStr;
 	int stringInd;
 	bool isNullTerminated;
 	int inputStrLength;
@@ -21,7 +21,7 @@ typedef struct {
 	int lineNum;
 
 	bool failedParse;
-	char *errMsg;
+	JsonParserError_t error;
 
 	jmp_buf errorTrap;
 } JsonParser_t;
@@ -30,6 +30,30 @@ static JsonVal_t JsonParser_parseValue(JsonParser_t *state);
 
 static void *copyJmpBuf(jmp_buf dest, const jmp_buf src){
 	return memcpy(dest, src, sizeof(jmp_buf));
+}
+
+void JsonParserError_free(JsonParserError_t *err){
+	free(err->errMsg);
+}
+
+const char *JsonErrorType_toString(JsonParserErrorType_t type){
+	#define CASE(errType) \
+		case errType: \
+			return #errType
+
+	switch(type){
+		CASE(JSON_ERR_EOF);
+		CASE(JSON_ERR_UNEXPECTED_CHAR);
+		CASE(JSON_ERR_STR_UNICODE_ESCAPE);
+		CASE(JSON_ERR_STR_INVALID_ESCAPE);
+		CASE(JSON_ERR_STR_CONTROL_CHAR);
+		CASE(JSON_ERR_BOOL);
+		CASE(JSON_ERR_NUMBER);
+		CASE(JSON_ERR_VALUE);
+
+		default:
+			return "Undefined type.";
+	}
 }
 
 /**
@@ -128,15 +152,25 @@ void JsonVal_print(JsonVal_t *val){
  * context (`state->errorTrap`).
  */
 static void JsonParser_error(
-	JsonParser_t *state, const char *errMsg, bool jump){
+	JsonParser_t *state, JsonParserErrorType_t errorType,
+	char *errMsg, bool jump){
 	state->failedParse = true;
+
+	char *fullErMsg;
 	int asprintfRes = asprintf(
-		&state->errMsg, "Parse error on line %d, column %d:\n%s\n",
+		&fullErMsg, "Parse error on line %d, column %d:\n%s\n",
 		state->lineNum, state->colNum, errMsg);
 	if(asprintfRes == -1){
 		fputs("JsonParser_error(): `asprintf()` call failed!", stderr);
-		state->errMsg = "";
+		fullErMsg = "";
 	}
+
+	state->error = (JsonParserError_t){
+		.lnNum = state->lineNum,
+		.colNum = state->colNum,
+		.errMsg = fullErMsg,
+		.type = errorType
+	};
 
 	if(jump){
 		longjmp(state->errorTrap, 1);
@@ -153,7 +187,8 @@ static char JsonParser_peek(JsonParser_t *state){
 static char JsonParser_next(JsonParser_t *state){
 	if((state->isNullTerminated && !state->inputStr[state->stringInd]) ||
 		state->stringInd == state->inputStrLength){
-		JsonParser_error(state, "Unexpected end of input.", true);
+		JsonParser_error(
+			state, JSON_ERR_EOF, "Unexpected end of input.", true);
 	}
 	char chr = state->inputStr[state->stringInd++];
 	if(chr == '\n'){
@@ -210,7 +245,7 @@ static char JsonParser_expect(JsonParser_t *state, char expected){
 			fputs("JsonParser_expect(): `asprintf()` call failed!", stderr);
 			errMsg = "";
 		}
-		JsonParser_error(state, errMsg, false);
+		JsonParser_error(state, JSON_ERR_UNEXPECTED_CHAR, errMsg, false);
 		free(errMsg);
 		longjmp(state->errorTrap, 1);
 	}
@@ -292,14 +327,15 @@ static JsonString_t JsonParser_parseString(JsonParser_t *state){
 				else if(escapedChar == 'u'){
 					int unicodeCodePoint;
 
-					char *inputStrPtr = &state->inputStr[state->stringInd];
+					const char *inputStrPtr =
+						&state->inputStr[state->stringInd];
 					int numCharsRead;
 					int numItemsMatched = sscanf(
 						inputStrPtr, "%4x%n", &unicodeCodePoint, &numCharsRead);
 					if(numItemsMatched != 1 || numCharsRead != 4){
 						JsonParser_error(
-							state, "Failed to read 4 hexadecimal characters",
-							false);
+							state, JSON_ERR_STR_UNICODE_ESCAPE,
+							"Failed to read 4 hexadecimal characters", false);
 						goto error;
 					}
 					state->stringInd += 4;
@@ -313,14 +349,15 @@ static JsonString_t JsonParser_parseString(JsonParser_t *state){
 				}
 				else {
 					JsonParser_error(
-						state, "Invalid escaped character.", false);
+						state, JSON_ERR_STR_INVALID_ESCAPE,
+						"Invalid escaped character.", false);
 					goto error;
 				}
 			}
 			else if(iscntrl(chr)){
 				JsonParser_error(
-					state, "Control characters inside strings are invalid.",
-					false);
+					state, JSON_ERR_STR_CONTROL_CHAR,
+					"Control characters inside strings are invalid.", false);
 				goto error;
 			}
 			else {
@@ -343,9 +380,10 @@ error:
 static unsigned int JsonParser_parseDigits(JsonParser_t *state){
 	unsigned int val;
 	int numCharsRead;
-	char *srcStr = &state->inputStr[state->stringInd];
+	const char *srcStr = &state->inputStr[state->stringInd];
 	if(sscanf(srcStr, "%d%n", &val, &numCharsRead) != 1){
-		JsonParser_error(state, "Failed to read one or more digits.", true);
+		JsonParser_error(
+			state, JSON_ERR_NUMBER, "Failed to read one or more digits.", true);
 	}
 	state->stringInd += numCharsRead;
 	return val;
@@ -519,7 +557,8 @@ static JsonBool_t JsonParser_parseBoolean(JsonParser_t *state){
 			break;
 
 		default:
-			JsonParser_error(state, "Expecting `t` or `f`.", true);
+			JsonParser_error(
+				state, JSON_ERR_BOOL, "Expecting `t` or `f`.", true);
 
 			// The following is necessary to silence a GCC warning about the
 			// lack of a return type ("control reaches end of non-void
@@ -572,27 +611,34 @@ static JsonVal_t JsonParser_parseValue(JsonParser_t *state){
 	}
 
 	else {
-		JsonParser_error(state, "Couldn't parse a value.\n", true);
+		JsonParser_error(
+			state, JSON_ERR_VALUE, "Couldn't parse a value.\n", true);
 	}
 
 	return val;
 }
 
-JsonVal_t parse(char *src, bool *failed, char **errMsg){
+JsonVal_t parse(
+	const char *src, bool isNullTerminated, int length, bool *failed,
+	JsonParserError_t *error){
 	JsonParser_t state = (JsonParser_t){
+		.isNullTerminated = isNullTerminated,
+		.inputStrLength = length,
 		.colNum = 1,
 		.lineNum = 1,
 		.stringInd = 0,
 		.inputStr = src,
-		.failedParse = false,
-		.errMsg = NULL
+		.failedParse = false
 	};
 
 	JsonVal_t parsedVal;
 	if(!setjmp(state.errorTrap)){
 		parsedVal = JsonParser_parseValue(&state);
+		*failed = false;
 	}
-	*failed = state.failedParse;
-	*errMsg = state.errMsg;
+	else {
+		*failed = true;
+		*error = state.error;
+	}
 	return parsedVal;
 }
