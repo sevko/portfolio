@@ -1,3 +1,7 @@
+// Define _GNU_SOURCE to silence warnings about an implicit declaration of
+// `asprintf()`.
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -7,10 +11,6 @@
 
 #include "json_parser.h"
 #include "src/stretchy_buffer.h"
-
-#define ERROR(msg) \
-	JsonParser_error(state, msg); \
-	return
 
 typedef enum {
 	JSON_STRING,
@@ -61,6 +61,8 @@ struct JsonVal {
 typedef struct {
 	char *inputStr;
 	int stringInd;
+	bool isNullTerminated;
+	int inputStrLength;
 
 	int colNum;
 	int lineNum;
@@ -169,13 +171,23 @@ void JsonVal_print(JsonVal_t *val){
 /**
  * Raise en error in `state`, setting its error message to `errMsg` with some
  * additional, helpful context (like the line and column numbers of where it
- * occurred).
+ * occurred). If `jump` is true, also jump to the previous error-catching
+ * context (`state->errorTrap`).
  */
-static void JsonParser_error(JsonParser_t *state, const char *errMsg){
+static void JsonParser_error(
+	JsonParser_t *state, const char *errMsg, bool jump){
 	state->failedParse = true;
-	asprintf(
+	int asprintfRes = asprintf(
 		&state->errMsg, "Parse error on line %d, column %d:\n%s\n",
 		state->lineNum, state->colNum, errMsg);
+	if(asprintfRes == -1){
+		fputs("JsonParser_error(): `asprintf()` call failed!", stderr);
+		state->errMsg = "";
+	}
+
+	if(jump){
+		longjmp(state->errorTrap, 1);
+	}
 }
 
 static char JsonParser_peek(JsonParser_t *state){
@@ -183,9 +195,13 @@ static char JsonParser_peek(JsonParser_t *state){
 }
 
 /**
- * Advance the parser to the next character.
+ * Return the next character in the input string and advance the parser.
  */
 static char JsonParser_next(JsonParser_t *state){
+	if((state->isNullTerminated && !state->inputStr[state->stringInd]) ||
+		state->stringInd == state->inputStrLength){
+		JsonParser_error(state, "Unexpected end of input.", true);
+	}
 	char chr = state->inputStr[state->stringInd++];
 	if(chr == '\n'){
 		state->lineNum++;
@@ -215,8 +231,9 @@ static bool JsonParser_nextIfChr(JsonParser_t *state, char c){
  * Advance the parser past any whitespace.
  */
 static void JsonParser_skipWhitespace(JsonParser_t *state){
-	char c = state->inputStr[state->stringInd];
+	char c = JsonParser_peek(state);
 	while(c == ' ' || c == '\t' || c == '\n'){
+		JsonParser_next(state);
 		if(c == '\n'){
 			state->colNum = 1;
 			state->lineNum++;
@@ -224,7 +241,7 @@ static void JsonParser_skipWhitespace(JsonParser_t *state){
 		else {
 			state->colNum++;
 		}
-		c = state->inputStr[++state->stringInd];
+		c = JsonParser_peek(state);
 	}
 }
 
@@ -235,8 +252,12 @@ static char JsonParser_expect(JsonParser_t *state, char expected){
 	}
 	else {
 		char *errMsg;
-		asprintf(&errMsg, "Expecting `%c`, but got `%c`.", expected, c);
-		JsonParser_error(state, errMsg);
+		if(asprintf(
+			&errMsg, "Expecting `%c`, but got `%c`.", expected, c) == -1){
+			fputs("JsonParser_expect(): `asprintf()` call failed!", stderr);
+			errMsg = "";
+		}
+		JsonParser_error(state, errMsg, false);
 		free(errMsg);
 		longjmp(state->errorTrap, 1);
 	}
@@ -274,8 +295,6 @@ static void encodeUtf8CodePoint(int codePoint, int *numBytes, char *dest){
 		dest[2] = SIX_BIT_BLOCK(codePoint >> 6);
 		dest[3] = SIX_BIT_BLOCK(codePoint);
 	}
-
-	return dest;
 }
 
 static JsonString_t JsonParser_parseString(JsonParser_t *state){
@@ -325,7 +344,10 @@ static JsonString_t JsonParser_parseString(JsonParser_t *state){
 					int numItemsMatched = sscanf(
 						inputStrPtr, "%4x%n", &unicodeCodePoint, &numCharsRead);
 					if(numItemsMatched != 1 || numCharsRead != 4){
-						ERROR("Failed to read 4 hexadecimal characters");
+						JsonParser_error(
+							state, "Failed to read 4 hexadecimal characters",
+							false);
+						goto error;
 					}
 					state->stringInd += 4;
 
@@ -337,14 +359,19 @@ static JsonString_t JsonParser_parseString(JsonParser_t *state){
 					}
 				}
 				else {
-					ERROR("Invalid escaped character.");
+					JsonParser_error(
+						state, "Invalid escaped character.", false);
+					goto error;
 				}
 			}
 			else if(iscntrl(chr)){
-				ERROR("Control characters inside strings are invalid.");
+				JsonParser_error(
+					state, "Control characters inside strings are invalid.",
+					false);
 			}
 			else {
 				sb_push(str, chr);
+				goto error;
 			}
 		}
 		JsonParser_expect(state, '"');
@@ -355,9 +382,12 @@ static JsonString_t JsonParser_parseString(JsonParser_t *state){
 		};
 	}
 	else {
-		sb_free(str);
-		longjmp(prevErrorTrap, 1);
+		goto error;
 	}
+
+error:
+	sb_free(str);
+	longjmp(prevErrorTrap, 1);
 }
 
 static unsigned int JsonParser_parseDigits(JsonParser_t *state){
@@ -365,7 +395,7 @@ static unsigned int JsonParser_parseDigits(JsonParser_t *state){
 	int numCharsRead;
 	char *srcStr = &state->inputStr[state->stringInd];
 	if(sscanf(srcStr, "%d%n", &val, &numCharsRead) != 1){
-		ERROR("Failed to read one or more digits.");
+		JsonParser_error(state, "Failed to read one or more digits.", true);
 	}
 	state->stringInd += numCharsRead;
 	return val;
@@ -376,7 +406,7 @@ static void JsonParser_parseNumber(JsonParser_t *state, JsonVal_t *val){
 	int baseNum = JsonParser_parseDigits(state);
 
 	bool hasFraction = JsonParser_nextIfChr(state, '.');
-	int fractionNum;
+	int fractionNum = 0;
 	if(hasFraction){
 		fractionNum = JsonParser_parseDigits(state);
 	}
@@ -539,8 +569,14 @@ static JsonBool_t JsonParser_parseBoolean(JsonParser_t *state){
 			break;
 
 		default:
-			JsonParser_error(state, "Expecting `t` or `f`.");
-			longjmp(state->errorTrap, 1);
+			JsonParser_error(state, "Expecting `t` or `f`.", true);
+
+			// The following is necessary to silence a GCC warning about the
+			// lack of a return type ("control reaches end of non-void
+			// function")`. In reality, the above call to `JsonParser_error()`
+			// will `longjmp()` to the last error-catching context, so this'll
+			// never be reached.
+			return false;
 	}
 }
 
@@ -586,7 +622,7 @@ static JsonVal_t JsonParser_parseValue(JsonParser_t *state){
 	}
 
 	else {
-		JsonParser_error(state, "Couldn't parse a value.\n");
+		JsonParser_error(state, "Couldn't parse a value.\n", true);
 	}
 
 	return val;
