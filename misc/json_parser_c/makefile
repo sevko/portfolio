@@ -15,10 +15,10 @@ debug: FLAGS += -Og -g3
 debug: bin $(PROJECT_EXECUTABLE)
 
 run: all
-	./$(PROJECT_EXECUTABLE)
+	./$(PROJECT_EXECUTABLE) | tap-spec
 
 $(PROJECT_EXECUTABLE): $(OBJ)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ -ltap
 
 bin/%.o: src/%.c
 	$(CC) -o $@ -c $^
