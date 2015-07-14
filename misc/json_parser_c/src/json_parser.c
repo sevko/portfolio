@@ -453,64 +453,58 @@ error:
 	longjmp(prevErrorTrap, 1);
 }
 
-static unsigned int JsonParser_parseDigits(JsonParser_t *state){
-	unsigned int val;
-	int numCharsRead;
-	const char *srcStr = &state->inputStr[state->stringInd];
-	if(sscanf(srcStr, "%d%n", &val, &numCharsRead) != 1){
-		JsonParser_error(
-			state, JSON_ERR_NUMBER, "Failed to read one or more digits.", true);
+/**
+ * Advance the parser past a number containing one or more digits, throwing an
+ * error if no digits are found. Used in `JsonParser_parseNumber()`.
+ */
+static void JsonParser_skipNumber(JsonParser_t *state){
+	int startInd = state->stringInd;
+	while(isdigit(JsonParser_peek(state))){
+		JsonParser_next(state);
 	}
-	state->stringInd += numCharsRead;
-	return val;
+	if(state->stringInd - startInd == 0){
+		JsonParser_error(
+			state, JSON_ERR_NUMBER,
+			"Failed to parse one or more digits.", true);
+	}
 }
 
+
+/**
+ * Parse either an integer or float from the input string, storing the result
+ * in `*val` (with the appropriate type, either `JSON_INT` or `JSON_FLOAT`).
+ * Note that this implementation doesn't entirely comply with the JSON spec,
+ * since it uses `strtof()` and `strtod()` to convert characters to numbers,
+ * and those support quite a wide range of numeric formats (like "0xabcd"
+ * hexadecimal notation), so might end up successfully parsing spec-incompliant
+ * input. In the interest of simplicity, we'll keep it as is.
+ */
 static void JsonParser_parseNumber(JsonParser_t *state, JsonVal_t *val){
-	bool negate = JsonParser_nextIfChr(state, '-');
-	int baseNum = JsonParser_parseDigits(state);
+	int numStartInd = state->stringInd;
+	JsonParser_nextIfChr(state, '-');
+	JsonParser_skipNumber(state);
 
 	bool hasFraction = JsonParser_nextIfChr(state, '.');
-	int fractionNum = 0;
 	if(hasFraction){
-		fractionNum = JsonParser_parseDigits(state);
+		JsonParser_skipNumber(state);
 	}
 
 	bool hasExp = JsonParser_nextIfChr(state, 'e') ||
 		JsonParser_nextIfChr(state, 'E');
-	int expPart;
 	if(hasExp){
-		bool negateExp = !JsonParser_nextIfChr(state, '+') &&
-			JsonParser_nextIfChr(state, '-');
-		expPart = JsonParser_parseDigits(state);
-		if(negateExp){
-			expPart = -expPart;
-		}
+		JsonParser_nextIfChr(state, '+') || JsonParser_nextIfChr(state, '-');
+		JsonParser_skipNumber(state);
 	}
-
-	#define APPLY_EXP(numVar) \
-		if(hasExp){ \
-			for(int power = 0; power < expPart; power++){ \
-				numVar *= 10; \
-			} \
-		}
-
-	#define APPLY_NEGATION(numVar) \
-		if(negate){ \
-			numVar = -numVar; \
-		}
 
 	if(hasFraction){
-		float floatVal = baseNum + fractionNum / 100.0;
-		APPLY_EXP(floatVal);
-		APPLY_NEGATION(floatVal);
+		float floatNum = strtof(state->inputStr + numStartInd, NULL);
 		val->type = JSON_FLOAT;
-		val->value.floatNum = floatVal;
+		val->value.floatNum = floatNum;
 	}
 	else {
-		APPLY_EXP(baseNum);
-		APPLY_NEGATION(baseNum);
+		int intNum = strtod(state->inputStr + numStartInd, NULL);
 		val->type = JSON_INT;
-		val->value.intNum = baseNum;
+		val->value.intNum = intNum;
 	}
 }
 
