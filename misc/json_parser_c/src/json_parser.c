@@ -469,15 +469,9 @@ static void JsonParser_skipNumber(JsonParser_t *state){
 	}
 }
 
-
 /**
  * Parse either an integer or float from the input string, storing the result
  * in `*val` (with the appropriate type, either `JSON_INT` or `JSON_FLOAT`).
- * Note that this implementation doesn't entirely comply with the JSON spec,
- * since it uses `strtof()` and `strtod()` to convert characters to numbers,
- * and those support quite a wide range of numeric formats (like "0xabcd"
- * hexadecimal notation), so might end up successfully parsing spec-incompliant
- * input. In the interest of simplicity, we'll keep it as is.
  */
 static void JsonParser_parseNumber(JsonParser_t *state, JsonVal_t *val){
 	int numStartInd = state->stringInd;
@@ -496,16 +490,35 @@ static void JsonParser_parseNumber(JsonParser_t *state, JsonVal_t *val){
 		JsonParser_skipNumber(state);
 	}
 
+	// Copy the number chars into a null-terminated buffer so that `strtof()`
+	// and `strtod()` don't read too far into the string. This could be an
+	// issue if the input string isn't null terminated and the number being
+	// parsed is at the very end, and also causes problems when the input
+	// string contains a numeric format that `strtof()`/`strtod()` accept but
+	// the JSON spec does not, like say, 0xaf: the parser would only advance
+	// past the 0 and error later on, but `strtof()`/`strtod()` would read in
+	// the full hexadecimal value. This approach isn't ideal, but we'll stick
+	// to it in the interest of simplicity; also, there don't seem to be any
+	// immediate alternatives for parsing a number from a string while limiting
+	// the number of bytes read without some sort of intermediate allocations,
+	// anyway.
+	int numChars = state->stringInd - numStartInd;
+	char *numStrBuf = malloc(numChars + 1);
+	memcpy(numStrBuf, state->inputStr + numStartInd, numChars);
+	numStrBuf[numChars] = '\0';
+
 	if(hasFraction){
-		float floatNum = strtof(state->inputStr + numStartInd, NULL);
+		float floatNum = strtof(numStrBuf, NULL);
 		val->type = JSON_FLOAT;
 		val->value.floatNum = floatNum;
 	}
 	else {
-		int intNum = strtod(state->inputStr + numStartInd, NULL);
+		float intNum = strtod(numStrBuf, NULL);
 		val->type = JSON_INT;
 		val->value.intNum = intNum;
 	}
+
+	free(numStrBuf);
 }
 
 static JsonObject_t JsonParser_parseObject(JsonParser_t *state){
