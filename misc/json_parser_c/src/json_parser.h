@@ -87,6 +87,12 @@ void JsonVal_free(JsonVal_t *val);
 void JsonVal_print(JsonVal_t *val);
 
 /**
+ * Recursively compare `a` and `b` for equality. Float values will be compared
+ * with a small (1e-6) margin of error.
+ */
+bool JsonVal_eq(JsonVal_t *a, JsonVal_t *b);
+
+/**
  * Deallocate the members of `err` (currently only `errMsg`); `err` itself will
  * *not* be free'd.
  */

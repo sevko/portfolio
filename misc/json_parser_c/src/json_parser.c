@@ -145,6 +145,82 @@ void JsonVal_print(JsonVal_t *val){
 	}
 }
 
+bool JsonVal_eq(JsonVal_t *a, JsonVal_t *b){
+	if(a->type != b->type){
+		return false;
+	}
+
+	switch(a->type){
+		case JSON_STRING:{
+			JsonString_t *aStr = &a->value.string,
+				*bStr = &b->value.string;
+			int aLength = aStr->length;
+			return aLength == bStr->length &&
+				strncmp(aStr->str, bStr->str, aLength) == 0;
+		}
+
+		case JSON_INT:
+			return a->value.intNum == b->value.intNum;
+
+		case JSON_FLOAT:{
+			float diff = a->value.floatNum - b->value.floatNum;
+			if(diff < 0){
+				diff = -diff;
+			}
+			return diff <= 1e-6;
+		}
+
+		case JSON_OBJECT:{
+			JsonObject_t *aObj = &a->value.object,
+				*bObj = &b->value.object;
+			if(aObj->length != bObj->length){
+				return false;
+			}
+
+			for(int pair = 0; pair < aObj->length; pair++){
+				JsonString_t *key1 = aObj->keys + pair,
+					*key2 = bObj->keys + pair;
+				int key1Length = key1->length;
+				bool keysMatch = key1Length == key2->length &&
+					strncmp(key1->str, key2->str, key1Length);
+				if(!(keysMatch &&
+					JsonVal_eq(aObj->values + pair, bObj->values + pair))){
+					return false;
+				}
+			}
+
+			break;
+		}
+
+		case JSON_ARRAY:{
+			JsonArray_t *aArray = &a->value.array,
+				*bArray = &b->value.array;
+			if(aArray->length != bArray->length){
+				return false;
+			}
+
+			for(int ind = 0; ind < aArray->length; ind++){
+				if(!JsonVal_eq(aArray->values + ind, bArray->values + ind)){
+					return false;
+				}
+			}
+
+			break;
+		}
+
+		case JSON_BOOL:{
+			bool aBool = a->value.boolean,
+				bBool = b->value.boolean;
+			return (aBool && bBool) || (!aBool && !bBool);
+		}
+
+		case JSON_NULL:
+			break;
+	}
+
+	return true;
+}
+
 /**
  * Raise en error in `state`, setting its error message to `errMsg` with some
  * additional, helpful context (like the line and column numbers of where it
