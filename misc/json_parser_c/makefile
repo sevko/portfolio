@@ -1,5 +1,5 @@
 PROJECT_EXECUTABLE = bin/json_parser
-FLAGS = -Wall -Wextra -I ./ -std=c99
+FLAGS = -Wall -Wextra -I ./ -std=c99 -Wall -Wno-clobbered
 C_COMPILER = gcc $(FLAGS)
 CC = @echo "\tcc $@" && $(C_COMPILER)
 
