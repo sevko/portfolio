@@ -182,7 +182,7 @@ bool JsonVal_eq(JsonVal_t *a, JsonVal_t *b){
 					*key2 = bObj->keys + pair;
 				int key1Length = key1->length;
 				bool keysMatch = key1Length == key2->length &&
-					strncmp(key1->str, key2->str, key1Length);
+					strncmp(key1->str, key2->str, key1Length) == 0;
 				if(!(keysMatch &&
 					JsonVal_eq(aObj->values + pair, bObj->values + pair))){
 					return false;
