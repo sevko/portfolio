@@ -1,19 +1,15 @@
 /**
- * @brief 
+ * A simple, recursive-descent JSON parser.
  */
 
 #pragma once
 
 #include <stdbool.h>
 
-// Convenience macro for creating `JsonVal_t` structs. Note that `__VA_ARGS__`
-// is used for `.value` because the argument may contain commas that would
-// otherwise be interpreted as an argument delimiters by the preprocessor.
-#define CREATE_JSON_VAL(valType, ...) \
-	(JsonVal_t){ \
-		.type = valType, \
-		.value = __VA_ARGS__ \
-	}
+/**
+ * The following types are used to represent JSON values. `JsonVal_t` is the
+ * highest-level type and aggregates all the others in a union.
+ */
 
 typedef enum {
 	JSON_STRING,
@@ -64,6 +60,15 @@ struct JsonVal {
 	} value;
 };
 
+// Convenience macro for creating `JsonVal_t` structs. Note that `__VA_ARGS__`
+// is used for `.value` because the argument may contain commas that would
+// otherwise be interpreted as an argument delimiters by the preprocessor.
+#define CREATE_JSON_VAL(valType, ...) \
+	(JsonVal_t){ \
+		.type = valType, \
+		.value = __VA_ARGS__ \
+	}
+
 /**
  * The following types are used to represent parser errors. We choose to expose
  * a full blown type, rather than just returning a string error message,
@@ -92,10 +97,27 @@ typedef struct {
 	char *errMsg; // A user-friendly error message.
 } JsonParserError_t;
 
+/**
+ * Parse a JSON value from `src`. `isNullTerminated` indicates whether the
+ * string is terminated with a null-byte; if it isn't, `length` must contain
+ * the number of bytes to read. `*failed` will be set to `false` if a value was
+ * successfully parsed and the value returned; otherwise, `*failed` will be set
+ * to `true` and an error object will be stored in `*error`.
+ */
 JsonVal_t parse(
 	const char *src, bool isNullTerminated, int length, bool *failed,
 	JsonParserError_t *error);
+
+/**
+ * Recursively deallocate a value returned by `parse()`. Note that the `val`
+ * pointer itself will *not* be free'd.
+ */
 void JsonVal_free(JsonVal_t *val);
+
+/**
+ * Intended for debugging: recursively print the contents of `val` to stdout.
+ * This will look more or less like JSON.
+ */
 void JsonVal_print(JsonVal_t *val);
 
 /**
