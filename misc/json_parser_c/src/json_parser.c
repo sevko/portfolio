@@ -1,3 +1,28 @@
+/**
+ * A recursive-descent JSON parser. If a function is missing a documentation
+ * comment and is non-`static` (ie public), check out `json_parser.h` instead.
+ *
+ * The implementation is fairly simple: there are a bunch of (sometimes
+ * mutually recursive) parse routines, like `JsonParser_parseValue()` and
+ * `JsonParser_parseNumber()`, that loosely match the JSON grammar. The parser
+ * state is represented by a `JsonParser_t` struct that's passed around from
+ * function to function. Error handling was an interesting problem to solve
+ * because the call stack can grow quite big, errors are fatal and require
+ * immediate termination of the entire parse, and an error can occur in the
+ * lowest level operations, like `JsonParser_next()` and `JsonParser_expect()`.
+ * In other words, every call to a parser method would have to be suffixed with
+ * a check on whether any errors occurred, and a `return` made if it did
+ * (because some of the functions are directly used in expressions without
+ * prior assignment, this would make the code fairly messy). A very clean
+ * solution is non-local jumping via `setjmp()` and `longjmp()`, which lets the
+ * parser emulate exceptions and jump all the way to the bottom of the call
+ * stack (ie the beginning of the parse) when an error occurs. This is slightly
+ * complicated by the fact that some parse routines perform intermediate memory
+ * allocations and thus need to deallocate them before exiting, but is resolved
+ * by setting intermediate breakpoints to "catch exceptions" and then
+ * "re-raise" them.
+ */
+
 // Define _GNU_SOURCE to silence warnings about an implicit declaration of
 // `asprintf()`.
 #define _GNU_SOURCE
@@ -11,26 +36,26 @@
 #include "json_parser.h"
 #include "src/stretchy_buffer.h"
 
+/**
+ * A representation of the parser's state, passed around from function to
+ * function.
+ */
 typedef struct {
-	const char *inputStr;
-	int stringInd;
-	bool isNullTerminated;
-	int inputStrLength;
+	const char *inputStr; // The string being parsed.
+	int stringInd; // The parser's current index inside `inputStr`.
+	bool isNullTerminated; // Whether or not `inputStr` is null-terminated.
+	int inputStrLength; // The maximum number of bytes to read in `inputStr`.
 
-	int colNum;
-	int lineNum;
+	int colNum; // The current column number inside `inputStr`.
+	int lineNum; // The current line number inside `inputStr`.
 
-	bool failedParse;
-	JsonParserError_t error;
-
+	JsonParserError_t error; // Contains any error information.
+	// The last error-catching context (created with `setjmp()`) to `longjmp()`
+	// to in case of an error.
 	jmp_buf errorTrap;
 } JsonParser_t;
 
 static JsonVal_t JsonParser_parseValue(JsonParser_t *state);
-
-static void *copyJmpBuf(jmp_buf dest, const jmp_buf src){
-	return memcpy(dest, src, sizeof(jmp_buf));
-}
 
 void JsonParserError_free(JsonParserError_t *err){
 	free(err->errMsg);
@@ -56,10 +81,6 @@ const char *JsonErrorType_toString(JsonParserErrorType_t type){
 	}
 }
 
-/**
- * Recursively deallocate the members of `*val`. `val` itself will NOT be
- * `free()`'d.
- */
 void JsonVal_free(JsonVal_t *val){
 	switch(val->type){
 		case JSON_STRING:
@@ -91,10 +112,6 @@ void JsonVal_free(JsonVal_t *val){
 	}
 }
 
-/**
- * Recursively print a string representation of `*val`; intended primarily for
- * debbuging.
- */
 void JsonVal_print(JsonVal_t *val){
 	switch(val->type){
 		case JSON_STRING:
@@ -222,6 +239,13 @@ bool JsonVal_eq(JsonVal_t *a, JsonVal_t *b){
 }
 
 /**
+ * Shorthand for copying `jmp_buf`s.
+ */
+static void *copyJmpBuf(jmp_buf dest, const jmp_buf src){
+	return memcpy(dest, src, sizeof(jmp_buf));
+}
+
+/**
  * Raise en error in `state`, setting its error message to `errMsg` with some
  * additional, helpful context (like the line and column numbers of where it
  * occurred). If `jump` is true, also jump to the previous error-catching
@@ -230,7 +254,6 @@ bool JsonVal_eq(JsonVal_t *a, JsonVal_t *b){
 static void JsonParser_error(
 	JsonParser_t *state, JsonParserErrorType_t errorType,
 	char *errMsg, bool jump){
-	state->failedParse = true;
 
 	char *fullErMsg;
 	int asprintfRes = asprintf(
@@ -309,6 +332,10 @@ static void JsonParser_skipWhitespace(JsonParser_t *state){
 	}
 }
 
+/**
+ * Advance the parser with `JsonParser_next()`, and error if its return value
+ * is not equal to `expected`.
+ */
 static char JsonParser_expect(JsonParser_t *state, char expected){
 	char c = JsonParser_next(state);
 	if(c == expected){
@@ -710,8 +737,7 @@ JsonVal_t parse(
 		.colNum = 1,
 		.lineNum = 1,
 		.stringInd = 0,
-		.inputStr = src,
-		.failedParse = false
+		.inputStr = src
 	};
 
 	JsonVal_t parsedVal;
