@@ -37,6 +37,8 @@ static void testBadInputs(void){
 	testBadInput("{\"a}", JSON_ERR_EOF);
 	testBadInput("e", JSON_ERR_VALUE);
 	testBadInput("1.]", JSON_ERR_NUMBER);
+	testBadInput("1.1e", JSON_ERR_NUMBER);
+	testBadInput("1.", JSON_ERR_NUMBER);
 	testBadInput("[1.0, \"abc\", 1.]", JSON_ERR_NUMBER);
 	testBadInput("5942.a", JSON_ERR_NUMBER);
 	testBadInput(
@@ -63,6 +65,8 @@ void testGoodInput(const char *inputStr, JsonVal_t expected){
 		inputStr, true, strlen(inputStr), &failed, &error);
 	ok(!failed, "Boolean set to indicate success.");
 	ok(JsonVal_eq(&parsed, &expected), "Parsed value matches expected.");
+	JsonVal_print(&parsed);
+	putchar('\n');
 	JsonVal_free(&parsed);
 }
 
@@ -72,6 +76,13 @@ void testGoodInput(const char *inputStr, JsonVal_t expected){
 static void testGoodInputs(void){
 	testGoodInput("1", CREATE_JSON_VAL(JSON_INT, {.intNum = 1}));
 	testGoodInput("4e4", CREATE_JSON_VAL(JSON_INT, {.intNum = 40000}));
+
+	testGoodInput(
+		"4.123e5", CREATE_JSON_VAL(JSON_FLOAT, {.floatNum = 412300.0}));
+	testGoodInput(
+		"-42.123e-1", CREATE_JSON_VAL(JSON_FLOAT, {.floatNum = -4.2123}));
+	testGoodInput(
+		"54.987e+1", CREATE_JSON_VAL(JSON_FLOAT, {.floatNum = 549.87}));
 
 	// Convenience macro for creating JsonVal_t strings.
 	#define CREATE_STRING(strLiteral) \
@@ -103,6 +114,57 @@ static void testGoodInputs(void){
 			}
 		}
 	));
+
+	testGoodInput(
+		"{ \"abc\": [1.234, null, \"def\", 5, 5.232e+5, {}], \"bool\": false}",
+		CREATE_JSON_VAL(
+			JSON_OBJECT,
+			{
+				.object = (JsonObject_t){
+					.length = 2,
+					.keys = (JsonString_t []){
+						(JsonString_t){
+							.length = 3,
+							.str = "abc"
+						},
+						(JsonString_t){
+							.length = 4,
+							.str = "bool"
+						}
+					},
+					.values = (JsonVal_t []){
+						CREATE_JSON_VAL(
+							JSON_ARRAY,
+							{
+								.array = (JsonArray_t){
+									.length = 6,
+									.values = (JsonVal_t []){
+										CREATE_JSON_VAL(
+											JSON_FLOAT, {.floatNum = 1.234}),
+										CREATE_JSON_VAL(JSON_NULL, {}),
+										CREATE_STRING("def"),
+										CREATE_JSON_VAL(
+											JSON_INT, {.intNum = 5}),
+										CREATE_JSON_VAL(
+											JSON_FLOAT,
+											{.floatNum = 523200}),
+										CREATE_JSON_VAL(
+											JSON_OBJECT,
+											{
+												.object = (JsonObject_t){
+													.length = 0
+												}
+											})
+									}
+								}
+							}
+						),
+						CREATE_JSON_VAL(JSON_BOOL, {.boolean = false})
+					}
+				}
+			}
+		)
+	);
 }
 
 int main(){
