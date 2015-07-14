@@ -52,7 +52,61 @@ static void testBadInputs(void){
 	testBadInput("\"\\9\"", JSON_ERR_STR_INVALID_ESCAPE);
 }
 
+/**
+ * Test whether parsing `inputStr` returns a value that's equal to `expected`.
+ */
+void testGoodInput(const char *inputStr, JsonVal_t expected){
+	note("Testing good input `%s`\n", inputStr);
+	bool failed;
+	JsonParserError_t error;
+	JsonVal_t parsed = parse(
+		inputStr, true, strlen(inputStr), &failed, &error);
+	ok(!failed, "Boolean set to indicate success.");
+	ok(JsonVal_eq(&parsed, &expected), "Parsed value matches expected.");
+	JsonVal_free(&parsed);
+}
+
+/**
+ * Test whether the parser creates expected values from valid input.
+ */
+static void testGoodInputs(void){
+	testGoodInput("1", CREATE_JSON_VAL(JSON_INT, {.intNum = 1}));
+	testGoodInput("4e4", CREATE_JSON_VAL(JSON_INT, {.intNum = 40000}));
+
+	// Convenience macro for creating JsonVal_t strings.
+	#define CREATE_STRING(strLiteral) \
+		CREATE_JSON_VAL( \
+			JSON_STRING, { \
+			.string = (JsonString_t){ \
+				.length = sizeof(strLiteral) - 1, \
+				.str = strLiteral \
+			} \
+		})
+
+	testGoodInput("\"abc\\td\\n\"", CREATE_STRING("abc\td\n"));
+	testGoodInput(
+		"\"\\r\\b uni \\u2713 code\"", CREATE_STRING("\r\b uni ✓ code"));
+	testGoodInput(
+		"\"ǾǿȀȁȂȃȄȅȆȇȈȉȊȋȌȍȎȏȐȑȒȓȔȕ\"",
+		CREATE_STRING("ǾǿȀȁȂȃȄȅȆȇȈȉȊȋȌȍȎȏȐȑȒȓȔȕ"));
+
+	testGoodInput("false", CREATE_JSON_VAL(JSON_BOOL, {.boolean = false}));
+	testGoodInput("[null, true, false]", CREATE_JSON_VAL(
+		JSON_ARRAY, {
+			.array = (JsonArray_t){
+				.length = 3,
+				.values = (JsonVal_t []){
+					CREATE_JSON_VAL(JSON_NULL, {}),
+					CREATE_JSON_VAL(JSON_BOOL, {.boolean = true}),
+					CREATE_JSON_VAL(JSON_BOOL, {.boolean = false})
+				}
+			}
+		}
+	));
+}
+
 int main(){
 	testBadInputs();
+	testGoodInputs();
 	return EXIT_SUCCESS;
 }

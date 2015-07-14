@@ -6,6 +6,15 @@
 
 #include <stdbool.h>
 
+// Convenience macro for creating `JsonVal_t` structs. Note that `__VA_ARGS__`
+// is used for `.value` because the argument may contain commas that would
+// otherwise be interpreted as an argument delimiters by the preprocessor.
+#define CREATE_JSON_VAL(valType, ...) \
+	(JsonVal_t){ \
+		.type = valType, \
+		.value = __VA_ARGS__ \
+	}
+
 typedef enum {
 	JSON_STRING,
 	JSON_INT,
@@ -24,7 +33,10 @@ typedef struct {
 typedef int JsonInt_t;
 typedef float JsonFloat_t;
 
+// Forward declare `JsonVal` to use it inside the `JsonObject_t` and
+// `JsonArray_t` definitions.
 typedef struct JsonVal JsonVal_t;
+
 typedef struct {
 	int length;
 	JsonString_t *keys;
