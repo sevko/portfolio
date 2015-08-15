@@ -1,17 +1,39 @@
+"""
+An implementation of Dijkstra's Algorithm and A* for rectangular grids.
+"""
+
 import heapq
 import termcolor
 import random
 import time
 
 class Grid:
+	"""
+	A rectangular, 2D grid.
+	"""
 
 	def __init__(self, grid_costs):
+		"""
+		Create a `Grid` from a 2D array, where each row's element is either a
+		number (which represents the movement cost of the corresponding tile)
+		or `None` (which represents impassability). The array MUST be
+		rectangular.
+		"""
+
 		self.height = len(grid_costs)
 		self.width = len(grid_costs[0])
 		self.grid_costs = grid_costs
 
 	def dijkstras_algorithm(
 		self, start, end, heuristic=None, diagnostic_reporting=False):
+		"""
+		Dijkstra's Algorithm for calculating a path between `start` and `end`
+		in this `Grid`. Set `diagnostic_reporting` to `True` to print out the
+		number of visited nodes; set `heuristic` to a function accepting a
+		coordinate pair as an argument if you wish to provide custom node
+		priority values.
+		"""
+
 		if not self._is_coord_traversable(start):
 			raise ValueError("The start coord is invalid")
 
@@ -64,6 +86,12 @@ class Grid:
 		return path
 
 	def astar(self, start, end, diagnostic_reporting=False):
+		"""
+		The A* pathfinding algorithm, implemented in terms of
+		`self.dijkstras_algorithm()` with a manhattan/taxicab distance
+		heuristic.
+		"""
+
 		def manhattan_distance(curr_coords):
 			return abs(end[0] - curr_coords[0]) + abs(end[1] - curr_coords[1])
 
@@ -71,17 +99,32 @@ class Grid:
 			start, end, manhattan_distance, diagnostic_reporting)
 
 	def _neighbor_coords(self, coord):
+		"""
+		Return an array containing `coord`'s traversable neighbors (up, down,
+		left, and right).
+		"""
+
 		x, y = coord
 		all_neighbor_coords = [(x, y + 1), (x, y - 1), (x + 1, y), (x - 1, y)]
 		return list(filter(self._is_coord_traversable, all_neighbor_coords))
 
 	def _is_coord_traversable(self, coord):
+		"""
+		Whether `coord` is in bounds and is not impassable.
+		"""
+
 		x, y = coord
 		return 0 <= x < self.width and \
 			0 <= y < self.height and \
 			self.grid_costs[y][x] is not None
 
 	def to_ascii(self, path=None):
+		"""
+		Return a pretty string representation of this `Grid`. If `path` is not
+		`None`, it should be an array of coordinate pairs representing a path
+		through the grid.
+		"""
+
 		grid_chars = [
 			["█" if cost is None else str(cost) for cost in row]
 			for row in self.grid_costs]
@@ -102,6 +145,12 @@ class Grid:
 
 	@classmethod
 	def from_ascii(cls, grid_str):
+		"""
+		Create a `Grid` from a string representation (see usage in `main`).
+		This is just for convenience, since the string representations are more
+		readable than a 2D array literal passed to `Grid()`.
+		"""
+
 		return Grid([
 			[None if char == "_" else int(char)
 				for char in row.strip().split(" ")]
