@@ -92,7 +92,7 @@ if __name__ == "__main__":
 		1 1 1 1 9 1 _ 1 _ 4 7 9
 		1 1 _ 1 1 1 1 1 _ 5 7 9
 		1 1 _ 1 _ _ _ _ _ 5 2 1
-		1 1 _ 1 _ 1 1 1 _ 5 7 1
+		1 1 _ 1 _ 1 _ 1 _ 5 7 1
 		1 1 _ 1 1 1 _ 1 _ 1 1 1
 	""")
 	# grid = Grid([
@@ -102,5 +102,13 @@ if __name__ == "__main__":
 		# [1, 1, None, 1, 1, 1, None, 1, None, 1, 1],
 		# [1, 1, 1, 1, None, 1, 1, 1, None, 1, 1]
 	# ])
-	path = grid.dijkstras_algorithm((4, 4), (11, 10))
+	start = (4, 4)
+	end = (11, 10)
+	path = grid.dijkstras_algorithm(start, end)
+	print("Path from {} to {} reachable location: {}".format(start, end, path))
 	print(grid.to_ascii(path))
+
+	unreachable_location = (7, 10)
+	print("\nPath to {} (an unreachable location): {}".format(
+		unreachable_location,
+		grid.dijkstras_algorithm((4, 4), unreachable_location)))
