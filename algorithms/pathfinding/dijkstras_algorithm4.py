@@ -1,5 +1,7 @@
 import heapq
 import termcolor
+import random
+import time
 
 class Grid:
 
@@ -117,22 +119,72 @@ if __name__ == "__main__":
 		1 1 _ 1 1 1 1 1 _ 5 7 9
 		1 1 _ 1 _ _ _ _ _ 5 2 1
 		1 1 _ 1 _ 1 _ 1 _ 5 7 1
-		1 1 _ 1 1 1 _ 1 _ 1 1 1
-	""")
-	# grid = Grid([
-		# [1, 1, 1, 1, 1, 1, None, 1, 1, 1, 1],
-		# [1, None, 1, 1, 1, 1, None, 1, None, 1, 1],
-		# [1, 1, None, None, None, 1, None, 1, None, 1, 1],
-		# [1, 1, None, 1, 1, 1, None, 1, None, 1, 1],
-		# [1, 1, 1, 1, None, 1, 1, 1, None, 1, 1]
-	# ])
+		1 1 _ 1 1 1 _ 1 _ 1 1 1""")
 	start = (4, 4)
 	end = (11, 10)
 	path = grid.dijkstras_algorithm(start, end)
-	print("Path from {} to {} reachable location: {}".format(start, end, path))
+	print("Path from {} to {} using Dijkstra's: {}".format(start, end, path))
+	print(grid.to_ascii(path), "\n")
+
+	path = grid.astar(start, end)
+	print("Path from {} to {} using A*: {}".format(start, end, path))
 	print(grid.to_ascii(path))
 
 	unreachable_location = (7, 10)
 	print("\nPath to {} (an unreachable location): {}".format(
 		unreachable_location,
 		grid.dijkstras_algorithm((4, 4), unreachable_location)))
+
+	grid = Grid.from_ascii("""
+	 	 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+	 	 1 1 1 1 1 _ _ _ _ _ _ _ _ 1 1
+	 	 1 1 1 1 1 1 1 1 1 1 1 1 _ 1 1
+	 	 1 1 1 1 1 1 1 1 1 1 1 1 _ 1 1
+	 	 1 1 1 1 1 1 1 1 1 1 1 1 _ 1 1
+	 	 1 1 1 1 1 1 1 1 1 1 1 1 _ 1 1
+	 	 1 1 1 1 1 1 1 1 1 1 1 1 _ 1 1
+	 	 1 1 1 1 1 1 1 1 1 1 1 1 _ 1 1
+	 	 1 1 1 1 1 1 1 1 1 1 1 1 _ 1 1
+	 	 1 1 1 1 1 1 1 1 1 1 1 1 _ 1 1
+	 	 1 1 _ _ _ _ _ _ _ _ _ _ _ 1 1
+	 	 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+	 	 """)
+
+	print(
+		"\nComparing the number of nodes visited by Dijkstra's and A* for the "
+		"following grid:")
+	print(grid.to_ascii())
+
+	start = (3, 9)
+	end = (14, 0)
+
+	print("Dijkstra's:")
+	grid.dijkstras_algorithm(start, end, diagnostic_reporting=True)
+
+	print("A*:")
+	grid.astar(start, end, diagnostic_reporting=True)
+
+	grid_size = 100
+	print("\nTesting performance for a {0}x{0} grid:".format(grid_size))
+	random_grid_costs = [
+		[random.choice([1, 1, 1, 2]) if random.randint(1, 5) < 5 else None
+			for _ in range(grid_size)]
+		for _ in range(grid_size)]
+
+	start = (0, 0)
+	end = (grid_size - 1,) * 2
+
+	for x, y in [start, end]:
+		random_grid_costs[y][x] = 1
+
+	random_grid = Grid(random_grid_costs)
+
+	def timeit(algorithm_name, pathfinding_func):
+		start_time = time.time()
+		pathfinding_func(start, end, diagnostic_reporting=True)
+		time_diff = time.time() - start_time
+		print("{} took {}s".format(algorithm_name, time_diff))
+
+	timeit("Dijkstra's", random_grid.dijkstras_algorithm)
+	print("")
+	timeit("A*", random_grid.astar)
