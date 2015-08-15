@@ -8,7 +8,8 @@ class Grid:
 		self.width = len(grid_costs[0])
 		self.grid_costs = grid_costs
 
-	def dijkstras_algorithm(self, start, end):
+	def dijkstras_algorithm(
+		self, start, end, heuristic=None, diagnostic_reporting=False):
 		if not self._is_coord_traversable(start):
 			raise ValueError("The start coord is invalid")
 
@@ -19,8 +20,15 @@ class Grid:
 		came_from = {start: None}
 		frontier = [(0, start)]
 
+		if diagnostic_reporting:
+			num_nodes_visited = 0
+
 		while frontier:
-			curr_cost, curr_coords = heapq.heappop(frontier)
+			if diagnostic_reporting:
+				num_nodes_visited += 1
+
+			_, curr_coords = heapq.heappop(frontier)
+			curr_cost = costs_so_far[curr_coords]
 			if curr_coords == end:
 				break
 
@@ -32,17 +40,33 @@ class Grid:
 					neighbor_cost < costs_so_far[neighbor_coords]:
 					costs_so_far[neighbor_coords] = neighbor_cost
 					came_from[neighbor_coords] = curr_coords
-					heapq.heappush(frontier, (neighbor_cost, neighbor_coords))
+					priority = neighbor_cost
+
+					if heuristic is not None:
+						priority += heuristic(neighbor_coords)
+
+					heapq.heappush(frontier, (priority, neighbor_coords))
 
 		else:
 			return None
+
+		if diagnostic_reporting:
+			print("Number of visited nodes:", num_nodes_visited)
 
 		path = []
 		while curr_coords is not None:
 			path.append(curr_coords)
 			curr_coords = came_from[curr_coords]
+		path.reverse()
 
 		return path
+
+	def astar(self, start, end, diagnostic_reporting=False):
+		def manhattan_distance(curr_coords):
+			return abs(end[0] - curr_coords[0]) + abs(end[1] - curr_coords[1])
+
+		return self.dijkstras_algorithm(
+			start, end, manhattan_distance, diagnostic_reporting)
 
 	def _neighbor_coords(self, coord):
 		x, y = coord
