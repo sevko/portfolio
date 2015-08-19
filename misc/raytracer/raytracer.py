@@ -1,7 +1,15 @@
+"""
+A simple raytracer that supports spheres with configurable color properties
+(like the base color and specular coefficient).
+"""
+
 import math
-import collections
 
 class Scene:
+	"""
+	The scene that gets rendered. Contains information like the camera
+	position, the different objects present, etc.
+	"""
 
 	def __init__(self, camera, objects, lights, width, height):
 		self.camera = camera
@@ -11,6 +19,11 @@ class Scene:
 		self.height = height
 
 	def render(self):
+		"""
+		Return a `self.height`x`self.width` 2D array of `Color`s representing
+		the color of each pixel, obtained via ray-tracing.
+		"""
+
 		pixels = [
 			[Color() for _ in range(self.width)] for _ in range(self.height)]
 
@@ -23,6 +36,11 @@ class Scene:
 		return pixels
 
 	def _trace_ray(self, ray, depth=0, max_depth=5):
+		"""
+		Recursively trace a ray through the scene, returning the color it
+		accumulates.
+		"""
+
 		color = Color()
 
 		if depth >= max_depth:
@@ -36,10 +54,10 @@ class Scene:
 		intersection_pt = ray.point_at_dist(dist)
 		surface_norm = obj.surface_norm(intersection_pt)
 
-		# ambient
+		# ambient light
 		color += obj.material.color * obj.material.ambient
 
-		# lambert
+		# lambert shading
 		for light in self.lights:
 			pt_to_light_vec = (light - intersection_pt).normalize()
 			pt_to_light_ray = Ray(intersection_pt, pt_to_light_vec)
@@ -49,7 +67,7 @@ class Scene:
 					color += obj.material.color * obj.material.lambert * \
 						lambert_intensity
 
-		# specular
+		# specular (reflective) light
 		reflected_ray = Ray(
 			intersection_pt, ray.direction.reflect(surface_norm).normalize())
 		color += self._trace_ray(reflected_ray, depth + 1) * \
@@ -57,6 +75,11 @@ class Scene:
 		return color
 
 	def _get_intersection(self, ray):
+		"""
+		If ray intersects any of `self.objects`, return `obj, dist` (the object
+		itself, and the distance to it). Otherwise, return `None`.
+		"""
+
 		intersection = None
 		for obj in self.objects:
 			dist = obj.intersects(ray)
@@ -67,6 +90,9 @@ class Scene:
 		return intersection
 
 class Vector:
+	"""
+	A generic 3-element vector. All of the methods should be self-explanatory.
+	"""
 
 	def __init__(self, x=0, y=0, z=0):
 		self.x = x
@@ -115,10 +141,18 @@ class Vector:
 		yield self.y
 		yield self.z
 
+# Since 3D points and RGB colors are effectively 3-element vectors, we simply
+# declare them as aliases to the `Vector` class to take advantage of all its
+# defined operations (like overloaded addition, multiplication, etc.) while
+# improving readability (so we can use `color = Color(0xFF)` instead of
+# `color = Vector(0xFF)`).
 Point = Vector
 Color = Vector
 
 class Sphere:
+	"""
+	A sphere object.
+	"""
 
 	def __init__(self, origin, radius, material):
 		self.origin = origin
@@ -126,6 +160,11 @@ class Sphere:
 		self.material = material
 
 	def intersects(self, ray):
+		"""
+		If `ray` intersects sphere, return the distance at which it does;
+		otherwise, `None`.
+		"""
+
 		sphere_to_ray = ray.origin - self.origin
 		b = 2 * ray.direction * sphere_to_ray
 		c = sphere_to_ray ** 2 - self.radius ** 2
@@ -137,9 +176,11 @@ class Sphere:
 				return dist
 
 	def surface_norm(self, pt):
-		return (pt - self.origin).normalize()
+		"""
+		Return the surface normal to the sphere at `pt`.
+		"""
 
-Material = collections.namedtuple("Material", "color specular lambert ambient")
+		return (pt - self.origin).normalize()
 
 class Material:
 
@@ -150,6 +191,9 @@ class Material:
 		self.ambient = ambient
 
 class Ray:
+	"""
+	A mathematical ray.
+	"""
 
 	def __init__(self, origin, direction):
 		self.origin = origin
@@ -159,6 +203,10 @@ class Ray:
 		return self.origin + self.direction * dist
 
 def pixels_to_ppm(pixels):
+	"""
+	Convert `pixels`, a 2D array of `Color`s, into a PPM P3 string.
+	"""
+
 	header = "P3 {} {} 255\n".format(len(pixels[0]), len(pixels))
 	img_data_rows = []
 	for row in pixels:
@@ -183,7 +231,7 @@ if __name__ == "__main__":
 		Sphere(Point(300, 1000, 0), 700, Material(Color(0xFF, 0xFF, 0xFF),
 			lambert=0.5)),
 		]
-	lights = [Point(200, -100, 0)]
+	lights = [Point(200, -100, 0), Point(600, 200, -200)]
 	camera = Point(200, 200, -400)
 	scene = Scene(camera, objects, lights, 600, 400)
 	pixels = scene.render()
